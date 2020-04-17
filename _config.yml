@@ -99,5 +99,5 @@ theme: landscape
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
     type: git
-    repository: git@github.com:twomorehours/twomorehours.github.io.git
+    repository: git@github.com:twomorehours/twomorehours.git
     branch: master
