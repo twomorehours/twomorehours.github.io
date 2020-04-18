@@ -3,12 +3,12 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Hexo
-subtitle: ''
-description: ''
+title: two more hours
+subtitle: '向天再借两小时'
+description: 'two more hours company'
 keywords:
-author: John Doe
-language: en
+author: 
+language: chinese
 timezone: ''
 
 # URL
@@ -93,7 +93,7 @@ ignore:
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
-theme: next
+theme: ayer
 
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
