@@ -270,7 +270,7 @@ protected Object getSingleton(String beanName, boolean allowEarlyReference) {
     B要注入A，去容器里面去取，发现陷入了循环引用直接取出一个半成品
 6.将半成品A注入B,B初始化完成
 7.回到A的注入，此时拿到了B,注入到A，A的初始化完成
-8.全剧中
+8.全剧终
 <!--more-->
 
 
