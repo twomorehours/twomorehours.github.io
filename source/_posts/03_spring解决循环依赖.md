@@ -91,6 +91,9 @@ public void preInstantiateSingletons() throws BeansException {
     //...
 }
 ```
+总结一下上面的逻辑：
+    屌事没干，代码上万
+
 2.现在开始创建A了
 ```
 org.springframework.beans.factory.support.AbstractBeanFactory#getBean(java.lang.String)
@@ -171,6 +174,103 @@ protected Object doCreateBean(final String beanName, final RootBeanDefinition mb
 
 }
 ```
+总结一下上面的逻辑：
+    1.A被标记为正在创建
+    2.A被实例化并且被保存到singletonFactories中
+
+3.现在开始对A进行注入
+```
+org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory#populateBean
+protected void populateBean(String beanName, RootBeanDefinition mbd, @Nullable BeanWrapper bw) {
+    //...
+    if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
+        for (BeanPostProcessor bp : getBeanPostProcessors()) {
+            if (bp instanceof InstantiationAwareBeanPostProcessor) {
+                //这里有一个PostProcessor是AutowiredAnnotationBeanPostProcessor
+                InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) bp;
+                if (!ibp.postProcessAfterInstantiation(bw.getWrappedInstance(), beanName)) {
+                    return;
+                }
+            }
+        }
+	}
+    //...
+org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor#postProcessProperties
+public PropertyValues postProcessProperties(PropertyValues pvs, Object bean, String beanName) {
+    //...
+	InjectionMetadata metadata = findAutowiringMetadata(beanName, bean.getClass(), pvs);
+    metadata.inject(bean, beanName, pvs);
+    //...
+}
+org.springframework.beans.factory.annotation.InjectionMetadata#inject
+public void inject(Object target, @Nullable String beanName, @Nullable PropertyValues pvs) throws Throwable {
+        for (InjectedElement element : elementsToIterate) {
+            element.inject(target, beanName, pvs);
+        }
+	}
+org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor.AutowiredFieldElement#inject
+protected void inject(Object bean, @Nullable String beanName, @Nullable PropertyValues pvs) throws Throwable {
+    //去BeanFactory中寻找
+    value = beanFactory.resolveDependency(desc, beanName, autowiredBeanNames, typeConverter);
+}
+org.springframework.beans.factory.support.DefaultListableBeanFactory#doResolveDependency
+public Object doResolveDependency(DependencyDescriptor descriptor, @Nullable String beanName,
+			@Nullable Set<String> autowiredBeanNames, @Nullable TypeConverter typeConverter) throws BeansException {
+    //这里取到的就是B的class
+    if (instanceCandidate instanceof Class) {
+		instanceCandidate = descriptor.resolveCandidate(autowiredBeanName, type, this);
+	}
+org.springframework.beans.factory.config.DependencyDescriptor#resolveCandidate
+public Object resolveCandidate(String beanName, Class<?> requiredType, BeanFactory beanFactory)
+			throws BeansException {
+        //这个getBean是不是感到有一些熟悉,这里的beanName就是b
+        //接下来就创建B的过程，整个流程和创建A一毛一样
+		return beanFactory.getBean(beanName);
+	}
+}
+```
+总结一下上面逻辑：
+    AutowiredAnnotationBeanPostProcessor在执行的时候发现A要注入B，则去获取B
+4.创建B过程省略，和创建A一致
+5.下面给B注入A，要去获取A，但是这个时候要注意了,这里要获取的A之前已经创建过了，请仔细看，这里就是关键
+```
+org.springframework.beans.factory.support.AbstractBeanFactory#getBean(java.lang.String)
+public Object getBean(String name) throws BeansException {
+    return doGetBean(name, null, null, false);
+}
+org.springframework.beans.factory.support.AbstractBeanFactory#doGetBean
+protected <T> T doGetBean(final String name, @Nullable final Class<T> requiredType,
+			@Nullable final Object[] args, boolean typeCheckOnly) throws BeansException {
+    final String beanName = transformedBeanName(name);
+    //...
+    //这里从缓存取A
+    Object sharedInstance = getSingleton(beanName); 
+}
+org.springframework.beans.factory.support.DefaultSingletonBeanRegistry#getSingleton
+protected Object getSingleton(String beanName, boolean allowEarlyReference) {
+    //从已经初始化完成的里面取，肯定取不到
+    Object singletonObject = this.singletonObjects.get(beanName);
+    //判断A是否在创建，是的，因为B是在A注入未完成的情况下创建的，A要等着B创建完成
+    if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
+        synchronized (this.singletonObjects) {
+            //...
+            ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
+            if (singletonFactory != null) {
+                取出之前的半成品A
+                singletonObject = singletonFactory.getObject();
+            }
+            //...
+        }
+    }
+    //返回半成品A
+    return singletonObject;
+}
+```
+上面逻辑总结：
+    B要注入A，去容器里面去取，发现陷入了循环引用直接取出一个半成品
+6.将半成品A注入B,B初始化完成
+7.回到A的注入，此时拿到了B,注入到A，A的初始化完成
+8.全剧中
 <!--more-->
 
 
