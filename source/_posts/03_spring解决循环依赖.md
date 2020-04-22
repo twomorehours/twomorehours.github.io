@@ -5,7 +5,7 @@ categories:
 - spring
 
 ---
-## 沙雕面试题回顾
+## 沙雕面试
 面试官：如何判断一个链表是否有环?
 候选人：快慢指针。
 
@@ -39,7 +39,7 @@ public class B {
 - Bean的属性注入(@Autowird && @Inject && @Value)是在AutowiredAnnotationBeanPostProcessor完成的
 - DefaultSingletonBeanRegistry（DefaultListableBeanFactory的父类）有三个缓存
   - Map<String, Object> singletonObjects // 这个保存已经完成初始化的Bean，跟本题关系不大
-  - Map<String, ObjectFactory<?>> singletonFactories // 这个是保存刚创建成功还未初始化的Bean，这就是解决问题的核心
+  - Map<String, ObjectFactory<?>> singletonFactories // 这个是保存刚创建成功还未初始化的Bean，这里的ObjectFactory返回就是之前创建的对象，而不是新创建一个，这个在后面代码能看到，这就是解决问题的核心
   - Map<String, Object> earlySingletonObjects // 也是保存半成品Bean集合，跟本题关系不大
 
 
@@ -52,8 +52,9 @@ public class B {
 - 开始实例化B
 - B被标记为正在创建
 - 实例化了B
+- 半成品B被保存
 - 发现B要注入A
-- 寻找A，发现A正在创建，容器知道已经发现了循环引用，此时就从半成品集合中取出A，将A赋值给B
+- 从容器中寻找A，发现A正在创建，容器知道已经发现了循环引用，此时就从半成品集合中取出A，将A赋值给B
 - B初始化完成
 - A拿到B，并注入
 - A初始化完成
