@@ -62,7 +62,7 @@ public class B {
 ## 源码解析
 1.首先我们来到最初的起点，这是spring启动的入口，当然如果使用springboot的话，这个是会自己调用的。
 ```
-org.springframework.context.support.AbstractApplicationContext#refresh()
+org.springframework.context.support.AbstractApplicationContext#refresh
 public void refresh() throws BeansException, IllegalStateException {
     synchronized (this.startupShutdownMonitor) {
             //...
@@ -93,6 +93,55 @@ public void preInstantiateSingletons() throws BeansException {
 ```
 2.现在开始创建A了
 ```
+org.springframework.beans.factory.support.AbstractBeanFactory#getBean(java.lang.String)
+public Object getBean(String name) throws BeansException {
+    return doGetBean(name, null, null, false);
+}
+org.springframework.beans.factory.support.AbstractBeanFactory#doGetBean
+protected <T> T doGetBean(final String name, @Nullable final Class<T> requiredType,
+			@Nullable final Object[] args, boolean typeCheckOnly) throws BeansException {
+    final String beanName = transformedBeanName(name);.
+    Object sharedInstance = getSingleton(beanName); //这里是取缓存，肯定是取不到的，因为A从没有创建过，所以这里先不深究，创建B的时候这里是关键
+    if (sharedInstance != null ) {
+        //...
+    }else {
+        //...
+        if (mbd.isSingleton()) {
+            //用lambda实现一个ObjectFactory，以实现回调
+            sharedInstance = getSingleton(beanName, () -> { 
+                // createBean是真正的创建逻辑
+                return createBean(beanName, mbd, args);
+            });
+        }	
+	}
+
+org.springframework.beans.factory.support.DefaultSingletonBeanRegistry#getSingleton
+public Object getSingleton(String beanName, ObjectFactory<?> singletonFactory) {
+    //... 
+    //把A标记为创建中 这里是关键
+    beforeSingletonCreation(beanName);
+    //... 
+    //调用上面传入的lambda实际创建对象也就是createBean
+    singletonObject = singletonFactory.getObject();
+    //...
+}
+
+org.springframework.beans.factory.support.DefaultSingletonBeanRegistry#beforeSingletonCreation
+protected void beforeSingletonCreation(String beanName) {
+    if (!this.inCreationCheckExclusions.contains(beanName) 
+            && !this.singletonsCurrentlyInCreation.add(beanName)) { //放入正在创建的Set
+        throw new BeanCurrentlyInCreationException(beanName);
+    }
+}
+
+org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory#createBean
+protected Object createBean(String beanName, RootBeanDefinition mbd, @Nullable Object[] args)
+			throws BeanCreationException {
+    //...
+    Object beanInstance = doCreateBean(beanName, mbdToUse, args); // 实际创建
+    //...
+}
+
 ```
 
 
