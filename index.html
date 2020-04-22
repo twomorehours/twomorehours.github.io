@@ -122,7 +122,7 @@
       
 
       
-      <h2 id="沙雕面试题回顾"><a href="#沙雕面试题回顾" class="headerlink" title="沙雕面试题回顾"></a>沙雕面试题回顾</h2><p>面试官：如何判断一个链表是否有环?<br>候选人：快慢指针。</p>
+      <h2 id="沙雕面试"><a href="#沙雕面试" class="headerlink" title="沙雕面试"></a>沙雕面试</h2><p>面试官：如何判断一个链表是否有环?<br>候选人：快慢指针。</p>
 <p>这是宇宙公认的答案。</p>
 <p>但是今天在这里我要说的不是快慢指针，而是那个最lowB的解决方案，那就是集合历史保存法，那么这种方案有什么问题以至于如此不受大家的待见呢？也许就是为它太简单了吧。下面我们来看看方案真正的优缺点。<br>    缺点：线性空间复杂度，链表节点过多，占用内存过大。<br>    优点：很方便的得到从哪个节点陷入了回环。<br>在spring的场景中，没有很多的Bean，远不至于挤爆内存，所以这个缺点不算缺点，而这个优点就是Spring解决循环引用的核心。</p>
 <h2 id="案例描述"><a href="#案例描述" class="headerlink" title="案例描述"></a>案例描述</h2><p>少废话，直接上代码  </p>
@@ -134,7 +134,7 @@
 <li>Bean的属性注入(@Autowird &amp;&amp; @Inject &amp;&amp; @Value)是在AutowiredAnnotationBeanPostProcessor完成的</li>
 <li>DefaultSingletonBeanRegistry（DefaultListableBeanFactory的父类）有三个缓存<ul>
 <li>Map&lt;String, Object&gt; singletonObjects // 这个保存已经完成初始化的Bean，跟本题关系不大</li>
-<li>Map&lt;String, ObjectFactory&lt;?&gt;&gt; singletonFactories // 这个是保存刚创建成功还未初始化的Bean，这就是解决问题的核心</li>
+<li>Map&lt;String, ObjectFactory&lt;?&gt;&gt; singletonFactories // 这个是保存刚创建成功还未初始化的Bean，这里的ObjectFactory返回就是之前创建的对象，而不是新创建一个，这个在后面代码能看到，这就是解决问题的核心</li>
 <li>Map&lt;String, Object&gt; earlySingletonObjects // 也是保存半成品Bean集合，跟本题关系不大</li>
 </ul>
 </li>
@@ -148,8 +148,9 @@
 <li>开始实例化B</li>
 <li>B被标记为正在创建</li>
 <li>实例化了B</li>
+<li>半成品B被保存</li>
 <li>发现B要注入A</li>
-<li>寻找A，发现A正在创建，容器知道已经发现了循环引用，此时就从半成品集合中取出A，将A赋值给B</li>
+<li>从容器中寻找A，发现A正在创建，容器知道已经发现了循环引用，此时就从半成品集合中取出A，将A赋值给B</li>
 <li>B初始化完成</li>
 <li>A拿到B，并注入</li>
 <li>A初始化完成</li>
