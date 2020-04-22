@@ -142,7 +142,36 @@ protected Object createBean(String beanName, RootBeanDefinition mbd, @Nullable O
     //...
 }
 
+org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory#doCreateBean
+protected Object doCreateBean(final String beanName, final RootBeanDefinition mbd, final @Nullable Object[] args)
+			throws BeanCreationException {
+    //...
+    // 实例化对象 实际就是反射空参构造
+    BeanWrapper instanceWrapper = null;
+    if (instanceWrapper == null) {
+        instanceWrapper = createBeanInstance(beanName, mbd, args);
+    }
+    final Object bean = instanceWrapper.getWrappedInstance();
+    //...
+    //是否支持循环引用 默认是
+    boolean earlySingletonExposure = (mbd.isSingleton() && this.allowCircularReferences &&
+				isSingletonCurrentlyInCreation(beanName));
+    if (earlySingletonExposure) {
+        // 把刚实例化的对象放到singletonFactories中，这里可以看到lambda直接返回已经创建的bean
+		addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
+	}
+    Object exposedObject = bean;
+    try {
+        //处理注入(这里会发生递归)
+        populateBean(beanName, mbd, instanceWrapper);
+        //调用生命周期方法 典型的如： *Aware 、afterPropertiesSet、@PostContruct 等
+        //我们姑且认为到了这里就算完成了
+        exposedObject = initializeBean(beanName, exposedObject, mbd);
+    }
+
+}
 ```
+<!--more-->
 
 
 
