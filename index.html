@@ -122,16 +122,13 @@
       
 
       
-      <h2 id="沙雕面试题回顾"><a href="#沙雕面试题回顾" class="headerlink" title="沙雕面试题回顾"></a>沙雕面试题回顾</h2><pre><code>面试官：如何判断一个链表是否有环?
-候选人：快慢指针。
+      <h2 id="沙雕面试题回顾"><a href="#沙雕面试题回顾" class="headerlink" title="沙雕面试题回顾"></a>沙雕面试题回顾</h2><p>面试官：如何判断一个链表是否有环?<br>候选人：快慢指针。</p>
+<p>这是宇宙公认的答案。</p>
+<p>但是今天在这里我要说的不是快慢指针，而是那个最lowB的解决方案，那就是集合历史保存法，那么这种方案有什么问题以至于如此不受大家的待见呢？也许就是为它太简单了吧。下面我们来看看方案真正的优缺点。<br>    缺点：线性空间复杂度，链表节点过多，占用内存过大。<br>    优点：很方便的得到从哪个节点陷入了回环。<br>在spring的场景中，没有很多的Bean，远不至于挤爆内存，所以这个缺点不算缺点，而这个优点就是Spring解决循环引用的核心。</p>
+<h2 id="案例描述"><a href="#案例描述" class="headerlink" title="案例描述"></a>案例描述</h2><p>少废话，直接上代码  </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class A &#123;</span><br><span class="line">    @Autowired</span><br><span class="line">    private B b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">@Component</span><br><span class="line">public class B &#123;</span><br><span class="line">    @Autowired</span><br><span class="line">    private A a;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-这是宇宙公认的答案。
-
-但是今天在这里我要说的不是快慢指针，而是那个最lowB的解决方案，那就是集合历史保存法，那么这种方案有什么问题以至于如此不受大家的待见呢？也许就是为它太简单了吧。下面我们来看看方案真正的优缺点。
-    缺点：线性空间复杂度，链表节点过多，占用内存过大。
-    优点：很方便的得到从哪个节点陷入了回环。
-在spring的场景中，没有很多的Bean，远不至于挤爆内存，所以这个缺点不算缺点，而这个优点就是Spring解决循环引用的核心。</code></pre><h2 id="案例描述"><a href="#案例描述" class="headerlink" title="案例描述"></a>案例描述</h2><pre><code>少废话，直接上代码</code></pre><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class A &#123;</span><br><span class="line">    @Autowired</span><br><span class="line">    private B b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">@Component</span><br><span class="line">public class B &#123;</span><br><span class="line">    @Autowired</span><br><span class="line">    private A a;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<pre><code>够清晰了吧</code></pre><h2 id="知识储备"><a href="#知识储备" class="headerlink" title="知识储备"></a>知识储备</h2><ul>
+<h2 id="知识储备"><a href="#知识储备" class="headerlink" title="知识储备"></a>知识储备</h2><ul>
 <li>ioc容器指的是BeanFactory，准确说是DefaultListableBeanFactory</li>
 <li>Bean属性注入是深度优先的递归过程</li>
 <li>Bean的属性注入(@Autowird &amp;&amp; @Inject &amp;&amp; @Value)是在AutowiredAnnotationBeanPostProcessor完成的</li>
@@ -157,6 +154,109 @@
 <li>A拿到B，并注入</li>
 <li>A初始化完成</li>
 </ul>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
+    <article id="post-01_类加载" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2020/04/17/01_%E7%B1%BB%E5%8A%A0%E8%BD%BD/"
+    >类加载</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/04/17/01_%E7%B1%BB%E5%8A%A0%E8%BD%BD/" class="article-date">
+  <time datetime="2020-04-17T15:29:26.000Z" itemprop="datePublished">2020-04-17</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/JVM/">JVM</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="class信息"><a href="#class信息" class="headerlink" title="class信息"></a>class信息</h2><p><img src="https://my-blog-to-use.oss-cn-beijing.aliyuncs.com/2019-6/%E7%B1%BB%E6%96%87%E4%BB%B6%E5%AD%97%E8%8A%82%E7%A0%81%E7%BB%93%E6%9E%84%E7%BB%84%E7%BB%87%E7%A4%BA%E6%84%8F%E5%9B%BE.png" alt="image-20200304071455336"></p>
+<h2 id="类加载过程"><a href="#类加载过程" class="headerlink" title="类加载过程"></a>类加载过程</h2><ol>
+<li>加载<ul>
+<li>通过类的全路径获取该类的二进制字节流</li>
+<li>将字节流中的静态字段装为方法区中的运行时数据结构</li>
+<li>在内存中创建该类的Class对象,作为访问该类的入口</li>
+</ul>
+</li>
+<li>连接<ul>
+<li>验证:验证class对应的字节码是否符合规范</li>
+<li>准备:为变量(static)分配内存空间,比初始化值为默认值</li>
+<li>解析:符号引用变为之间引用</li>
+</ul>
+</li>
+<li>初始化:对类进行初始化 每个类只能初始化一次(类的class对象中维护类是否init了每次加锁的方式来初始化),初始化的时机如下:<ul>
+<li>new 对象实例</li>
+<li>访问静态变量</li>
+<li>静态变量赋值</li>
+<li>访问静态方法</li>
+</ul>
+</li>
+</ol>
+<h2 id="类加载器"><a href="#类加载器" class="headerlink" title="类加载器"></a>类加载器</h2><ol>
+<li>启动类加载(bootstrapClassLoader):加载java_home/lib包下的jar和类</li>
+<li>扩展加载器(ExtensionClassLoader):加载java_home/lib/ext下</li>
+<li>应用程序加载器(AppClassLoader):加载用户classpath下的jar和类</li>
+</ol>
+<h2 id="双亲委派"><a href="#双亲委派" class="headerlink" title="双亲委派"></a>双亲委派</h2><p><img src="https://my-blog-to-use.oss-cn-beijing.aliyuncs.com/2019-6/classloader_WPS%E5%9B%BE%E7%89%87.png" alt="image-20200304071455336"></p>
+<ol>
+<li>当类加载时,首先检查当前类是否被加载过,加载过直接返回</li>
+<li>未加载过,则交给父类加载器调用loadClass,父类加载器在判断自己的父类是否加载过,未加载过在交给自己的父类一层一层最后到bootstrapClassLoader</li>
+<li>从顶层的加载器从上往下进行加载</li>
+<li>好处:避免类的加载重复</li>
+</ol>
 
       
       <!-- reward -->
@@ -347,109 +447,6 @@
 </tr>
 </tbody></table>
 <p>其实还有一些打印及CMS方面的参数，这里就不以一一列举了</p>
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-01_类加载" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2020/04/17/01_%E7%B1%BB%E5%8A%A0%E8%BD%BD/"
-    >类加载</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2020/04/17/01_%E7%B1%BB%E5%8A%A0%E8%BD%BD/" class="article-date">
-  <time datetime="2020-04-17T15:29:26.000Z" itemprop="datePublished">2020-04-17</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/JVM/">JVM</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <h2 id="class信息"><a href="#class信息" class="headerlink" title="class信息"></a>class信息</h2><p><img src="https://my-blog-to-use.oss-cn-beijing.aliyuncs.com/2019-6/%E7%B1%BB%E6%96%87%E4%BB%B6%E5%AD%97%E8%8A%82%E7%A0%81%E7%BB%93%E6%9E%84%E7%BB%84%E7%BB%87%E7%A4%BA%E6%84%8F%E5%9B%BE.png" alt="image-20200304071455336"></p>
-<h2 id="类加载过程"><a href="#类加载过程" class="headerlink" title="类加载过程"></a>类加载过程</h2><ol>
-<li>加载<ul>
-<li>通过类的全路径获取该类的二进制字节流</li>
-<li>将字节流中的静态字段装为方法区中的运行时数据结构</li>
-<li>在内存中创建该类的Class对象,作为访问该类的入口</li>
-</ul>
-</li>
-<li>连接<ul>
-<li>验证:验证class对应的字节码是否符合规范</li>
-<li>准备:为变量(static)分配内存空间,比初始化值为默认值</li>
-<li>解析:符号引用变为之间引用</li>
-</ul>
-</li>
-<li>初始化:对类进行初始化 每个类只能初始化一次(类的class对象中维护类是否init了每次加锁的方式来初始化),初始化的时机如下:<ul>
-<li>new 对象实例</li>
-<li>访问静态变量</li>
-<li>静态变量赋值</li>
-<li>访问静态方法</li>
-</ul>
-</li>
-</ol>
-<h2 id="类加载器"><a href="#类加载器" class="headerlink" title="类加载器"></a>类加载器</h2><ol>
-<li>启动类加载(bootstrapClassLoader):加载java_home/lib包下的jar和类</li>
-<li>扩展加载器(ExtensionClassLoader):加载java_home/lib/ext下</li>
-<li>应用程序加载器(AppClassLoader):加载用户classpath下的jar和类</li>
-</ol>
-<h2 id="双亲委派"><a href="#双亲委派" class="headerlink" title="双亲委派"></a>双亲委派</h2><p><img src="https://my-blog-to-use.oss-cn-beijing.aliyuncs.com/2019-6/classloader_WPS%E5%9B%BE%E7%89%87.png" alt="image-20200304071455336"></p>
-<ol>
-<li>当类加载时,首先检查当前类是否被加载过,加载过直接返回</li>
-<li>未加载过,则交给父类加载器调用loadClass,父类加载器在判断自己的父类是否加载过,未加载过在交给自己的父类一层一层最后到bootstrapClassLoader</li>
-<li>从顶层的加载器从上往下进行加载</li>
-<li>好处:避免类的加载重复</li>
-</ol>
 
       
       <!-- reward -->
