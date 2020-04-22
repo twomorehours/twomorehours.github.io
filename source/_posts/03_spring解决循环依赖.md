@@ -59,6 +59,45 @@ public class B {
 - A拿到B，并注入
 - A初始化完成
 
+## 源码解析
+1.首先我们来到最初的起点，这是spring启动的入口，当然如果使用springboot的话，这个是会自己调用的。
+```
+org.springframework.context.support.AbstractApplicationContext#refresh()
+public void refresh() throws BeansException, IllegalStateException {
+    synchronized (this.startupShutdownMonitor) {
+            //...
+            // 实例化所有单例
+            finishBeanFactoryInitialization(beanFactory); 
+            //...
+        }	
+}
+
+org.springframework.context.support.AbstractApplicationContext#finishBeanFactoryInitialization
+protected void finishBeanFactoryInitialization(ConfigurableListableBeanFactory beanFactory) {
+    //...
+	// 实例化所有非lazy的Bean
+	beanFactory.preInstantiateSingletons();
+    //...
+}
+
+org.springframework.beans.factory.support.DefaultListableBeanFactory#preInstantiateSingletons
+public void preInstantiateSingletons() throws BeansException {
+    //...
+    List<String> beanNames = new ArrayList<>(this.beanDefinitionNames);
+    // 逐个初始化 这里的BeanName就是我们定义的@Compnonet(name="")，默认是短类名第一个字母小写
+    for (String beanName : beanNames) {
+        getBean(beanName);		
+    }
+    //...
+}
+```
+2.现在开始创建A了
+```
+```
+
+
+
+
 
 
     
