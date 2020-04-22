@@ -118,11 +118,8 @@
 
     
     <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <h2 id="沙雕面试"><a href="#沙雕面试" class="headerlink" title="沙雕面试"></a>沙雕面试</h2><p>面试官：如何判断一个链表是否有环?<br>候选人：快慢指针。</p>
+        
+    <h2 id="沙雕面试"><a href="#沙雕面试" class="headerlink" title="沙雕面试"></a>沙雕面试</h2><p>面试官：如何判断一个链表是否有环?<br>候选人：快慢指针。</p>
 <p>这是宇宙公认的答案。</p>
 <p>但是今天在这里我要说的不是快慢指针，而是那个最lowB的解决方案，那就是集合历史保存法，那么这种方案有什么问题以至于如此不受大家的待见呢？也许就是为它太简单了吧。下面我们来看看方案真正的优缺点。<br>    缺点：线性空间复杂度，链表节点过多，占用内存过大。<br>    优点：很方便的得到从哪个节点陷入了回环。<br>在spring的场景中，没有很多的Bean，远不至于挤爆内存，所以这个缺点不算缺点，而这个优点就是Spring解决循环引用的核心。</p>
 <h2 id="案例描述"><a href="#案例描述" class="headerlink" title="案例描述"></a>案例描述</h2><p>少废话，直接上代码  </p>
@@ -166,12 +163,12 @@
 <p>总结一下上面逻辑：<br>    AutowiredAnnotationBeanPostProcessor在执行的时候发现A要注入B，则去获取B<br>4.创建B过程省略，和创建A一致<br>5.下面给B注入A，要去获取A，但是这个时候要注意了,这里要获取的A之前已经创建过了，请仔细看，这里就是关键</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">org.springframework.beans.factory.support.AbstractBeanFactory#getBean(java.lang.String)</span><br><span class="line">public Object getBean(String name) throws BeansException &#123;</span><br><span class="line">    return doGetBean(name, null, null, false);</span><br><span class="line">&#125;</span><br><span class="line">org.springframework.beans.factory.support.AbstractBeanFactory#doGetBean</span><br><span class="line">protected &lt;T&gt; T doGetBean(final String name, @Nullable final Class&lt;T&gt; requiredType,</span><br><span class="line">			@Nullable final Object[] args, boolean typeCheckOnly) throws BeansException &#123;</span><br><span class="line">    final String beanName &#x3D; transformedBeanName(name);</span><br><span class="line">    &#x2F;&#x2F;...</span><br><span class="line">    &#x2F;&#x2F;这里从缓存取A</span><br><span class="line">    Object sharedInstance &#x3D; getSingleton(beanName); </span><br><span class="line">&#125;</span><br><span class="line">org.springframework.beans.factory.support.DefaultSingletonBeanRegistry#getSingleton</span><br><span class="line">protected Object getSingleton(String beanName, boolean allowEarlyReference) &#123;</span><br><span class="line">    &#x2F;&#x2F;从已经初始化完成的里面取，肯定取不到</span><br><span class="line">    Object singletonObject &#x3D; this.singletonObjects.get(beanName);</span><br><span class="line">    &#x2F;&#x2F;判断A是否在创建，是的，因为B是在A注入未完成的情况下创建的，A要等着B创建完成</span><br><span class="line">    if (singletonObject &#x3D;&#x3D; null &amp;&amp; isSingletonCurrentlyInCreation(beanName)) &#123;</span><br><span class="line">        synchronized (this.singletonObjects) &#123;</span><br><span class="line">            &#x2F;&#x2F;...</span><br><span class="line">            ObjectFactory&lt;?&gt; singletonFactory &#x3D; this.singletonFactories.get(beanName);</span><br><span class="line">            if (singletonFactory !&#x3D; null) &#123;</span><br><span class="line">                取出之前的半成品A</span><br><span class="line">                singletonObject &#x3D; singletonFactory.getObject();</span><br><span class="line">            &#125;</span><br><span class="line">            &#x2F;&#x2F;...</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    &#x2F;&#x2F;返回半成品A</span><br><span class="line">    return singletonObject;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>上面逻辑总结：<br>    B要注入A，去容器里面去取，发现陷入了循环引用直接取出一个半成品<br>6.将半成品A注入B,B初始化完成<br>7.回到A的注入，此时拿到了B,注入到A，A的初始化完成<br>8.全剧终</p>
-      
-      <a class="article-more-link" href="/2020/04/22/03_spring%E8%A7%A3%E5%86%B3%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%96/">阅读更多...</a>
-      
-      
-      <!-- reward -->
-      
+    
+      <p class="article-more-link">
+        <a href="/2020/04/22/03_spring解决循环依赖/#more">阅读更多...</a>
+      </p>
+    
+  
     </div>
     
     
@@ -196,6 +193,7 @@
   
 
 </article>
+
     
     <article id="post-01_类加载" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
@@ -233,11 +231,8 @@
 
     
     <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <h2 id="class信息"><a href="#class信息" class="headerlink" title="class信息"></a>class信息</h2><p><img src="https://my-blog-to-use.oss-cn-beijing.aliyuncs.com/2019-6/%E7%B1%BB%E6%96%87%E4%BB%B6%E5%AD%97%E8%8A%82%E7%A0%81%E7%BB%93%E6%9E%84%E7%BB%84%E7%BB%87%E7%A4%BA%E6%84%8F%E5%9B%BE.png" alt="image-20200304071455336"></p>
+        
+    <h2 id="class信息"><a href="#class信息" class="headerlink" title="class信息"></a>class信息</h2><p><img src="https://my-blog-to-use.oss-cn-beijing.aliyuncs.com/2019-6/%E7%B1%BB%E6%96%87%E4%BB%B6%E5%AD%97%E8%8A%82%E7%A0%81%E7%BB%93%E6%9E%84%E7%BB%84%E7%BB%87%E7%A4%BA%E6%84%8F%E5%9B%BE.png" alt="image-20200304071455336"></p>
 <h2 id="类加载过程"><a href="#类加载过程" class="headerlink" title="类加载过程"></a>类加载过程</h2><ol>
 <li>加载<ul>
 <li>通过类的全路径获取该类的二进制字节流</li>
@@ -270,12 +265,12 @@
 <li>未加载过,则交给父类加载器调用loadClass,父类加载器在判断自己的父类是否加载过,未加载过在交给自己的父类一层一层最后到bootstrapClassLoader</li>
 <li>从顶层的加载器从上往下进行加载</li>
 <li>好处:避免类的加载重复
-      
-      <a class="article-more-link" href="/2020/04/17/01_%E7%B1%BB%E5%8A%A0%E8%BD%BD/">阅读更多...</a>
-      
-      
-      <!-- reward -->
-      
+    
+      <p class="article-more-link">
+        <a href="/2020/04/17/01_类加载/#more">阅读更多...</a>
+      </p>
+    
+  
     </div>
     
     
@@ -300,6 +295,7 @@
   
 
 </article>
+
     
     <article id="post-02_jvm 参数" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
@@ -337,11 +333,8 @@
 
     
     <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <h2 id="堆内存"><a href="#堆内存" class="headerlink" title="堆内存"></a>堆内存</h2><ol>
+        
+    <h2 id="堆内存"><a href="#堆内存" class="headerlink" title="堆内存"></a>堆内存</h2><ol>
 <li><p>最大堆内存和最小堆内存</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">-- heap size:大小 unit:单位</span><br><span class="line">-Xms&lt;heap size&gt;[unit] :最小</span><br><span class="line">-Xmx&lt;heap size&gt;[unit] :最大</span><br><span class="line"></span><br><span class="line">比如 -Xms2g -Xmx5g</span><br></pre></td></tr></table></figure>
 </li>
@@ -462,12 +455,12 @@
 </tr>
 </tbody></table>
 <p>其实还有一些打印及CMS方面的参数，这里就不以一一列举了</p>
-      
-      <a class="article-more-link" href="/2020/04/17/02_jvm%20%E5%8F%82%E6%95%B0/">阅读更多...</a>
-      
-      
-      <!-- reward -->
-      
+    
+      <p class="article-more-link">
+        <a href="/2020/04/17/02_jvm 参数/#more">阅读更多...</a>
+      </p>
+    
+  
     </div>
     
     
@@ -492,6 +485,7 @@
   
 
 </article>
+
     
   </article>
   
