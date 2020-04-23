@@ -82,6 +82,88 @@
     
     
     
+    <article id="post-04_拆包粘包" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2020/04/23/04_%E6%8B%86%E5%8C%85%E7%B2%98%E5%8C%85/"
+    >粘包拆包</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/04/23/04_%E6%8B%86%E5%8C%85%E7%B2%98%E5%8C%85/" class="article-date">
+  <time datetime="2020-04-23T13:29:26.000Z" itemprop="datePublished">2020-04-23</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BD%91%E7%BB%9C/">网络</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="什么是粘包拆包"><a href="#什么是粘包拆包" class="headerlink" title="什么是粘包拆包"></a>什么是粘包拆包</h2><ol>
+<li>一条数据在网络中因为大小或者某些发送效率的原因有可能会被拆分为多个数据包，这种情况就被称为拆包。</li>
+<li>在Nagle等算法的作用下，不同的数据的被拆分的两个数据包可能被放在一个包里面发送，这就叫粘包。</li>
+</ol>
+<h2 id="UDP有这种问题吗"><a href="#UDP有这种问题吗" class="headerlink" title="UDP有这种问题吗"></a>UDP有这种问题吗</h2><ol>
+<li>UDP在读取数据包的时候能明确知道哪里是数据包的结束，所以UDP会拆包，但是不用解决，因为接收方会阻塞直到接受到一条数据所有的数据包。</li>
+<li>因为UDP没有Nagle算法，不会合并数据包，所以不存在粘包问题。</li>
+</ol>
+<h2 id="如何解决TCP的粘包拆包问题"><a href="#如何解决TCP的粘包拆包问题" class="headerlink" title="如何解决TCP的粘包拆包问题"></a>如何解决TCP的粘包拆包问题</h2><ol>
+<li>解决这种问题的核心就是如何界定一条数据的开始和结束。</li>
+<li>解决方案根据具体场景的不同多种多样，简单的有根据数据固定大小分割的，说白了就是我读到一个固定大小的数据，我就认为这些数据包结束了，再接受的话就是下一条数据的数据包。</li>
+<li>现在Java业界主流的解决方案是使用Netty的<code>io.netty.handler.codec.LengthFieldBasedFrameDecoder</code>，此组件支持定义任意的长度，并且替你从网络流中截取满足条件的数据段，基本上Java世界中大多数知名网络中间件的网络通信都是用这个实现的。</li>
+</ol>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
     <article id="post-03_spring解决循环依赖" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
@@ -464,110 +546,6 @@
 <p>其实还有一些打印及CMS方面的参数，这里就不以一一列举了</p>
       
       <a class="article-more-link" href="/2020/04/17/02_jvm%20%E5%8F%82%E6%95%B0/">阅读更多...</a>
-      
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-04_拆包粘包" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2020/04/17/04_%E6%8B%86%E5%8C%85%E7%B2%98%E5%8C%85/"
-    >类加载</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2020/04/17/04_%E6%8B%86%E5%8C%85%E7%B2%98%E5%8C%85/" class="article-date">
-  <time datetime="2020-04-17T15:29:26.000Z" itemprop="datePublished">2020-04-17</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/JVM/">JVM</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <h2 id="class信息"><a href="#class信息" class="headerlink" title="class信息"></a>class信息</h2><p><img src="https://my-blog-to-use.oss-cn-beijing.aliyuncs.com/2019-6/%E7%B1%BB%E6%96%87%E4%BB%B6%E5%AD%97%E8%8A%82%E7%A0%81%E7%BB%93%E6%9E%84%E7%BB%84%E7%BB%87%E7%A4%BA%E6%84%8F%E5%9B%BE.png" alt="image-20200304071455336"></p>
-<h2 id="类加载过程"><a href="#类加载过程" class="headerlink" title="类加载过程"></a>类加载过程</h2><ol>
-<li>加载<ul>
-<li>通过类的全路径获取该类的二进制字节流</li>
-<li>将字节流中的静态字段装为方法区中的运行时数据结构</li>
-<li>在内存中创建该类的Class对象,作为访问该类的入口</li>
-</ul>
-</li>
-<li>连接<ul>
-<li>验证:验证class对应的字节码是否符合规范</li>
-<li>准备:为变量(static)分配内存空间,比初始化值为默认值</li>
-<li>解析:符号引用变为之间引用</li>
-</ul>
-</li>
-<li>初始化:对类进行初始化 每个类只能初始化一次(类的class对象中维护类是否init了每次加锁的方式来初始化),初始化的时机如下:<ul>
-<li>new 对象实例</li>
-<li>访问静态变量</li>
-<li>静态变量赋值</li>
-<li>访问静态方法</li>
-</ul>
-</li>
-</ol>
-<h2 id="类加载器"><a href="#类加载器" class="headerlink" title="类加载器"></a>类加载器</h2><ol>
-<li>启动类加载(bootstrapClassLoader):加载java_home/lib包下的jar和类</li>
-<li>扩展加载器(ExtensionClassLoader):加载java_home/lib/ext下</li>
-<li>应用程序加载器(AppClassLoader):加载用户classpath下的jar和类</li>
-</ol>
-<h2 id="双亲委派"><a href="#双亲委派" class="headerlink" title="双亲委派"></a>双亲委派</h2><p><img src="https://my-blog-to-use.oss-cn-beijing.aliyuncs.com/2019-6/classloader_WPS%E5%9B%BE%E7%89%87.png" alt="image-20200304071455336"></p>
-<ol>
-<li>当类加载时,首先检查当前类是否被加载过,加载过直接返回</li>
-<li>未加载过,则交给父类加载器调用loadClass,父类加载器在判断自己的父类是否加载过,未加载过在交给自己的父类一层一层最后到bootstrapClassLoader</li>
-<li>从顶层的加载器从上往下进行加载</li>
-<li>好处:避免类的加载重复
-      
-      <a class="article-more-link" href="/2020/04/17/04_%E6%8B%86%E5%8C%85%E7%B2%98%E5%8C%85/">阅读更多...</a>
       
       
       <!-- reward -->
