@@ -82,7 +82,7 @@
     
     
     
-    <article id="post-04_拆包粘包" class="article article-type-post" itemscope
+    <article id="post-03_young gc" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -90,7 +90,165 @@
     <header class="article-header">
        
 <h2 itemprop="name">
-  <a class="article-title" href="/2020/04/23/04_%E6%8B%86%E5%8C%85%E7%B2%98%E5%8C%85/"
+  <a class="article-title" href="/2020/04/23/03_young%20gc/"
+    >young gc No.1</a> 
+</h2>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/04/23/03_young%20gc/" class="article-date">
+  <time datetime="2020-04-23T15:29:26.000Z" itemprop="datePublished">2020-04-23</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/JVM/">JVM</a>
+  </div>
+
+      
+      
+      
+    </div>
+    
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="JVM常用启动参数"><a href="#JVM常用启动参数" class="headerlink" title="JVM常用启动参数"></a>JVM常用启动参数</h2><table>
+<thead>
+<tr>
+<th>参数名称</th>
+<th align="center">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-Xms</td>
+<td align="center">堆最小内存</td>
+</tr>
+<tr>
+<td>-Xmx</td>
+<td align="center">堆最大内存</td>
+</tr>
+<tr>
+<td>-XX:NewSize</td>
+<td align="center">新生代内存</td>
+</tr>
+<tr>
+<td>-XX:MaxNewSize</td>
+<td align="center">新生代最大内存</td>
+</tr>
+<tr>
+<td>-XX:SurvivorRatio</td>
+<td align="center">新生代内存比例默认为8:1:1  如果设置为5:1:1则值为5,eden占:5/7</td>
+</tr>
+<tr>
+<td>-XX:PretenureSizeThreshold</td>
+<td align="center">大对象直接进入老年代的阀值</td>
+</tr>
+<tr>
+<td>-XX:MaxTenuringThreshold</td>
+<td align="center">新生代对象进入老年代的年龄阀值,默认为15(对象头:4字节最大1111)</td>
+</tr>
+<tr>
+<td>-XX:TargetSurvivorRatio</td>
+<td align="center">动态年龄判断条件,新生代对象占s0区域的比率,默认为50%</td>
+</tr>
+<tr>
+<td>-XX:+UseParNewGC</td>
+<td align="center">新生代使用parNew收集器(多线程并发标记, stop the world)</td>
+</tr>
+<tr>
+<td>-XX:+UseConcMarkSweepGC</td>
+<td align="center">老年代使用CMS收集器</td>
+</tr>
+<tr>
+<td>-XX:+PrintGCDetails</td>
+<td align="center">打印gc日志详情</td>
+</tr>
+<tr>
+<td>-XX:+PrintGCTimeStamps</td>
+<td align="center">打印gc时间戳</td>
+</tr>
+<tr>
+<td>-Xloggc:gc.log</td>
+<td align="center">gc日志对应的文件</td>
+</tr>
+</tbody></table>
+<h2 id="堆内存对象分配流程"><a href="#堆内存对象分配流程" class="headerlink" title="堆内存对象分配流程"></a>堆内存对象分配流程</h2><ol>
+<li>对象优先分配新生代eden区(大对象直接进入老年代)</li>
+<li>当eden区域没有可用内存空间分配时触发young gc</li>
+<li>young gc触发时进行分配担当判断(保证young gc成功)<ul>
+<li>判断老年代可用连续空间是否大于新生代,大于则分配担当成功</li>
+<li>小于,则判断老年代可用连续空间是否大于历次新生代进入老年代的对象平均大小,大于则分配担当成功</li>
+<li>小于则先执行full gc保证老年代空间够用</li>
+</ul>
+</li>
+<li>执行young gc时通过gc root可达性算法(gc root对象有局部变量和静态变量或常量)标记新生代中存活的对象</li>
+<li>第一次young gc时将eden中存活的对象通过复制算法复制到新生代 survival0,第二次即将eden和survival0中存活对象复制到survival1(每次保证s0或s1为空用来放young gc后存活对象)</li>
+</ol>
+<h2 id="新生代对象何时进入老年代"><a href="#新生代对象何时进入老年代" class="headerlink" title="新生代对象何时进入老年代"></a>新生代对象何时进入老年代</h2><ol>
+<li><p>新生代young gc时存活的对象大于新生代s0堆内存大小</p>
+</li>
+<li><p>新生代young gc后存在某个对象的年龄大于等于了进入老年代对象的阀值(默认15)</p>
+</li>
+<li><p>新生代young gc后满足动态年龄判断条件,比如新生代中年龄代0,1,2占比49%  3:2% 4:49%,此时年龄0+1+2+3对象占比为51%,则大于等于年龄3的对象进入老年代即年龄3和4</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jdk源码地址:http:<span class="comment">//hg.openjdk.java.net/jdk8/jdk8/hotspot/file/87ee5ee27509/src/share/vm/gc_implementation/shared/ageTable.cpp#l81</span></span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ol>
+<h2 id="young-gc存活对象大于s0例子"><a href="#young-gc存活对象大于s0例子" class="headerlink" title="young gc存活对象大于s0例子"></a>young gc存活对象大于s0例子</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> &lt;a href="mailto:twomorehours@163.com"&gt;twomorehours&lt;/a&gt;</span></span><br><span class="line"><span class="comment"> * Date: 2020-04-23 15:23</span></span><br><span class="line"><span class="comment"> * version: 1.0</span></span><br><span class="line"><span class="comment"> * Description:young gc后存活的对象大于s0堆大小导致对象进入老年代</span></span><br><span class="line"><span class="comment"> **/</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">YoungGcIntoOldByGreaterS0Demo</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * jvm参数:</span></span><br><span class="line"><span class="comment">     * -XX:NewSize=10M -XX:MaxNewSize=10M -Xms20M -Xmx20M -XX:SurvivorRatio=8 -XX:PretenureSizeThreshold=10M -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.log</span></span><br><span class="line"><span class="comment">     * &lt;p&gt;</span></span><br><span class="line"><span class="comment">     * 参数分析:</span></span><br><span class="line"><span class="comment">     * 1.新生代 10M eden:8M s0:1M s1:1M</span></span><br><span class="line"><span class="comment">     * 2.老年代 10M</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> args</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">byte</span>[] array01 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">        array01 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">128</span> * <span class="number">1024</span>];</span><br><span class="line">        array01 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">        array01 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line"></span><br><span class="line">        <span class="keyword">byte</span>[] array02 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过:java jvm参数  -jar demo.jar  启动后gc.log信息</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Java <span class="title">HotSpot</span><span class="params">(TM)</span> 64-Bit Server <span class="title">VM</span> <span class="params">(<span class="number">25.211</span>-b12)</span> <span class="keyword">for</span> bsd-amd64 <span class="title">JRE</span> <span class="params">(<span class="number">1.8</span><span class="number">.0</span>_211-b12)</span>, built on Apr  1 2019 20:53:18 by "java_re" with gcc 4.2.1 <span class="params">(Based on Apple Inc. build <span class="number">5658</span>)</span> <span class="params">(LLVM build <span class="number">2336.11</span><span class="number">.00</span>)</span></span></span><br><span class="line"><span class="function">Memory: 4k page, physical 33554432<span class="title">k</span><span class="params">(<span class="number">2646028</span>k free)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">/proc/meminfo:</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">CommandLine flags: -XX:InitialHeapSize</span>=<span class="number">20971520</span> -XX:MaxHeapSize=<span class="number">20971520</span> -XX:MaxNewSize=<span class="number">10485760</span> -XX:NewSize=<span class="number">10485760</span> -XX:OldPLABSize=<span class="number">16</span> -XX:PretenureSizeThreshold=<span class="number">10485760</span> -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:SurvivorRatio=<span class="number">8</span> -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseConcMarkSweepGC -XX:+UseParNewGC </span><br><span class="line"><span class="number">0.080</span>: [GC (Allocation Failure) <span class="number">0.080</span>: [ParNew: <span class="number">6943</span>K-&gt;<span class="number">333</span>K(<span class="number">9216</span>K), <span class="number">0.0014860</span> secs] <span class="number">6943</span>K-&gt;<span class="number">2383</span>K(<span class="number">19456</span>K), <span class="number">0.0015622</span> secs] [Times: user=<span class="number">0.01</span> sys=<span class="number">0.00</span>, real=<span class="number">0.01</span> secs] </span><br><span class="line">Heap</span><br><span class="line"> par <span class="keyword">new</span> generation   total <span class="number">9216</span>K, used <span class="number">2463</span>K [<span class="number">0x00000007bec00000</span>, <span class="number">0x00000007bf600000</span>, <span class="number">0x00000007bf600000</span>)</span><br><span class="line">  eden space <span class="number">8192</span>K,  <span class="number">26</span>% used [<span class="number">0x00000007bec00000</span>, <span class="number">0x00000007bee14930</span>, <span class="number">0x00000007bf400000</span>)</span><br><span class="line">  from space <span class="number">1024</span>K,  <span class="number">32</span>% used [<span class="number">0x00000007bf500000</span>, <span class="number">0x00000007bf553518</span>, <span class="number">0x00000007bf600000</span>)</span><br><span class="line">  to   space <span class="number">1024</span>K,   <span class="number">0</span>% used [<span class="number">0x00000007bf400000</span>, <span class="number">0x00000007bf400000</span>, <span class="number">0x00000007bf500000</span>)</span><br><span class="line"> concurrent mark-sweep generation total <span class="number">10240</span>K, used <span class="number">2050</span>K [<span class="number">0x00000007bf600000</span>, <span class="number">0x00000007c0000000</span>, <span class="number">0x00000007c0000000</span>)</span><br><span class="line"> Metaspace       used <span class="number">2728</span>K, capacity <span class="number">4486</span>K, committed <span class="number">4864</span>K, reserved <span class="number">1056768</span>K</span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">space</span>    <span class="title">used</span> 293<span class="title">K</span>, <span class="title">capacity</span> 386<span class="title">K</span>, <span class="title">committed</span> 512<span class="title">K</span>, <span class="title">reserved</span> 1048576<span class="title">K</span></span></span><br><span class="line"><span class="class"></span></span><br><span class="line">-- 分析:新生代 8M 1M 1M 老年代:10M</span><br><span class="line"><span class="number">0</span>.ParNew: <span class="number">6943</span>K-&gt;<span class="number">333</span>K(<span class="number">9216</span>K), <span class="number">0.0014860</span> secs,新生代堆总大小<span class="number">9</span>M,gc回收对象从<span class="number">6.9</span>M--&gt;<span class="number">333</span>k,<span class="number">333</span>k未知对象在from区存活,占survival from:<span class="number">32</span>%,耗时<span class="number">1.4</span>ms                                                           </span><br><span class="line"><span class="number">1</span>.当分配array02:<span class="number">2</span>M对象时,此时eden中对象大小为<span class="number">6943</span>K无法分配<span class="number">2</span>M对象导致<span class="function">Allocation <span class="title">Failure</span><span class="params">(分配失败)</span>触发young gc,young gc进行分配担当判断此时老年代空间大于新生代内存空间不需要触发full gc</span></span><br><span class="line"><span class="function">                                                            </span></span><br><span class="line"><span class="function">2.6943K-&gt;2383<span class="title">K</span><span class="params">(<span class="number">19456</span>K)</span>, 0.0015622 secs,堆总大小19M,回收前:6.9M 回收后:2M+333k                                                             </span></span><br><span class="line"><span class="function">2.young gc存活的对象为array01引用2M对象,回收:2M+2M+128K对象,通过复制算法加入到s0时发现空间不够,2M对象进入老年代,剩下未知对象333k,s0可以放下</span></span><br><span class="line"><span class="function">                                                            </span></span><br><span class="line"><span class="function">3.最后eden中分配2M对象,此时对的占用情况为</span></span><br><span class="line"><span class="function">eden:2M 占比26%</span></span><br><span class="line"><span class="function">from:333K 占比32%</span></span><br><span class="line"><span class="function">to:0 占用0%</span></span><br><span class="line"><span class="function">CMS即old区域:2M</span></span><br></pre></td></tr></table></figure>
+
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+    <footer class="article-footer">
+      
+      
+
+    </footer>
+
+  </div>
+
+  
+
+  
+  
+  
+
+  
+  
+  
+
+</article>
+    
+    <article id="post-02_拆包粘包" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2020/04/23/02_%E6%8B%86%E5%8C%85%E7%B2%98%E5%8C%85/"
     >粘包拆包</a> 
 </h2>
  
@@ -100,7 +258,7 @@
 
     
     <div class="article-meta">
-      <a href="/2020/04/23/04_%E6%8B%86%E5%8C%85%E7%B2%98%E5%8C%85/" class="article-date">
+      <a href="/2020/04/23/02_%E6%8B%86%E5%8C%85%E7%B2%98%E5%8C%85/" class="article-date">
   <time datetime="2020-04-23T13:29:26.000Z" itemprop="datePublished">2020-04-23</time>
 </a>
       
@@ -164,7 +322,7 @@
 
 </article>
     
-    <article id="post-03_spring解决循环依赖" class="article article-type-post" itemscope
+    <article id="post-01_spring解决循环依赖" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -172,7 +330,7 @@
     <header class="article-header">
        
 <h2 itemprop="name">
-  <a class="article-title" href="/2020/04/22/03_spring%E8%A7%A3%E5%86%B3%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%96/"
+  <a class="article-title" href="/2020/04/22/01_spring%E8%A7%A3%E5%86%B3%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%96/"
     >spring解决循环依赖</a> 
 </h2>
  
@@ -182,7 +340,7 @@
 
     
     <div class="article-meta">
-      <a href="/2020/04/22/03_spring%E8%A7%A3%E5%86%B3%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%96/" class="article-date">
+      <a href="/2020/04/22/01_spring%E8%A7%A3%E5%86%B3%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%96/" class="article-date">
   <time datetime="2020-04-22T15:29:26.000Z" itemprop="datePublished">2020-04-22</time>
 </a>
       
@@ -249,303 +407,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">org.springframework.beans.factory.support.AbstractBeanFactory#getBean(java.lang.String)</span><br><span class="line">public Object getBean(String name) throws BeansException &#123;</span><br><span class="line">    return doGetBean(name, null, null, false);</span><br><span class="line">&#125;</span><br><span class="line">org.springframework.beans.factory.support.AbstractBeanFactory#doGetBean</span><br><span class="line">protected &lt;T&gt; T doGetBean(final String name, @Nullable final Class&lt;T&gt; requiredType,</span><br><span class="line">			@Nullable final Object[] args, boolean typeCheckOnly) throws BeansException &#123;</span><br><span class="line">    final String beanName &#x3D; transformedBeanName(name);</span><br><span class="line">    &#x2F;&#x2F;...</span><br><span class="line">    &#x2F;&#x2F;这里从缓存取A</span><br><span class="line">    Object sharedInstance &#x3D; getSingleton(beanName); </span><br><span class="line">&#125;</span><br><span class="line">org.springframework.beans.factory.support.DefaultSingletonBeanRegistry#getSingleton</span><br><span class="line">protected Object getSingleton(String beanName, boolean allowEarlyReference) &#123;</span><br><span class="line">    &#x2F;&#x2F;从已经初始化完成的里面取，肯定取不到</span><br><span class="line">    Object singletonObject &#x3D; this.singletonObjects.get(beanName);</span><br><span class="line">    &#x2F;&#x2F;判断A是否在创建，是的，因为B是在A注入未完成的情况下创建的，A要等着B创建完成</span><br><span class="line">    if (singletonObject &#x3D;&#x3D; null &amp;&amp; isSingletonCurrentlyInCreation(beanName)) &#123;</span><br><span class="line">        synchronized (this.singletonObjects) &#123;</span><br><span class="line">            &#x2F;&#x2F;...</span><br><span class="line">            ObjectFactory&lt;?&gt; singletonFactory &#x3D; this.singletonFactories.get(beanName);</span><br><span class="line">            if (singletonFactory !&#x3D; null) &#123;</span><br><span class="line">                取出之前的半成品A</span><br><span class="line">                singletonObject &#x3D; singletonFactory.getObject();</span><br><span class="line">            &#125;</span><br><span class="line">            &#x2F;&#x2F;...</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    &#x2F;&#x2F;返回半成品A</span><br><span class="line">    return singletonObject;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>上面逻辑总结：<br>    B要注入A，去容器里面去取，发现陷入了循环引用直接取出一个半成品<br>6.将半成品A注入B,B初始化完成<br>7.回到A的注入，此时拿到了B,注入到A，A的初始化完成<br>8.全剧终</p>
       
-      <a class="article-more-link" href="/2020/04/22/03_spring%E8%A7%A3%E5%86%B3%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%96/">阅读更多...</a>
-      
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-01_类加载" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2020/04/17/01_%E7%B1%BB%E5%8A%A0%E8%BD%BD/"
-    >类加载</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2020/04/17/01_%E7%B1%BB%E5%8A%A0%E8%BD%BD/" class="article-date">
-  <time datetime="2020-04-17T15:29:26.000Z" itemprop="datePublished">2020-04-17</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/JVM/">JVM</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <h2 id="class信息"><a href="#class信息" class="headerlink" title="class信息"></a>class信息</h2><p><img src="https://my-blog-to-use.oss-cn-beijing.aliyuncs.com/2019-6/%E7%B1%BB%E6%96%87%E4%BB%B6%E5%AD%97%E8%8A%82%E7%A0%81%E7%BB%93%E6%9E%84%E7%BB%84%E7%BB%87%E7%A4%BA%E6%84%8F%E5%9B%BE.png" alt="image-20200304071455336"></p>
-<h2 id="类加载过程"><a href="#类加载过程" class="headerlink" title="类加载过程"></a>类加载过程</h2><ol>
-<li>加载<ul>
-<li>通过类的全路径获取该类的二进制字节流</li>
-<li>将字节流中的静态字段装为方法区中的运行时数据结构</li>
-<li>在内存中创建该类的Class对象,作为访问该类的入口</li>
-</ul>
-</li>
-<li>连接<ul>
-<li>验证:验证class对应的字节码是否符合规范</li>
-<li>准备:为变量(static)分配内存空间,比初始化值为默认值</li>
-<li>解析:符号引用变为之间引用</li>
-</ul>
-</li>
-<li>初始化:对类进行初始化 每个类只能初始化一次(类的class对象中维护类是否init了每次加锁的方式来初始化),初始化的时机如下:<ul>
-<li>new 对象实例</li>
-<li>访问静态变量</li>
-<li>静态变量赋值</li>
-<li>访问静态方法</li>
-</ul>
-</li>
-</ol>
-<h2 id="类加载器"><a href="#类加载器" class="headerlink" title="类加载器"></a>类加载器</h2><ol>
-<li>启动类加载(bootstrapClassLoader):加载java_home/lib包下的jar和类</li>
-<li>扩展加载器(ExtensionClassLoader):加载java_home/lib/ext下</li>
-<li>应用程序加载器(AppClassLoader):加载用户classpath下的jar和类</li>
-</ol>
-<h2 id="双亲委派"><a href="#双亲委派" class="headerlink" title="双亲委派"></a>双亲委派</h2><p><img src="https://my-blog-to-use.oss-cn-beijing.aliyuncs.com/2019-6/classloader_WPS%E5%9B%BE%E7%89%87.png" alt="image-20200304071455336"></p>
-<ol>
-<li>当类加载时,首先检查当前类是否被加载过,加载过直接返回</li>
-<li>未加载过,则交给父类加载器调用loadClass,父类加载器在判断自己的父类是否加载过,未加载过在交给自己的父类一层一层最后到bootstrapClassLoader</li>
-<li>从顶层的加载器从上往下进行加载</li>
-<li>好处:避免类的加载重复
-      
-      <a class="article-more-link" href="/2020/04/17/01_%E7%B1%BB%E5%8A%A0%E8%BD%BD/">阅读更多...</a>
-      
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-    <footer class="article-footer">
-      
-      
-
-    </footer>
-
-  </div>
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-</article>
-    
-    <article id="post-02_jvm 参数" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2020/04/17/02_jvm%20%E5%8F%82%E6%95%B0/"
-    >JVM参数</a> 
-</h2>
- 
-
-    </header>
-    
-
-    
-    <div class="article-meta">
-      <a href="/2020/04/17/02_jvm%20%E5%8F%82%E6%95%B0/" class="article-date">
-  <time datetime="2020-04-17T15:29:26.000Z" itemprop="datePublished">2020-04-17</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/JVM/">JVM</a>
-  </div>
-
-      
-      
-      
-    </div>
-    
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <h2 id="堆内存"><a href="#堆内存" class="headerlink" title="堆内存"></a>堆内存</h2><ol>
-<li><p>最大堆内存和最小堆内存</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">-- heap size:大小 unit:单位</span><br><span class="line">-Xms&lt;heap size&gt;[unit] :最小</span><br><span class="line">-Xmx&lt;heap size&gt;[unit] :最大</span><br><span class="line"></span><br><span class="line">比如 -Xms2g -Xmx5g</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>新生代堆内存</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">-XX:NewSize&#x3D;&lt;young size&gt;[unit] :新生代分配内存</span><br><span class="line">-XX:MaxNewSize&#x3D;&lt;young size&gt;[unit]:新生代对打分配内存</span><br><span class="line">-Xmn&lt;young size&gt;[unit] :指定新生代内存大小</span><br><span class="line">-XX:NewRatio&#x3D;&lt;int&gt;:指定新生代和老年代的内存比率</span><br></pre></td></tr></table></figure>
-
-<ol>
-<li>gc优化时通过调节新生代的内存让触发Full gc的频率降低,即大部分对象存储在新生代</li>
-</ol>
-</li>
-<li><p>永久代内存</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-XX:MetaspaceSize=N <span class="comment">//设置 Metaspace 的初始（和最小大小）</span></span><br><span class="line">-XX:MaxMetaspaceSize=N <span class="comment">//设置 Metaspace 的最大大小，如果不指定大小的话，随着更多类的创建，虚拟机会耗尽所有可用的系统内存。</span></span><br></pre></td></tr></table></figure>
-
-
-
-</li>
-</ol>
-<h2 id="GC调优"><a href="#GC调优" class="headerlink" title="GC调优"></a>GC调优</h2><p><strong>策略 1：</strong>将新对象预留在新生代，由于 Full GC 的成本远高于 Minor GC，因此尽可能将对象分配在新生代是明智的做法，实际项目中根据 GC 日志分析新生代空间大小分配是否合理，适当通过“-Xmn”命令调节新生代大小，最大限度降低新对象直接进入老年代的情况。</p>
-<p><strong>策略 2：</strong>大对象进入老年代，虽然大部分情况下，将对象分配在新生代是合理的。但是对于大对象这种做法却值得商榷，大对象如果首次在新生代分配可能会出现空间不足导致很多年龄不够的小对象被分配的老年代，破坏新生代的对象结构，可能会出现频繁的 full gc。因此，对于大对象，可以设置直接进入老年代（当然短命的大对象对于垃圾回收来说简直就是噩梦）。<code>-XX:PretenureSizeThreshold</code> 可以设置直接进入老年代的对象大小。</p>
-<p><strong>策略 3：</strong>合理设置进入老年代对象的年龄，<code>-XX:MaxTenuringThreshold</code> 设置对象进入老年代的年龄大小，减少老年代的内存占用，降低 full gc 发生的频率。</p>
-<p><strong>策略 4：</strong>设置稳定的堆大小，堆大小设置有两个参数：<code>-Xms</code> 初始化堆大小，<code>-Xmx</code> 最大堆大小。</p>
-<p><strong>策略5：</strong>注意： 如果满足下面的指标，<strong>则一般不需要进行 GC 优化：</strong></p>
-<blockquote>
-<p>MinorGC 执行时间不到50ms； Minor GC 执行不频繁，约10秒一次； Full GC 执行时间不到1s； Full GC 执行频率不算频繁，不低于10分钟1次。</p>
-</blockquote>
-<h2 id="jvm参数"><a href="#jvm参数" class="headerlink" title="jvm参数"></a>jvm参数</h2><table>
-<thead>
-<tr>
-<th>参数名称</th>
-<th>含义</th>
-<th>默认值</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>-Xms</td>
-<td>初始堆大小</td>
-<td>物理内存的1/64(&lt;1GB)</td>
-<td>默认(MinHeapFreeRatio参数可以调整)空余堆内存小于40%时，JVM就会增大堆直到-Xmx的最大限制.</td>
-</tr>
-<tr>
-<td>-Xmx</td>
-<td>最大堆大小</td>
-<td>物理内存的1/4(&lt;1GB)</td>
-<td>默认(MaxHeapFreeRatio参数可以调整)空余堆内存大于70%时，JVM会减少堆直到 -Xms的最小限制</td>
-</tr>
-<tr>
-<td>-Xmn</td>
-<td>年轻代大小(1.4or lator)</td>
-<td></td>
-<td>注意：此处的大小是（eden+ 2 survivor space).与jmap -heap中显示的New gen是不同的。整个堆大小=年轻代大小 + 老年代大小 + 持久代（永久代）大小.增大年轻代后,将会减小年老代大小.此值对系统性能影响较大,Sun官方推荐配置为整个堆的3/8</td>
-</tr>
-<tr>
-<td>-XX:NewSize</td>
-<td>设置年轻代大小(for 1.3/1.4)</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>-XX:MaxNewSize</td>
-<td>年轻代最大值(for 1.3/1.4)</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>-XX:PermSize</td>
-<td>设置持久代(perm gen)初始值</td>
-<td>物理内存的1/64</td>
-<td></td>
-</tr>
-<tr>
-<td>-XX:MaxPermSize</td>
-<td>设置持久代最大值</td>
-<td>物理内存的1/4</td>
-<td></td>
-</tr>
-<tr>
-<td>-Xss</td>
-<td>每个线程的堆栈大小</td>
-<td></td>
-<td>JDK5.0以后每个线程堆栈大小为1M,以前每个线程堆栈大小为256K.更具应用的线程所需内存大小进行 调整.在相同物理内存下,减小这个值能生成更多的线程.但是操作系统对一个进程内的线程数还是有限制的,不能无限生成,经验值在3000~5000左右一般小的应用， 如果栈不是很深， 应该是128k够用的 大的应用建议使用256k。这个选项对性能影响比较大，需要严格的测试。（校长）和threadstacksize选项解释很类似,官方文档似乎没有解释,在论坛中有这样一句话:-Xss is translated in a VM flag named ThreadStackSize”一般设置这个值就可以了</td>
-</tr>
-<tr>
-<td>-XX:NewRatio</td>
-<td>年轻代(包括Eden和两个Survivor区)与年老代的比值(除去持久代)</td>
-<td></td>
-<td>-XX:NewRatio=4表示年轻代与年老代所占比值为1:4,年轻代占整个堆栈的1/5Xms=Xmx并且设置了Xmn的情况下，该参数不需要进行设置。</td>
-</tr>
-<tr>
-<td>-XX:SurvivorRatio</td>
-<td>Eden区与Survivor区的大小比值</td>
-<td></td>
-<td>设置为8,则两个Survivor区与一个Eden区的比值为2:8,一个Survivor区占整个年轻代的1/10</td>
-</tr>
-<tr>
-<td>-XX:+DisableExplicitGC</td>
-<td>关闭System.gc()</td>
-<td></td>
-<td>这个参数需要严格的测试</td>
-</tr>
-<tr>
-<td>-XX:PretenureSizeThreshold</td>
-<td>对象超过多大是直接在旧生代分配</td>
-<td>0</td>
-<td>单位字节 新生代采用Parallel ScavengeGC时无效另一种直接在旧生代分配的情况是大的数组对象,且数组中无外部引用对象.</td>
-</tr>
-<tr>
-<td>-XX:ParallelGCThreads</td>
-<td>并行收集器的线程数</td>
-<td></td>
-<td>此值最好配置与处理器数目相等 同样适用于CMS</td>
-</tr>
-<tr>
-<td>-XX:MaxGCPauseMillis</td>
-<td>每次年轻代垃圾回收的最长时间(最大暂停时间)</td>
-<td></td>
-<td>如果无法满足此时间,JVM会自动调整年轻代大小,以满足此值.</td>
-</tr>
-</tbody></table>
-<p>其实还有一些打印及CMS方面的参数，这里就不以一一列举了</p>
-      
-      <a class="article-more-link" href="/2020/04/17/02_jvm%20%E5%8F%82%E6%95%B0/">阅读更多...</a>
+      <a class="article-more-link" href="/2020/04/22/01_spring%E8%A7%A3%E5%86%B3%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%96/">阅读更多...</a>
       
       
       <!-- reward -->
