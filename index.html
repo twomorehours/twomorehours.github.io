@@ -117,105 +117,6 @@
     
 
     
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <h2 id="JVM常用启动参数"><a href="#JVM常用启动参数" class="headerlink" title="JVM常用启动参数"></a>JVM常用启动参数</h2><table>
-<thead>
-<tr>
-<th>参数名称</th>
-<th align="center">含义</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>-Xms</td>
-<td align="center">堆最小内存</td>
-</tr>
-<tr>
-<td>-Xmx</td>
-<td align="center">堆最大内存</td>
-</tr>
-<tr>
-<td>-XX:NewSize</td>
-<td align="center">新生代内存</td>
-</tr>
-<tr>
-<td>-XX:MaxNewSize</td>
-<td align="center">新生代最大内存</td>
-</tr>
-<tr>
-<td>-XX:SurvivorRatio</td>
-<td align="center">新生代内存比例默认为8:1:1  如果设置为5:1:1则值为5,eden占:5/7</td>
-</tr>
-<tr>
-<td>-XX:PretenureSizeThreshold</td>
-<td align="center">大对象直接进入老年代的阀值</td>
-</tr>
-<tr>
-<td>-XX:MaxTenuringThreshold</td>
-<td align="center">新生代对象进入老年代的年龄阀值,默认为15(对象头:4字节最大1111)</td>
-</tr>
-<tr>
-<td>-XX:TargetSurvivorRatio</td>
-<td align="center">动态年龄判断条件,新生代对象占s0区域的比率,默认为50%</td>
-</tr>
-<tr>
-<td>-XX:+UseParNewGC</td>
-<td align="center">新生代使用parNew收集器(多线程并发标记, stop the world)</td>
-</tr>
-<tr>
-<td>-XX:+UseConcMarkSweepGC</td>
-<td align="center">老年代使用CMS收集器</td>
-</tr>
-<tr>
-<td>-XX:+PrintGCDetails</td>
-<td align="center">打印gc日志详情</td>
-</tr>
-<tr>
-<td>-XX:+PrintGCTimeStamps</td>
-<td align="center">打印gc时间戳</td>
-</tr>
-<tr>
-<td>-Xloggc:gc.log</td>
-<td align="center">gc日志对应的文件</td>
-</tr>
-</tbody></table>
-<h2 id="堆内存对象分配流程"><a href="#堆内存对象分配流程" class="headerlink" title="堆内存对象分配流程"></a>堆内存对象分配流程</h2><ol>
-<li>对象优先分配新生代eden区(大对象直接进入老年代)</li>
-<li>当eden区域没有可用内存空间分配时触发young gc</li>
-<li>young gc触发时进行分配担当判断(保证young gc成功)<ul>
-<li>判断老年代可用连续空间是否大于新生代,大于则分配担当成功</li>
-<li>小于,则判断老年代可用连续空间是否大于历次新生代进入老年代的对象平均大小,大于则分配担当成功</li>
-<li>小于则先执行full gc保证老年代空间够用</li>
-</ul>
-</li>
-<li>执行young gc时通过gc root可达性算法(gc root对象有局部变量和静态变量或常量)标记新生代中存活的对象</li>
-<li>第一次young gc时将eden中存活的对象通过复制算法复制到新生代 survival0,第二次即将eden和survival0中存活对象复制到survival1(每次保证s0或s1为空用来放young gc后存活对象)</li>
-</ol>
-<h2 id="新生代对象何时进入老年代"><a href="#新生代对象何时进入老年代" class="headerlink" title="新生代对象何时进入老年代"></a>新生代对象何时进入老年代</h2><ol>
-<li><p>新生代young gc时存活的对象大于新生代s0堆内存大小</p>
-</li>
-<li><p>新生代young gc后存在某个对象的年龄大于等于了进入老年代对象的阀值(默认15)</p>
-</li>
-<li><p>新生代young gc后满足动态年龄判断条件,比如新生代中年龄代0,1,2占比49%  3:2% 4:49%,此时年龄0+1+2+3对象占比为51%,则大于等于年龄3的对象进入老年代即年龄3和4</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jdk源码地址:http:<span class="comment">//hg.openjdk.java.net/jdk8/jdk8/hotspot/file/87ee5ee27509/src/share/vm/gc_implementation/shared/ageTable.cpp#l81</span></span><br></pre></td></tr></table></figure>
-
-
-
-</li>
-</ol>
-<h2 id="young-gc存活对象大于s0例子"><a href="#young-gc存活对象大于s0例子" class="headerlink" title="young gc存活对象大于s0例子"></a>young gc存活对象大于s0例子</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> &lt;a href="mailto:twomorehours@163.com"&gt;twomorehours&lt;/a&gt;</span></span><br><span class="line"><span class="comment"> * Date: 2020-04-23 15:23</span></span><br><span class="line"><span class="comment"> * version: 1.0</span></span><br><span class="line"><span class="comment"> * Description:young gc后存活的对象大于s0堆大小导致对象进入老年代</span></span><br><span class="line"><span class="comment"> **/</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">YoungGcIntoOldByGreaterS0Demo</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * jvm参数:</span></span><br><span class="line"><span class="comment">     * -XX:NewSize=10M -XX:MaxNewSize=10M -Xms20M -Xmx20M -XX:SurvivorRatio=8 -XX:PretenureSizeThreshold=10M -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.log</span></span><br><span class="line"><span class="comment">     * &lt;p&gt;</span></span><br><span class="line"><span class="comment">     * 参数分析:</span></span><br><span class="line"><span class="comment">     * 1.新生代 10M eden:8M s0:1M s1:1M</span></span><br><span class="line"><span class="comment">     * 2.老年代 10M</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> args</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">byte</span>[] array01 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">        array01 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">128</span> * <span class="number">1024</span>];</span><br><span class="line">        array01 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">        array01 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line"></span><br><span class="line">        <span class="keyword">byte</span>[] array02 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>通过:java jvm参数  -jar demo.jar  启动后gc.log信息</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Java <span class="title">HotSpot</span><span class="params">(TM)</span> 64-Bit Server <span class="title">VM</span> <span class="params">(<span class="number">25.211</span>-b12)</span> <span class="keyword">for</span> bsd-amd64 <span class="title">JRE</span> <span class="params">(<span class="number">1.8</span><span class="number">.0</span>_211-b12)</span>, built on Apr  1 2019 20:53:18 by "java_re" with gcc 4.2.1 <span class="params">(Based on Apple Inc. build <span class="number">5658</span>)</span> <span class="params">(LLVM build <span class="number">2336.11</span><span class="number">.00</span>)</span></span></span><br><span class="line"><span class="function">Memory: 4k page, physical 33554432<span class="title">k</span><span class="params">(<span class="number">2646028</span>k free)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">/proc/meminfo:</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">CommandLine flags: -XX:InitialHeapSize</span>=<span class="number">20971520</span> -XX:MaxHeapSize=<span class="number">20971520</span> -XX:MaxNewSize=<span class="number">10485760</span> -XX:NewSize=<span class="number">10485760</span> -XX:OldPLABSize=<span class="number">16</span> -XX:PretenureSizeThreshold=<span class="number">10485760</span> -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:SurvivorRatio=<span class="number">8</span> -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseConcMarkSweepGC -XX:+UseParNewGC </span><br><span class="line"><span class="number">0.080</span>: [GC (Allocation Failure) <span class="number">0.080</span>: [ParNew: <span class="number">6943</span>K-&gt;<span class="number">333</span>K(<span class="number">9216</span>K), <span class="number">0.0014860</span> secs] <span class="number">6943</span>K-&gt;<span class="number">2383</span>K(<span class="number">19456</span>K), <span class="number">0.0015622</span> secs] [Times: user=<span class="number">0.01</span> sys=<span class="number">0.00</span>, real=<span class="number">0.01</span> secs] </span><br><span class="line">Heap</span><br><span class="line"> par <span class="keyword">new</span> generation   total <span class="number">9216</span>K, used <span class="number">2463</span>K [<span class="number">0x00000007bec00000</span>, <span class="number">0x00000007bf600000</span>, <span class="number">0x00000007bf600000</span>)</span><br><span class="line">  eden space <span class="number">8192</span>K,  <span class="number">26</span>% used [<span class="number">0x00000007bec00000</span>, <span class="number">0x00000007bee14930</span>, <span class="number">0x00000007bf400000</span>)</span><br><span class="line">  from space <span class="number">1024</span>K,  <span class="number">32</span>% used [<span class="number">0x00000007bf500000</span>, <span class="number">0x00000007bf553518</span>, <span class="number">0x00000007bf600000</span>)</span><br><span class="line">  to   space <span class="number">1024</span>K,   <span class="number">0</span>% used [<span class="number">0x00000007bf400000</span>, <span class="number">0x00000007bf400000</span>, <span class="number">0x00000007bf500000</span>)</span><br><span class="line"> concurrent mark-sweep generation total <span class="number">10240</span>K, used <span class="number">2050</span>K [<span class="number">0x00000007bf600000</span>, <span class="number">0x00000007c0000000</span>, <span class="number">0x00000007c0000000</span>)</span><br><span class="line"> Metaspace       used <span class="number">2728</span>K, capacity <span class="number">4486</span>K, committed <span class="number">4864</span>K, reserved <span class="number">1056768</span>K</span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">space</span>    <span class="title">used</span> 293<span class="title">K</span>, <span class="title">capacity</span> 386<span class="title">K</span>, <span class="title">committed</span> 512<span class="title">K</span>, <span class="title">reserved</span> 1048576<span class="title">K</span></span></span><br><span class="line"><span class="class"></span></span><br><span class="line">-- 分析:新生代 8M 1M 1M 老年代:10M</span><br><span class="line"><span class="number">0</span>.ParNew: <span class="number">6943</span>K-&gt;<span class="number">333</span>K(<span class="number">9216</span>K), <span class="number">0.0014860</span> secs,新生代堆总大小<span class="number">9</span>M,gc回收对象从<span class="number">6.9</span>M--&gt;<span class="number">333</span>k,<span class="number">333</span>k未知对象在from区存活,占survival from:<span class="number">32</span>%,耗时<span class="number">1.4</span>ms                                                           </span><br><span class="line"><span class="number">1</span>.当分配array02:<span class="number">2</span>M对象时,此时eden中对象大小为<span class="number">6943</span>K无法分配<span class="number">2</span>M对象导致<span class="function">Allocation <span class="title">Failure</span><span class="params">(分配失败)</span>触发young gc,young gc进行分配担当判断此时老年代空间大于新生代内存空间不需要触发full gc</span></span><br><span class="line"><span class="function">                                                            </span></span><br><span class="line"><span class="function">2.6943K-&gt;2383<span class="title">K</span><span class="params">(<span class="number">19456</span>K)</span>, 0.0015622 secs,堆总大小19M,回收前:6.9M 回收后:2M+333k                                                             </span></span><br><span class="line"><span class="function">2.young gc存活的对象为array01引用2M对象,回收:2M+2M+128K对象,通过复制算法加入到s0时发现空间不够,2M对象进入老年代,剩下未知对象333k,s0可以放下</span></span><br><span class="line"><span class="function">                                                            </span></span><br><span class="line"><span class="function">3.最后eden中分配2M对象,此时对的占用情况为</span></span><br><span class="line"><span class="function">eden:2M 占比26%</span></span><br><span class="line"><span class="function">from:333K 占比32%</span></span><br><span class="line"><span class="function">to:0 占用0%</span></span><br><span class="line"><span class="function">CMS即old区域:2M</span></span><br></pre></td></tr></table></figure>
-
-
-      
-      <!-- reward -->
-      
-    </div>
     
     
       <!-- copyright -->
@@ -275,29 +176,6 @@
     
 
     
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <h2 id="什么是粘包拆包"><a href="#什么是粘包拆包" class="headerlink" title="什么是粘包拆包"></a>什么是粘包拆包</h2><ol>
-<li>一条数据在网络中因为大小或者某些发送效率的原因有可能会被拆分为多个数据包，这种情况就被称为拆包。</li>
-<li>在Nagle等算法的作用下，不同的数据的被拆分的两个数据包可能被放在一个包里面发送，这就叫粘包。</li>
-</ol>
-<h2 id="UDP有这种问题吗"><a href="#UDP有这种问题吗" class="headerlink" title="UDP有这种问题吗"></a>UDP有这种问题吗</h2><ol>
-<li>UDP在读取数据包的时候能明确知道哪里是数据包的结束，所以UDP会拆包，但是不用解决，因为接收方会阻塞直到接受到一条数据所有的数据包。</li>
-<li>因为UDP没有Nagle算法，不会合并数据包，所以不存在粘包问题。</li>
-</ol>
-<h2 id="如何解决TCP的粘包拆包问题"><a href="#如何解决TCP的粘包拆包问题" class="headerlink" title="如何解决TCP的粘包拆包问题"></a>如何解决TCP的粘包拆包问题</h2><ol>
-<li>解决这种问题的核心就是如何界定一条数据的开始和结束。</li>
-<li>解决方案根据具体场景的不同多种多样，简单的有根据数据固定大小分割的，说白了就是我读到一个固定大小的数据，我就认为这些数据包结束了，再接受的话就是下一条数据的数据包。</li>
-<li>现在Java业界主流的解决方案是使用Netty的<code>io.netty.handler.codec.LengthFieldBasedFrameDecoder</code>，此组件支持定义任意的长度，并且替你从网络流中截取满足条件的数据段，基本上Java世界中大多数知名网络中间件的网络通信都是用这个实现的。</li>
-</ol>
-
-      
-      <!-- reward -->
-      
-    </div>
     
     
       <!-- copyright -->
@@ -357,62 +235,6 @@
     
 
     
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <h2 id="沙雕面试"><a href="#沙雕面试" class="headerlink" title="沙雕面试"></a>沙雕面试</h2><p>面试官：如何判断一个链表是否有环?<br>候选人：快慢指针。</p>
-<p>这是宇宙公认的答案。</p>
-<p>但是今天在这里我要说的不是快慢指针，而是那个最lowB的解决方案，那就是集合历史保存法，那么这种方案有什么问题以至于如此不受大家的待见呢？也许就是为它太简单了吧。下面我们来看看方案真正的优缺点。<br>    缺点：线性空间复杂度，链表节点过多，占用内存过大。<br>    优点：很方便的得到从哪个节点陷入了回环。<br>在spring的场景中，没有很多的Bean，远不至于挤爆内存，所以这个缺点不算缺点，而这个优点就是Spring解决循环引用的核心。</p>
-<h2 id="案例描述"><a href="#案例描述" class="headerlink" title="案例描述"></a>案例描述</h2><p>少废话，直接上代码  </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">@Component</span><br><span class="line">public class A &#123;</span><br><span class="line">    @Autowired</span><br><span class="line">    private B b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">@Component</span><br><span class="line">public class B &#123;</span><br><span class="line">    @Autowired</span><br><span class="line">    private A a;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="知识储备"><a href="#知识储备" class="headerlink" title="知识储备"></a>知识储备</h2><ul>
-<li>ioc容器指的是BeanFactory，准确说是DefaultListableBeanFactory</li>
-<li>Bean属性注入是深度优先的递归过程</li>
-<li>Bean的属性注入(@Autowird &amp;&amp; @Inject &amp;&amp; @Value)是在AutowiredAnnotationBeanPostProcessor完成的</li>
-<li>DefaultSingletonBeanRegistry（DefaultListableBeanFactory的父类）有三个缓存<ul>
-<li>Map&lt;String, Object&gt; singletonObjects // 这个保存已经完成初始化的Bean，跟本题关系不大</li>
-<li>Map&lt;String, ObjectFactory&lt;?&gt;&gt; singletonFactories // 这个是保存刚创建成功还未初始化的Bean，这里的ObjectFactory返回就是之前创建的对象，而不是新创建一个，这个在后面代码能看到，这就是解决问题的核心</li>
-<li>Map&lt;String, Object&gt; earlySingletonObjects // 也是保存半成品Bean集合，跟本题关系不大</li>
-</ul>
-</li>
-</ul>
-<h2 id="大致过程"><a href="#大致过程" class="headerlink" title="大致过程"></a>大致过程</h2><ul>
-<li>开始实例化A</li>
-<li>A被标记为正在创建</li>
-<li>实例化了A</li>
-<li>半成品A被保存</li>
-<li>发现A要注入B</li>
-<li>开始实例化B</li>
-<li>B被标记为正在创建</li>
-<li>实例化了B</li>
-<li>半成品B被保存</li>
-<li>发现B要注入A</li>
-<li>从容器中寻找A，发现A正在创建，容器知道已经发现了循环引用，此时就从半成品集合中取出A，将A赋值给B</li>
-<li>B初始化完成</li>
-<li>A拿到B，并注入</li>
-<li>A初始化完成</li>
-</ul>
-<h2 id="源码解析"><a href="#源码解析" class="headerlink" title="源码解析"></a>源码解析</h2><p>1.首先我们来到最初的起点，这是spring启动的入口，当然如果使用springboot的话，这个是会自己调用的。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">org.springframework.context.support.AbstractApplicationContext#refresh</span><br><span class="line">public void refresh() throws BeansException, IllegalStateException &#123;</span><br><span class="line">    synchronized (this.startupShutdownMonitor) &#123;</span><br><span class="line">            &#x2F;&#x2F;...</span><br><span class="line">            &#x2F;&#x2F; 实例化所有单例</span><br><span class="line">            finishBeanFactoryInitialization(beanFactory); </span><br><span class="line">            &#x2F;&#x2F;...</span><br><span class="line">        &#125;	</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">org.springframework.context.support.AbstractApplicationContext#finishBeanFactoryInitialization</span><br><span class="line">protected void finishBeanFactoryInitialization(ConfigurableListableBeanFactory beanFactory) &#123;</span><br><span class="line">    &#x2F;&#x2F;...</span><br><span class="line">	&#x2F;&#x2F; 实例化所有非lazy的Bean</span><br><span class="line">	beanFactory.preInstantiateSingletons();</span><br><span class="line">    &#x2F;&#x2F;...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">org.springframework.beans.factory.support.DefaultListableBeanFactory#preInstantiateSingletons</span><br><span class="line">public void preInstantiateSingletons() throws BeansException &#123;</span><br><span class="line">    &#x2F;&#x2F;...</span><br><span class="line">    List&lt;String&gt; beanNames &#x3D; new ArrayList&lt;&gt;(this.beanDefinitionNames);</span><br><span class="line">    &#x2F;&#x2F; 逐个初始化 这里的BeanName就是我们定义的@Compnonet(name&#x3D;&quot;&quot;)，默认是短类名第一个字母小写</span><br><span class="line">    for (String beanName : beanNames) &#123;</span><br><span class="line">        getBean(beanName);		</span><br><span class="line">    &#125;</span><br><span class="line">    &#x2F;&#x2F;...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>总结一下上面的逻辑：<br>    屌事没干，代码上万</p>
-<p>2.现在开始创建A了</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line">org.springframework.beans.factory.support.AbstractBeanFactory#getBean(java.lang.String)</span><br><span class="line">public Object getBean(String name) throws BeansException &#123;</span><br><span class="line">    return doGetBean(name, null, null, false);</span><br><span class="line">&#125;</span><br><span class="line">org.springframework.beans.factory.support.AbstractBeanFactory#doGetBean</span><br><span class="line">protected &lt;T&gt; T doGetBean(final String name, @Nullable final Class&lt;T&gt; requiredType,</span><br><span class="line">			@Nullable final Object[] args, boolean typeCheckOnly) throws BeansException &#123;</span><br><span class="line">    final String beanName &#x3D; transformedBeanName(name);.</span><br><span class="line">    Object sharedInstance &#x3D; getSingleton(beanName); &#x2F;&#x2F;这里是取缓存，肯定是取不到的，因为A从没有创建过，所以这里先不深究，创建B的时候这里是关键</span><br><span class="line">    if (sharedInstance !&#x3D; null ) &#123;</span><br><span class="line">        &#x2F;&#x2F;...</span><br><span class="line">    &#125;else &#123;</span><br><span class="line">        &#x2F;&#x2F;...</span><br><span class="line">        if (mbd.isSingleton()) &#123;</span><br><span class="line">            &#x2F;&#x2F;用lambda实现一个ObjectFactory，以实现回调</span><br><span class="line">            sharedInstance &#x3D; getSingleton(beanName, () -&gt; &#123; </span><br><span class="line">                &#x2F;&#x2F; createBean是真正的创建逻辑</span><br><span class="line">                return createBean(beanName, mbd, args);</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;	</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">org.springframework.beans.factory.support.DefaultSingletonBeanRegistry#getSingleton</span><br><span class="line">public Object getSingleton(String beanName, ObjectFactory&lt;?&gt; singletonFactory) &#123;</span><br><span class="line">    &#x2F;&#x2F;... </span><br><span class="line">    &#x2F;&#x2F;把A标记为创建中 这里是关键</span><br><span class="line">    beforeSingletonCreation(beanName);</span><br><span class="line">    &#x2F;&#x2F;... </span><br><span class="line">    &#x2F;&#x2F;调用上面传入的lambda实际创建对象也就是createBean</span><br><span class="line">    singletonObject &#x3D; singletonFactory.getObject();</span><br><span class="line">    &#x2F;&#x2F;...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">org.springframework.beans.factory.support.DefaultSingletonBeanRegistry#beforeSingletonCreation</span><br><span class="line">protected void beforeSingletonCreation(String beanName) &#123;</span><br><span class="line">    if (!this.inCreationCheckExclusions.contains(beanName) </span><br><span class="line">            &amp;&amp; !this.singletonsCurrentlyInCreation.add(beanName)) &#123; &#x2F;&#x2F;放入正在创建的Set</span><br><span class="line">        throw new BeanCurrentlyInCreationException(beanName);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory#createBean</span><br><span class="line">protected Object createBean(String beanName, RootBeanDefinition mbd, @Nullable Object[] args)</span><br><span class="line">			throws BeanCreationException &#123;</span><br><span class="line">    &#x2F;&#x2F;...</span><br><span class="line">    Object beanInstance &#x3D; doCreateBean(beanName, mbdToUse, args); &#x2F;&#x2F; 实际创建</span><br><span class="line">    &#x2F;&#x2F;...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory#doCreateBean</span><br><span class="line">protected Object doCreateBean(final String beanName, final RootBeanDefinition mbd, final @Nullable Object[] args)</span><br><span class="line">			throws BeanCreationException &#123;</span><br><span class="line">    &#x2F;&#x2F;...</span><br><span class="line">    &#x2F;&#x2F; 实例化对象 实际就是反射空参构造</span><br><span class="line">    BeanWrapper instanceWrapper &#x3D; null;</span><br><span class="line">    if (instanceWrapper &#x3D;&#x3D; null) &#123;</span><br><span class="line">        instanceWrapper &#x3D; createBeanInstance(beanName, mbd, args);</span><br><span class="line">    &#125;</span><br><span class="line">    final Object bean &#x3D; instanceWrapper.getWrappedInstance();</span><br><span class="line">    &#x2F;&#x2F;...</span><br><span class="line">    &#x2F;&#x2F;是否支持循环引用 默认是</span><br><span class="line">    boolean earlySingletonExposure &#x3D; (mbd.isSingleton() &amp;&amp; this.allowCircularReferences &amp;&amp;</span><br><span class="line">				isSingletonCurrentlyInCreation(beanName));</span><br><span class="line">    if (earlySingletonExposure) &#123;</span><br><span class="line">        &#x2F;&#x2F; 把刚实例化的对象放到singletonFactories中，这里可以看到lambda直接返回已经创建的bean</span><br><span class="line">		addSingletonFactory(beanName, () -&gt; getEarlyBeanReference(beanName, mbd, bean));</span><br><span class="line">	&#125;</span><br><span class="line">    Object exposedObject &#x3D; bean;</span><br><span class="line">    try &#123;</span><br><span class="line">        &#x2F;&#x2F;处理注入(这里会发生递归)</span><br><span class="line">        populateBean(beanName, mbd, instanceWrapper);</span><br><span class="line">        &#x2F;&#x2F;调用生命周期方法 典型的如： *Aware 、afterPropertiesSet、@PostContruct 等</span><br><span class="line">        &#x2F;&#x2F;我们姑且认为到了这里就算完成了</span><br><span class="line">        exposedObject &#x3D; initializeBean(beanName, exposedObject, mbd);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>总结一下上面的逻辑：<br>    1.A被标记为正在创建<br>    2.A被实例化并且被保存到singletonFactories中</p>
-<p>3.现在开始对A进行注入</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line">org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory#populateBean</span><br><span class="line">protected void populateBean(String beanName, RootBeanDefinition mbd, @Nullable BeanWrapper bw) &#123;</span><br><span class="line">    &#x2F;&#x2F;...</span><br><span class="line">    if (!mbd.isSynthetic() &amp;&amp; hasInstantiationAwareBeanPostProcessors()) &#123;</span><br><span class="line">        for (BeanPostProcessor bp : getBeanPostProcessors()) &#123;</span><br><span class="line">            if (bp instanceof InstantiationAwareBeanPostProcessor) &#123;</span><br><span class="line">                &#x2F;&#x2F;这里有一个PostProcessor是AutowiredAnnotationBeanPostProcessor</span><br><span class="line">                InstantiationAwareBeanPostProcessor ibp &#x3D; (InstantiationAwareBeanPostProcessor) bp;</span><br><span class="line">                if (!ibp.postProcessAfterInstantiation(bw.getWrappedInstance(), beanName)) &#123;</span><br><span class="line">                    return;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">	&#125;</span><br><span class="line">    &#x2F;&#x2F;...</span><br><span class="line">org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor#postProcessProperties</span><br><span class="line">public PropertyValues postProcessProperties(PropertyValues pvs, Object bean, String beanName) &#123;</span><br><span class="line">    &#x2F;&#x2F;...</span><br><span class="line">	InjectionMetadata metadata &#x3D; findAutowiringMetadata(beanName, bean.getClass(), pvs);</span><br><span class="line">    metadata.inject(bean, beanName, pvs);</span><br><span class="line">    &#x2F;&#x2F;...</span><br><span class="line">&#125;</span><br><span class="line">org.springframework.beans.factory.annotation.InjectionMetadata#inject</span><br><span class="line">public void inject(Object target, @Nullable String beanName, @Nullable PropertyValues pvs) throws Throwable &#123;</span><br><span class="line">        for (InjectedElement element : elementsToIterate) &#123;</span><br><span class="line">            element.inject(target, beanName, pvs);</span><br><span class="line">        &#125;</span><br><span class="line">	&#125;</span><br><span class="line">org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor.AutowiredFieldElement#inject</span><br><span class="line">protected void inject(Object bean, @Nullable String beanName, @Nullable PropertyValues pvs) throws Throwable &#123;</span><br><span class="line">    &#x2F;&#x2F;去BeanFactory中寻找</span><br><span class="line">    value &#x3D; beanFactory.resolveDependency(desc, beanName, autowiredBeanNames, typeConverter);</span><br><span class="line">&#125;</span><br><span class="line">org.springframework.beans.factory.support.DefaultListableBeanFactory#doResolveDependency</span><br><span class="line">public Object doResolveDependency(DependencyDescriptor descriptor, @Nullable String beanName,</span><br><span class="line">			@Nullable Set&lt;String&gt; autowiredBeanNames, @Nullable TypeConverter typeConverter) throws BeansException &#123;</span><br><span class="line">    &#x2F;&#x2F;这里取到的就是B的class</span><br><span class="line">    if (instanceCandidate instanceof Class) &#123;</span><br><span class="line">		instanceCandidate &#x3D; descriptor.resolveCandidate(autowiredBeanName, type, this);</span><br><span class="line">	&#125;</span><br><span class="line">org.springframework.beans.factory.config.DependencyDescriptor#resolveCandidate</span><br><span class="line">public Object resolveCandidate(String beanName, Class&lt;?&gt; requiredType, BeanFactory beanFactory)</span><br><span class="line">			throws BeansException &#123;</span><br><span class="line">        &#x2F;&#x2F;这个getBean是不是感到有一些熟悉,这里的beanName就是b</span><br><span class="line">        &#x2F;&#x2F;接下来就创建B的过程，整个流程和创建A一毛一样</span><br><span class="line">		return beanFactory.getBean(beanName);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>总结一下上面逻辑：<br>    AutowiredAnnotationBeanPostProcessor在执行的时候发现A要注入B，则去获取B<br>4.创建B过程省略，和创建A一致<br>5.下面给B注入A，要去获取A，但是这个时候要注意了,这里要获取的A之前已经创建过了，请仔细看，这里就是关键</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">org.springframework.beans.factory.support.AbstractBeanFactory#getBean(java.lang.String)</span><br><span class="line">public Object getBean(String name) throws BeansException &#123;</span><br><span class="line">    return doGetBean(name, null, null, false);</span><br><span class="line">&#125;</span><br><span class="line">org.springframework.beans.factory.support.AbstractBeanFactory#doGetBean</span><br><span class="line">protected &lt;T&gt; T doGetBean(final String name, @Nullable final Class&lt;T&gt; requiredType,</span><br><span class="line">			@Nullable final Object[] args, boolean typeCheckOnly) throws BeansException &#123;</span><br><span class="line">    final String beanName &#x3D; transformedBeanName(name);</span><br><span class="line">    &#x2F;&#x2F;...</span><br><span class="line">    &#x2F;&#x2F;这里从缓存取A</span><br><span class="line">    Object sharedInstance &#x3D; getSingleton(beanName); </span><br><span class="line">&#125;</span><br><span class="line">org.springframework.beans.factory.support.DefaultSingletonBeanRegistry#getSingleton</span><br><span class="line">protected Object getSingleton(String beanName, boolean allowEarlyReference) &#123;</span><br><span class="line">    &#x2F;&#x2F;从已经初始化完成的里面取，肯定取不到</span><br><span class="line">    Object singletonObject &#x3D; this.singletonObjects.get(beanName);</span><br><span class="line">    &#x2F;&#x2F;判断A是否在创建，是的，因为B是在A注入未完成的情况下创建的，A要等着B创建完成</span><br><span class="line">    if (singletonObject &#x3D;&#x3D; null &amp;&amp; isSingletonCurrentlyInCreation(beanName)) &#123;</span><br><span class="line">        synchronized (this.singletonObjects) &#123;</span><br><span class="line">            &#x2F;&#x2F;...</span><br><span class="line">            ObjectFactory&lt;?&gt; singletonFactory &#x3D; this.singletonFactories.get(beanName);</span><br><span class="line">            if (singletonFactory !&#x3D; null) &#123;</span><br><span class="line">                取出之前的半成品A</span><br><span class="line">                singletonObject &#x3D; singletonFactory.getObject();</span><br><span class="line">            &#125;</span><br><span class="line">            &#x2F;&#x2F;...</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    &#x2F;&#x2F;返回半成品A</span><br><span class="line">    return singletonObject;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>上面逻辑总结：<br>    B要注入A，去容器里面去取，发现陷入了循环引用直接取出一个半成品<br>6.将半成品A注入B,B初始化完成<br>7.回到A的注入，此时拿到了B,注入到A，A的初始化完成<br>8.全剧终</p>
-      
-      <a class="article-more-link" href="/2020/04/22/01_spring%E8%A7%A3%E5%86%B3%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%96/">阅读更多...</a>
-      
-      
-      <!-- reward -->
-      
-    </div>
     
     
       <!-- copyright -->
