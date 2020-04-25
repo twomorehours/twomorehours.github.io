@@ -1,3 +1,10 @@
+---
+title: 排查问题(持续跟新)
+date: 2020-04-24 18:29:26
+categories: 
+- Java
+
+---
 # I wanna spend less time to "排查问题".(持续跟新)
 
 当前工作中，“排查问题”占据我当前每天最多的时间。
