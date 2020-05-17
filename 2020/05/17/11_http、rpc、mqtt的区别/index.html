@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    young gc No.1 |  向天再借两小时
+    http、rpc、mqtt的区别 |  向天再借两小时
   </title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   
@@ -43,7 +43,7 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
-  <article id="post-03_young_gc_No1" class="article article-type-post" itemscope
+  <article id="post-11_http、rpc、mqtt的区别" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -51,7 +51,7 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  young gc No.1
+  http、rpc、mqtt的区别
 </h1>
  
 
@@ -60,8 +60,8 @@
 
     
     <div class="article-meta">
-      <a href="/2020/04/23/03_young_gc_No1/" class="article-date">
-  <time datetime="2020-04-23T15:29:26.000Z" itemprop="datePublished">2020-04-23</time>
+      <a href="/2020/05/17/11_http%E3%80%81rpc%E3%80%81mqtt%E7%9A%84%E5%8C%BA%E5%88%AB/" class="article-date">
+  <time datetime="2020-05-17T15:30:51.000Z" itemprop="datePublished">2020-05-17</time>
 </a>
       
   <div class="article-category">
@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">1.2k</span>
+            <span class="post-count">394</span>
         </span>
     </span>
 
@@ -84,7 +84,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">5 min</span>
+            <span class="post-count">1 min</span>
         </span>
     </span>
 </div>
@@ -109,95 +109,13 @@
       
 
       
-      <h2 id="JVM常用启动参数"><a href="#JVM常用启动参数" class="headerlink" title="JVM常用启动参数"></a>JVM常用启动参数</h2><table>
-<thead>
-<tr>
-<th>参数名称</th>
-<th align="center">含义</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>-Xms</td>
-<td align="center">堆最小内存</td>
-</tr>
-<tr>
-<td>-Xmx</td>
-<td align="center">堆最大内存</td>
-</tr>
-<tr>
-<td>-XX:NewSize</td>
-<td align="center">新生代内存</td>
-</tr>
-<tr>
-<td>-XX:MaxNewSize</td>
-<td align="center">新生代最大内存</td>
-</tr>
-<tr>
-<td>-XX:SurvivorRatio</td>
-<td align="center">新生代内存比例默认为8:1:1  如果设置为5:1:1则值为5,eden占:5/7</td>
-</tr>
-<tr>
-<td>-XX:PretenureSizeThreshold</td>
-<td align="center">大对象直接进入老年代的阀值</td>
-</tr>
-<tr>
-<td>-XX:MaxTenuringThreshold</td>
-<td align="center">新生代对象进入老年代的年龄阀值,默认为15(对象头:4字节最大1111)</td>
-</tr>
-<tr>
-<td>-XX:TargetSurvivorRatio</td>
-<td align="center">动态年龄判断条件,新生代对象占s0区域的比率,默认为50%</td>
-</tr>
-<tr>
-<td>-XX:+UseParNewGC</td>
-<td align="center">新生代使用parNew收集器(多线程并发标记, stop the world)</td>
-</tr>
-<tr>
-<td>-XX:+UseConcMarkSweepGC</td>
-<td align="center">老年代使用CMS收集器</td>
-</tr>
-<tr>
-<td>-XX:+PrintGCDetails</td>
-<td align="center">打印gc日志详情</td>
-</tr>
-<tr>
-<td>-XX:+PrintGCTimeStamps</td>
-<td align="center">打印gc时间戳</td>
-</tr>
-<tr>
-<td>-Xloggc:gc.log</td>
-<td align="center">gc日志对应的文件</td>
-</tr>
-</tbody></table>
-<h2 id="堆内存对象分配流程"><a href="#堆内存对象分配流程" class="headerlink" title="堆内存对象分配流程"></a>堆内存对象分配流程</h2><ol>
-<li>对象优先分配新生代eden区(大对象直接进入老年代)</li>
-<li>当eden区域没有可用内存空间分配时触发young gc</li>
-<li>young gc触发时进行分配担当判断(保证young gc成功)<ul>
-<li>判断老年代可用连续空间是否大于新生代,大于则分配担当成功</li>
-<li>小于,则判断老年代可用连续空间是否大于历次新生代进入老年代的对象平均大小,大于则分配担当成功</li>
-<li>小于则先执行full gc保证老年代空间够用</li>
+      <h2 id="http、rpc、mqtt的区别（待完善）"><a href="#http、rpc、mqtt的区别（待完善）" class="headerlink" title="http、rpc、mqtt的区别（待完善）"></a>http、rpc、mqtt的区别（待完善）</h2><h4 id="为什么物联网-IOT-中不使用HTTP协议？"><a href="#为什么物联网-IOT-中不使用HTTP协议？" class="headerlink" title="为什么物联网(IOT)中不使用HTTP协议？"></a>为什么物联网(IOT)中不使用HTTP协议？</h4><ul>
+<li>HTTP 是一种同步协议。客户端需要等待服务器响应。Web 浏览器具有这样的要求，但它的代价是牺牲了可伸缩性。在 IoT 领域，大量设备以及很可能不可靠或高延迟的网络使得同步通信成为问题。异步消息协议更适合 IoT 应用程序。传感器发送读数，让网络确定将其传送到目标设备和服务的最佳路线和时间。</li>
+<li>HTTP 是单向的。客户端必须发起连接。在 IoT 应用程序中，设备或传感器通常是客户端，这意味着它们无法被动地接收来自网络的命令。</li>
+<li>HTTP 是一种 1-1 协议。客户端发出请求，服务器进行响应。将消息传送到网络上的所有设备上，不但很困难，而且成本很高，而这是 IoT 应用程序中的一种常见使用情况。</li>
+<li>HTTP 是一种有许多标头和规则的重量级协议。它不适合受限的网络。</li>
 </ul>
-</li>
-<li>执行young gc时通过gc root可达性算法(gc root对象有局部变量和静态变量或常量)标记新生代中存活的对象</li>
-<li>第一次young gc时将eden中存活的对象通过复制算法复制到新生代 survival0,第二次即将eden和survival0中存活对象复制到survival1(每次保证s0或s1为空用来放young gc后存活对象)</li>
-</ol>
-<h2 id="新生代对象何时进入老年代"><a href="#新生代对象何时进入老年代" class="headerlink" title="新生代对象何时进入老年代"></a>新生代对象何时进入老年代</h2><ol>
-<li><p>新生代young gc时存活的对象大于新生代s0堆内存大小</p>
-</li>
-<li><p>新生代young gc后存在某个对象的年龄大于等于了进入老年代对象的阀值(默认15)</p>
-</li>
-<li><p>新生代young gc后满足动态年龄判断条件,比如新生代中年龄代0,1,2占比49%  3:2% 4:49%,此时年龄0+1+2+3对象占比为51%,则大于等于年龄3的对象进入老年代即年龄3和4</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jdk源码地址:http:<span class="comment">//hg.openjdk.java.net/jdk8/jdk8/hotspot/file/87ee5ee27509/src/share/vm/gc_implementation/shared/ageTable.cpp#l81</span></span><br></pre></td></tr></table></figure>
-
-
-
-</li>
-</ol>
-<h2 id="young-gc存活对象大于s0例子"><a href="#young-gc存活对象大于s0例子" class="headerlink" title="young gc存活对象大于s0例子"></a>young gc存活对象大于s0例子</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> &lt;a href="mailto:twomorehours@163.com"&gt;twomorehours&lt;/a&gt;</span></span><br><span class="line"><span class="comment"> * Date: 2020-04-23 15:23</span></span><br><span class="line"><span class="comment"> * version: 1.0</span></span><br><span class="line"><span class="comment"> * Description:young gc后存活的对象大于s0堆大小导致对象进入老年代</span></span><br><span class="line"><span class="comment"> **/</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">YoungGcIntoOldByGreaterS0Demo</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * jvm参数:</span></span><br><span class="line"><span class="comment">     * -XX:NewSize=10M -XX:MaxNewSize=10M -Xms20M -Xmx20M -XX:SurvivorRatio=8 -XX:PretenureSizeThreshold=10M -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.log</span></span><br><span class="line"><span class="comment">     * &lt;p&gt;</span></span><br><span class="line"><span class="comment">     * 参数分析:</span></span><br><span class="line"><span class="comment">     * 1.新生代 10M eden:8M s0:1M s1:1M</span></span><br><span class="line"><span class="comment">     * 2.老年代 10M</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> args</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">byte</span>[] array01 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">        array01 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">128</span> * <span class="number">1024</span>];</span><br><span class="line">        array01 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">        array01 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line"></span><br><span class="line">        <span class="keyword">byte</span>[] array02 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>通过:java jvm参数  -jar demo.jar  启动后gc.log信息</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Java <span class="title">HotSpot</span><span class="params">(TM)</span> 64-Bit Server <span class="title">VM</span> <span class="params">(<span class="number">25.211</span>-b12)</span> <span class="keyword">for</span> bsd-amd64 <span class="title">JRE</span> <span class="params">(<span class="number">1.8</span><span class="number">.0</span>_211-b12)</span>, built on Apr  1 2019 20:53:18 by "java_re" with gcc 4.2.1 <span class="params">(Based on Apple Inc. build <span class="number">5658</span>)</span> <span class="params">(LLVM build <span class="number">2336.11</span><span class="number">.00</span>)</span></span></span><br><span class="line"><span class="function">Memory: 4k page, physical 33554432<span class="title">k</span><span class="params">(<span class="number">2646028</span>k free)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">/proc/meminfo:</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">CommandLine flags: -XX:InitialHeapSize</span>=<span class="number">20971520</span> -XX:MaxHeapSize=<span class="number">20971520</span> -XX:MaxNewSize=<span class="number">10485760</span> -XX:NewSize=<span class="number">10485760</span> -XX:OldPLABSize=<span class="number">16</span> -XX:PretenureSizeThreshold=<span class="number">10485760</span> -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:SurvivorRatio=<span class="number">8</span> -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseConcMarkSweepGC -XX:+UseParNewGC </span><br><span class="line"><span class="number">0.080</span>: [GC (Allocation Failure) <span class="number">0.080</span>: [ParNew: <span class="number">6943</span>K-&gt;<span class="number">333</span>K(<span class="number">9216</span>K), <span class="number">0.0014860</span> secs] <span class="number">6943</span>K-&gt;<span class="number">2383</span>K(<span class="number">19456</span>K), <span class="number">0.0015622</span> secs] [Times: user=<span class="number">0.01</span> sys=<span class="number">0.00</span>, real=<span class="number">0.01</span> secs] </span><br><span class="line">Heap</span><br><span class="line"> par <span class="keyword">new</span> generation   total <span class="number">9216</span>K, used <span class="number">2463</span>K [<span class="number">0x00000007bec00000</span>, <span class="number">0x00000007bf600000</span>, <span class="number">0x00000007bf600000</span>)</span><br><span class="line">  eden space <span class="number">8192</span>K,  <span class="number">26</span>% used [<span class="number">0x00000007bec00000</span>, <span class="number">0x00000007bee14930</span>, <span class="number">0x00000007bf400000</span>)</span><br><span class="line">  from space <span class="number">1024</span>K,  <span class="number">32</span>% used [<span class="number">0x00000007bf500000</span>, <span class="number">0x00000007bf553518</span>, <span class="number">0x00000007bf600000</span>)</span><br><span class="line">  to   space <span class="number">1024</span>K,   <span class="number">0</span>% used [<span class="number">0x00000007bf400000</span>, <span class="number">0x00000007bf400000</span>, <span class="number">0x00000007bf500000</span>)</span><br><span class="line"> concurrent mark-sweep generation total <span class="number">10240</span>K, used <span class="number">2050</span>K [<span class="number">0x00000007bf600000</span>, <span class="number">0x00000007c0000000</span>, <span class="number">0x00000007c0000000</span>)</span><br><span class="line"> Metaspace       used <span class="number">2728</span>K, capacity <span class="number">4486</span>K, committed <span class="number">4864</span>K, reserved <span class="number">1056768</span>K</span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">space</span>    <span class="title">used</span> 293<span class="title">K</span>, <span class="title">capacity</span> 386<span class="title">K</span>, <span class="title">committed</span> 512<span class="title">K</span>, <span class="title">reserved</span> 1048576<span class="title">K</span></span></span><br><span class="line"><span class="class"></span></span><br><span class="line">-- 分析:新生代 8M 1M 1M 老年代:10M</span><br><span class="line"><span class="number">0</span>.ParNew: <span class="number">6943</span>K-&gt;<span class="number">333</span>K(<span class="number">9216</span>K), <span class="number">0.0014860</span> secs,新生代堆总大小<span class="number">9</span>M,gc回收对象从<span class="number">6.9</span>M--&gt;<span class="number">333</span>k,<span class="number">333</span>k未知对象在from区存活,占survival from:<span class="number">32</span>%,耗时<span class="number">1.4</span>ms                                                           </span><br><span class="line"><span class="number">1</span>.当分配array02:<span class="number">2</span>M对象时,此时eden中对象大小为<span class="number">6943</span>K无法分配<span class="number">2</span>M对象导致<span class="function">Allocation <span class="title">Failure</span><span class="params">(分配失败)</span>触发young gc,young gc进行分配担当判断此时老年代空间大于新生代内存空间不需要触发full gc</span></span><br><span class="line"><span class="function">                                                            </span></span><br><span class="line"><span class="function">2.6943K-&gt;2383<span class="title">K</span><span class="params">(<span class="number">19456</span>K)</span>, 0.0015622 secs,堆总大小19M,回收前:6.9M 回收后:2M+333k                                                             </span></span><br><span class="line"><span class="function">2.young gc存活的对象为array01引用2M对象,回收:2M+2M+128K对象,通过复制算法加入到s0时发现空间不够,2M对象进入老年代,剩下未知对象333k,s0可以放下</span></span><br><span class="line"><span class="function">                                                            </span></span><br><span class="line"><span class="function">3.最后eden中分配2M对象,此时对的占用情况为</span></span><br><span class="line"><span class="function">eden:2M 占比26%</span></span><br><span class="line"><span class="function">from:333K 占比32%</span></span><br><span class="line"><span class="function">to:0 占用0%</span></span><br><span class="line"><span class="function">CMS即old区域:2M</span></span><br></pre></td></tr></table></figure>
-
+<h4 id="RPC是一种技术的概念名词"><a href="#RPC是一种技术的概念名词" class="headerlink" title="RPC是一种技术的概念名词"></a>RPC是一种技术的概念名词</h4><p>RPC=Remote Produce Call 是一种技术的概念名词，HTTP是一种协议,RPC可以通过 HTTP 来实现,也可以通过Socket自己实现一套协议来实现.所以题目可以换一种理解,为何 RPC 还有除 HTTP 之外的实现法,有何必要，毕竟除了HTTP实现外,私有协议不具备通用性.</p>
 
       
       <!-- reward -->
@@ -266,7 +184,7 @@
     <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2020/04/23/03_young_gc_No1/" alt="微信分享二维码">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2020/05/17/11_http%E3%80%81rpc%E3%80%81mqtt%E7%9A%84%E5%8C%BA%E5%88%AB/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -282,19 +200,10 @@
   
   <nav class="article-nav">
     
-      <a href="/2020/04/24/04_Java%E7%9A%84pecs%E6%B3%95%E5%88%99/" class="article-nav-link">
-        <strong class="article-nav-caption">上一篇</strong>
-        <div class="article-nav-title">
-          
-            不变、协变、逆变和PECS
-          
-        </div>
-      </a>
     
-    
-      <a href="/2020/04/23/02_%E6%8B%86%E5%8C%85%E7%B2%98%E5%8C%85/" class="article-nav-link">
+      <a href="/2020/05/09/10_gc%E6%94%B6%E9%9B%86%E5%99%A8/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">粘包拆包</div>
+        <div class="article-nav-title">gc收集器</div>
       </a>
     
   </nav>
