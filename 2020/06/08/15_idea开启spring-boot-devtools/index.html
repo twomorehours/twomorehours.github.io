@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    MyBatis的执行流程 |  向天再借两小时
+    idea开启spring-boot-devtools |  向天再借两小时
   </title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   
@@ -43,7 +43,7 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
-  <article id="post-14_MyBatis的执行流程" class="article article-type-post" itemscope
+  <article id="post-15_idea开启spring-boot-devtools" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -51,7 +51,7 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  MyBatis的执行流程
+  idea开启spring-boot-devtools
 </h1>
  
 
@@ -60,12 +60,12 @@
 
     
     <div class="article-meta">
-      <a href="/2020/05/30/14_MyBatis%E7%9A%84%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B/" class="article-date">
-  <time datetime="2020-05-30T10:30:39.000Z" itemprop="datePublished">2020-05-30</time>
+      <a href="/2020/06/08/15_idea%E5%BC%80%E5%90%AFspring-boot-devtools/" class="article-date">
+  <time datetime="2020-06-08T10:30:39.000Z" itemprop="datePublished">2020-06-08</time>
 </a>
       
   <div class="article-category">
-    <a class="article-category-link" href="/categories/MyBatis/">MyBatis</a>
+    <a class="article-category-link" href="/categories/spring/">spring</a>
   </div>
 
       
@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">379</span>
+            <span class="post-count">240</span>
         </span>
     </span>
 
@@ -109,23 +109,19 @@
       
 
       
-      <h2 id="spring的启动流程回顾"><a href="#spring的启动流程回顾" class="headerlink" title="spring的启动流程回顾"></a>spring的启动流程回顾</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; Prepare this context for refreshing.</span><br><span class="line">prepareRefresh();</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 1.Tell the subclass to refresh the internal bean factory.</span><br><span class="line">ConfigurableListableBeanFactory beanFactory &#x3D; obtainFreshBeanFactory();</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 2.Prepare the bean factory for use in this context.</span><br><span class="line">prepareBeanFactory(beanFactory);</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 3.Allows post-processing of the bean factory in context subclasses.</span><br><span class="line">postProcessBeanFactory(beanFactory);</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 4.Invoke factory processors registered as beans in the context.</span><br><span class="line">invokeBeanFactoryPostProcessors(beanFactory);</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 5.Register bean processors that intercept bean creation.</span><br><span class="line">registerBeanPostProcessors(beanFactory);</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 6.Initialize message source for this context.</span><br><span class="line">initMessageSource();</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 7.Initialize event multicaster for this context.</span><br><span class="line">initApplicationEventMulticaster();</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 8.Initialize other special beans in specific context subclasses.</span><br><span class="line">onRefresh();</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 9.Check for listener beans and register them.</span><br><span class="line">registerListeners();</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 10.Instantiate all remaining (non-lazy-init) singletons.</span><br><span class="line">finishBeanFactoryInitialization(beanFactory);</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 11.Last step: publish corresponding event.</span><br><span class="line">finishRefresh();</span><br></pre></td></tr></table></figure>
-<p>我们需要主要关注的是第4步<code>invokeBeanFactoryPostProcessors</code>和第10步<code>finishBeanFactoryInitialization</code></p>
-<h2 id="MyBatis的Mapper的注册"><a href="#MyBatis的Mapper的注册" class="headerlink" title="MyBatis的Mapper的注册"></a>MyBatis的Mapper的注册</h2><p>Mapper的注册在Spring启动的第4步<code>invokeBeanFactoryPostProcessors</code>完成<br>结果就是<code>把能能够生成MapperProxy的FactoryBean的BeanDefninition</code>注册到spring的Beanfactory中<br>具体步骤</p>
-<ul>
-<li>执行<code>org.mybatis.spring.mapper.MapperScannerConfigurer#postProcessBeanDefinitionRegistry</code></li>
-<li>调用<code>ClasspathMapperScanner</code>扫描<code>@MapperScan下配置的basepackage</code>，拿到对应的class信息（接口）</li>
-<li>然后生成一个BeanDefnition，并将class设置为<code>org.mybatis.spring.mapper.MapperFactoryBean</code>,这个FactoryBean就是用来创建Mapper代理的对象</li>
-</ul>
-<h2 id="MyBatis的Mapper代理的实例化"><a href="#MyBatis的Mapper代理的实例化" class="headerlink" title="MyBatis的Mapper代理的实例化"></a>MyBatis的Mapper代理的实例化</h2><p>Mapper代理的实例化发生在第10步<code>finishBeanFactoryInitialization</code><br>spring发现注册的Bean是<code>FactoryBean</code>的时候，就会回调<code>org.springframework.beans.factory.FactoryBean#getObject</code>，这个时候<code>MapperFactoryBean</code>就可以通过<code>sqlSession</code>去实例化Mapper的代理</p>
-<h2 id="Mybatis-sql的执行过程"><a href="#Mybatis-sql的执行过程" class="headerlink" title="Mybatis sql的执行过程"></a>Mybatis sql的执行过程</h2><p>具体步骤</p>
-<ul>
-<li>业务调用Mapper接口</li>
-<li>Mapper代理解析sql语句</li>
-<li>Mapper将解析好的sql交给<code>SqlSessionTemplate</code></li>
-<li><code>SqlSessionTemplate</code>从<code>SqlSessionFactory</code>中取出一个<code>SqlSession</code></li>
-<li><code>SqlSessionFactory</code>从<code>Datasource</code>中取出一个<code>Connection</code>封装成<code>SqlSession</code>,返回给<code>SqlSessionTemplate</code></li>
-<li><code>SqlSessionTemplate</code>利用<code>SqlSession</code>执行sql语句</li>
+      <h2 id="什么是spring-boot-devtools"><a href="#什么是spring-boot-devtools" class="headerlink" title="什么是spring-boot-devtools"></a>什么是spring-boot-devtools</h2><p>就是你在开发环境改完代码要部署，改一行代码就手动重启一次，不仅繁琐，而且启动很慢，<code>spring-boot-devtools</code>提供了代码的增量部署，只要修改代码，<code>spring-boot-devtools</code>就会重载classpath下的class文件（不会重载依赖的jar中的代码，具体是靠多个类加载器实现的），无需手动重启，方便且启动速度非常快。</p>
+<h2 id="如何配置"><a href="#如何配置" class="headerlink" title="如何配置"></a>如何配置</h2><ul>
+<li><p>引入<code>spring-boot-devtools</code>依赖</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-devtools<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">scope</span>&gt;</span>runtime<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">optional</span>&gt;</span>true<span class="tag">&lt;/<span class="name">optional</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>开始idea的自动编译功能(这样才能把你修改的代码编译成class,才会被工具检测到)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Settings&#x2F;Preferences -&gt; Build、Execution、Development -&gt; Compiler</span><br><span class="line">✅ Build project automatically</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>开启idea运行时自动编译许可</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ctrl&#x2F;command + shift + alt&#x2F;option + &#x2F; -&gt; 1.Registry</span><br><span class="line">compiler.automake.allow.when.app.running ✅</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>重启idea</p>
+</li>
 </ul>
 
       
@@ -195,7 +191,7 @@
     <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2020/05/30/14_MyBatis%E7%9A%84%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B/" alt="微信分享二维码">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2020/06/08/15_idea%E5%BC%80%E5%90%AFspring-boot-devtools/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -212,9 +208,9 @@
   <nav class="article-nav">
     
     
-      <a href="/2020/05/25/13_%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86%E7%8E%AF%E5%A2%83%E4%B8%8B%E5%A6%82%E4%BD%95%E8%8E%B7%E5%8F%96%E7%9C%9F%E5%AE%9EIP/" class="article-nav-link">
+      <a href="/2020/05/30/14_MyBatis%E7%9A%84%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B%20copy/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">反向代理环境下如何获取真实IP</div>
+        <div class="article-nav-title">MyBatis的执行流程</div>
       </a>
     
   </nav>
