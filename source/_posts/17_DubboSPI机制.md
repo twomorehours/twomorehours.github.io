@@ -311,5 +311,67 @@ public Result invoke(final Invocation invocation) throws RpcException {
 }
 ```
 
+## Dubbo SPI的AOP
+`Dubbo SPI`的`AOP`实现并不是我们熟知的`动态代理`,而是更为简单的`装饰者模式`
+`Dubbo SPI`的`AOP`是实现分为两步
+- 加载本扩展点下所有的包装类(实际上就是判断有没有以这个接口为参数的构造函数)
+    ```java
+    // com.alibaba.dubbo.common.extension.ExtensionLoader#loadClass
+        private void loadClass(Map<String, Class<?>> extensionClasses, java.net.URL resourceURL, Class<?> clazz, String name) throws NoSuchMethodException {
+        // ...
+        // 这里判断是不是包装类
+        } else if (isWrapperClass(clazz)) {
+            Set<Class<?>> wrappers = cachedWrapperClasses;
+            if (wrappers == null) {
+                cachedWrapperClasses = new ConcurrentHashSet<Class<?>>();
+                wrappers = cachedWrapperClasses;
+            }
+            //是就加到集合中
+            wrappers.add(clazz);
+        } 
+        // ...
+    }
+
+    //com.alibaba.dubbo.common.extension.ExtensionLoader#isWrapperClass
+    private boolean isWrapperClass(Class<?> clazz) {
+        try {
+            //就是简单判断一下是不是有接受这个扩展点接口的的构造函数
+            clazz.getConstructor(type);
+            return true;
+        } catch (NoSuchMethodException e) {
+            return false;
+        }
+    }
+    ```
+- 对创建好的实例进行包装
+    ```java
+    // com.alibaba.dubbo.common.extension.ExtensionLoader#createExtension
+    private T createExtension(String name) {
+        // 先获取扩展key对应的Class 我们这里先跳过 下一步再分析
+        Class<?> clazz = getExtensionClasses().get(name);
+        // ...
+        try {
+            //还是一个缓存
+            T instance = (T) EXTENSION_INSTANCES.get(clazz);
+            if (instance == null) {
+                //...
+                //这里就是包装逻辑 
+                //实际上等同于new Wrapper1(new Wrapper2(new Wrapper3(真实实现)))
+                Set<Class<?>> wrapperClasses = cachedWrapperClasses;
+                if (wrapperClasses != null && !wrapperClasses.isEmpty()) {
+                    for (Class<?> wrapperClass : wrapperClasses) {
+                        instance = injectExtension((T) wrapperClass.getConstructor(type).newInstance(instance));
+                    }
+                }
+            }
+            // 最终返回的其实是一个Wrapper对象（如果有的话）
+            return instance;
+        } catch (Throwable t) {
+            throw new IllegalStateException("Extension instance(name: " + name + ", class: " +
+                    type + ")  could not be instantiated: " + t.getMessage(), t);
+        }
+    }
+    ```
+
 ## Dubbo SPI的DI
-见下回书
+学会了再分析
