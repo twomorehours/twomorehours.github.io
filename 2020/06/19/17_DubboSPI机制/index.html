@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">2k</span>
+            <span class="post-count">2.2k</span>
         </span>
     </span>
 
@@ -84,7 +84,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">10 min</span>
+            <span class="post-count">11 min</span>
         </span>
     </span>
 </div>
@@ -161,7 +161,11 @@
 
 </li>
 </ul>
-<h2 id="Dubbo-SPI的DI"><a href="#Dubbo-SPI的DI" class="headerlink" title="Dubbo SPI的DI"></a>Dubbo SPI的DI</h2><p>学会了再分析</p>
+<h2 id="Dubbo-SPI的AOP实践"><a href="#Dubbo-SPI的AOP实践" class="headerlink" title="Dubbo SPI的AOP实践"></a>Dubbo SPI的AOP实践</h2><ul>
+<li>编写包装类  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> show.tmh.invoker;</span><br><span class="line"><span class="keyword">import</span> com.alibaba.dubbo.common.URL;</span><br><span class="line"><span class="keyword">import</span> com.alibaba.dubbo.rpc.Invocation;</span><br><span class="line"><span class="keyword">import</span> com.alibaba.dubbo.rpc.Invoker;</span><br><span class="line"><span class="keyword">import</span> com.alibaba.dubbo.rpc.RpcException;</span><br><span class="line"><span class="keyword">import</span> com.alibaba.dubbo.rpc.cluster.LoadBalance;</span><br><span class="line"><span class="keyword">import</span> java.util.List;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyLoadBalanceWrapper</span> <span class="keyword">implements</span> <span class="title">LoadBalance</span></span>&#123;</span><br><span class="line">    <span class="comment">// 有一个真正的扩展点实例</span></span><br><span class="line">    <span class="keyword">private</span> LoadBalance loadBalance;</span><br><span class="line">    <span class="comment">// 提供一个扩展点构造函数</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MyLoadBalanceWrapper</span><span class="params">(LoadBalance loadBalance)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.loadBalance = loadBalance;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> &lt;T&gt; <span class="function">Invoker&lt;T&gt; <span class="title">select</span><span class="params">(List&lt;Invoker&lt;T&gt;&gt; invokers, URL url, Invocation invocation)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"before loadbalance"</span>);</span><br><span class="line">        <span class="comment">// 实际调用扩展点</span></span><br><span class="line">        Invoker&lt;T&gt; select = loadBalance.select(invokers, url, invocation);</span><br><span class="line">        System.out.println(<span class="string">"after loadbalance"</span>);</span><br><span class="line">        <span class="keyword">return</span> select;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>配置  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">YOUR-CLASSPATH&#x2F;META-INF\dubbo\com.alibaba.dubbo.rpc.cluster.LoadBalance(文件)</span><br><span class="line">内容：</span><br><span class="line">... &#x2F;&#x2F; 其他扩展点或者包装</span><br><span class="line">myWrapper&#x3D;show.tmh.invoker.MyLoadBalanceWrapper</span><br></pre></td></tr></table></figure></li>
+<li>直接运行即可，<code>Dubbo SPI</code>自动完成包装<h2 id="Dubbo-SPI的DI"><a href="#Dubbo-SPI的DI" class="headerlink" title="Dubbo SPI的DI"></a>Dubbo SPI的DI</h2>学会了再分析</li>
+</ul>
 
       
       <!-- reward -->
