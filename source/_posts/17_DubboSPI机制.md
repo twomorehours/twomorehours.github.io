@@ -373,5 +373,40 @@ public Result invoke(final Invocation invocation) throws RpcException {
     }
     ```
 
+## Dubbo SPI的AOP实践
+- 编写包装类
+    ```java
+    package show.tmh.invoker;
+    import com.alibaba.dubbo.common.URL;
+    import com.alibaba.dubbo.rpc.Invocation;
+    import com.alibaba.dubbo.rpc.Invoker;
+    import com.alibaba.dubbo.rpc.RpcException;
+    import com.alibaba.dubbo.rpc.cluster.LoadBalance;
+    import java.util.List;
+    public class MyLoadBalanceWrapper implements LoadBalance{
+        // 有一个真正的扩展点实例
+        private LoadBalance loadBalance;
+        // 提供一个扩展点构造函数
+        public MyLoadBalanceWrapper(LoadBalance loadBalance) {
+            this.loadBalance = loadBalance;
+        }
+        @Override
+        public <T> Invoker<T> select(List<Invoker<T>> invokers, URL url, Invocation invocation) throws RpcException {
+            System.out.println("before loadbalance");
+            // 实际调用扩展点
+            Invoker<T> select = loadBalance.select(invokers, url, invocation);
+            System.out.println("after loadbalance");
+            return select;
+        }
+    }
+    ```
+- 配置
+    ```text
+    YOUR-CLASSPATH/META-INF\dubbo\com.alibaba.dubbo.rpc.cluster.LoadBalance(文件)
+    内容：
+    ... // 其他扩展点或者包装
+    myWrapper=show.tmh.invoker.MyLoadBalanceWrapper
+    ```
+- 直接运行即可，`Dubbo SPI`自动完成包装
 ## Dubbo SPI的DI
 学会了再分析
