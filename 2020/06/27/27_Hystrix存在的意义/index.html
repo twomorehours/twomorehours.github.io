@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">539</span>
+            <span class="post-count">422</span>
         </span>
     </span>
 
@@ -111,6 +111,11 @@
       
       <h2 id="Hystrix解决了什么问题"><a href="#Hystrix解决了什么问题" class="headerlink" title="Hystrix解决了什么问题"></a>Hystrix解决了什么问题</h2><p>根据我自己的理解,Hystrix最最主要的解决了一个问题,那就是<code>服务雪崩</code>。<br>服务雪崩的典型场景就是<code>下游一个接口拖死了上游N多个服务</code>,因为上游服务的线程全部hang在这个接口上，没有其他能力处理新的请求，导致服务假死，这种假死是蔓延型的，很快就会蔓延至整个业务</p>
 <h2 id="Hystrix解决哪几个方向的问题"><a href="#Hystrix解决哪几个方向的问题" class="headerlink" title="Hystrix解决哪几个方向的问题"></a>Hystrix解决哪几个方向的问题</h2><ul>
+<li>服务down掉</li>
+<li>接口超时</li>
+<li>接口返回错误</li>
+</ul>
+<h2 id="Hystrix怎么解决的问题"><a href="#Hystrix怎么解决的问题" class="headerlink" title="Hystrix怎么解决的问题"></a>Hystrix怎么解决的问题</h2><ul>
 <li>资源隔离<ul>
 <li>典型的就是<code>请求线程池隔离</code>,一个接口响应有问题最多拖死对应的线程池的线程，而不会影响其他的业务</li>
 </ul>
@@ -127,18 +132,8 @@
 <li>上面几种都是对用服务提供方的防范措施，调用方也应该对自己的调用量有一个预期，给自己限制一个请求上限，避免大流量将提供方压垮，实现一般是线程池实现，如果不能提交到线程池中，立即走降级逻辑</li>
 </ul>
 </li>
-</ul>
-<h2 id="常见的名词解释"><a href="#常见的名词解释" class="headerlink" title="常见的名词解释"></a>常见的名词解释</h2><ul>
-<li>限流<ul>
-<li>限流一般指调用方限制自己对提供方的调用速度，以保护提供方</li>
-</ul>
-</li>
-<li>降级<ul>
-<li>降级也是对调用方说的，当提供方因为各种原因（超时，错误，被标记为熔断等）不能提供服务的时候，走本地预设的逻辑，实现有损提供服务</li>
-</ul>
-</li>
-<li>熔断<ul>
-<li>熔断也是对调用方说的，当提供方在一段时间内出现一定量的非预期行为时（超时，错误等），调用方会直接切断对此提供方的调用，直接走降级逻辑，以节省请求资源，熔断是建立在错误统计之上的一种行为，熔断不是问题的来源，而是出现问题解决方案中的一环</li>
+<li>基于统计的熔断<ul>
+<li>当提供方在一段时间内出现一定量的非预期行为时（超时，错误等），调用方会直接切断对此提供方的调用，直接走降级逻辑，以节省请求资源</li>
 </ul>
 </li>
 </ul>
