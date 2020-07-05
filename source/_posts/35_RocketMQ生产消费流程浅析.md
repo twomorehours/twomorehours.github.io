@@ -1213,3 +1213,36 @@ categories:
         }
     }
     ```
+- 实际消费回调
+    ```java
+    //org.apache.rocketmq.client.impl.consumer.ConsumeMessageConcurrentlyService.ConsumeRequest#run
+    public void run() {
+            if (this.processQueue.isDropped()) {
+                log.info("the message queue not be able to consume, because it's dropped. group={} {}", ConsumeMessageConcurrentlyService.this.consumerGroup, this.messageQueue);
+                return;
+            }
+
+            MessageListenerConcurrently listener = ConsumeMessageConcurrentlyService.this.messageListener;
+            ConsumeConcurrentlyContext context = new ConsumeConcurrentlyContext(messageQueue);
+            //...
+            ConsumeReturnType returnType = ConsumeReturnType.SUCCESS;
+            try {
+                if (msgs != null && !msgs.isEmpty()) {
+                    for (MessageExt msg : msgs) {
+                        MessageAccessor.setConsumeStartTimeStamp(msg, String.valueOf(System.currentTimeMillis()));
+                    }
+                }
+                // 消费
+                status = listener.consumeMessage(Collections.unmodifiableList(msgs), context);
+            } catch (Throwable e) {
+                log.warn("consumeMessage exception: {} Group: {} Msgs: {} MQ: {}",
+                    RemotingHelper.exceptionSimpleDesc(e),
+                    ConsumeMessageConcurrentlyService.this.consumerGroup,
+                    msgs,
+                    messageQueue);
+                hasException = true;
+            }
+            //...
+
+    }
+    ```
