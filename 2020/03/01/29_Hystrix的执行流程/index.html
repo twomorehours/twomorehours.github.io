@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+
+
+<html lang="chinese">
+
+
+<head>
+  <meta charset="utf-8" />
+    
+  <meta name="description" content="two more hours company" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+    Hystrix的执行流程(去RxJava版) |  向天再借两小时
+  </title>
+  <meta name="generator" content="hexo-theme-yilia-plus">
+  
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
+  
+<link rel="stylesheet" href="/dist/main.css">
+
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/css/remixicon.min.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+  
+<script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+
+  
+  
+
+  
+
+</head>
+
+</html>
+
+<body>
+  <div id="app">
+    <main class="content on">
+      <section class="outer">
+  <article id="post-29_Hystrix的执行流程" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  Hystrix的执行流程(去RxJava版)
+</h1>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/03/01/29_Hystrix%E7%9A%84%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B/" class="article-date">
+  <time datetime="2020-03-01T15:52:39.000Z" itemprop="datePublished">2020-03-01</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/java/">java</a> / <a class="article-category-link" href="/categories/java/springcloud/">springcloud</a>
+  </div>
+
+      
+      
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">2.7k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">14 min</span>
+        </span>
+    </span>
+</div>
+
+      
+    </div>
+    
+
+    
+    
+    <div class="tocbot"></div>
+
+
+
+
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="说明"><a href="#说明" class="headerlink" title="说明"></a>说明</h2><ul>
+<li>RxJava是一个并发编程的框架，和Hystrix的核心逻辑并没有直接的联系，RxJava的编码方式过于复杂，所以本次分析会尽量减少RxJava相关的代码</li>
+<li>Feign和Hystrix整合与单独使用Hystrix在执行逻辑上没有任何区别，所以今天分析的入口是<code>com.netflix.hystrix.HystrixCommand#execute</code></li>
+</ul>
+<h2 id="Hystrix的执行逻辑"><a href="#Hystrix的执行逻辑" class="headerlink" title="Hystrix的执行逻辑"></a>Hystrix的执行逻辑</h2><ul>
+<li><p>任务提交</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// com.netflix.hystrix.HystrixCommand#execute</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> R <span class="title">execute</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 加到队列中并阻塞等待完成</span></span><br><span class="line">        <span class="keyword">return</span> queue().get();</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> Exceptions.sneakyThrow(decomposeException(e));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// com.netflix.hystrix.HystrixCommand#queue</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Future&lt;R&gt; <span class="title">queue</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// toObservable 是RxJava的东西 实际的执行逻辑就封装在里面</span></span><br><span class="line">    <span class="comment">// toBlocking 包装成阻塞模式</span></span><br><span class="line">    <span class="comment">// toFuture 包装成Future 并且并且订阅 Observable 执行真正的Hystrix逻辑</span></span><br><span class="line">    <span class="keyword">final</span> Future&lt;R&gt; delegate = toObservable().toBlocking().toFuture();</span><br><span class="line">    <span class="keyword">final</span> Future&lt;R&gt; f = <span class="keyword">new</span> Future&lt;R&gt;() &#123;</span><br><span class="line">        <span class="comment">//... 简单包装了一下delegate</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> f;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//rx.internal.operators.BlockingOperatorToFuture#toFuture</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">Future&lt;T&gt; <span class="title">toFuture</span><span class="params">(Observable&lt;? extends T&gt; that)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 等待结果返回 唤醒</span></span><br><span class="line">    <span class="keyword">final</span> CountDownLatch finished = <span class="keyword">new</span> CountDownLatch(<span class="number">1</span>);</span><br><span class="line">    <span class="comment">// 结果</span></span><br><span class="line">    <span class="keyword">final</span> AtomicReference&lt;T&gt; value = <span class="keyword">new</span> AtomicReference&lt;T&gt;();</span><br><span class="line">    <span class="comment">// 返回错误</span></span><br><span class="line">    <span class="keyword">final</span> AtomicReference&lt;Throwable&gt; error = <span class="keyword">new</span> AtomicReference&lt;Throwable&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 订阅Observable  使其执行内部封装的真正逻辑</span></span><br><span class="line">    <span class="meta">@SuppressWarnings</span>(<span class="string">"unchecked"</span>)</span><br><span class="line">    <span class="keyword">final</span> Subscription s = ((Observable&lt;T&gt;)that).single().subscribe(<span class="keyword">new</span> Subscriber&lt;T&gt;() &#123;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onCompleted</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="comment">// 完成之后唤醒主线程</span></span><br><span class="line">            finished.countDown();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onError</span><span class="params">(Throwable e)</span> </span>&#123;</span><br><span class="line">            error.compareAndSet(<span class="keyword">null</span>, e);</span><br><span class="line">            finished.countDown();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 返回结果后 将一个</span></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onNext</span><span class="params">(T v)</span> </span>&#123;</span><br><span class="line">            <span class="comment">// "single" guarantees there is only one "onNext"</span></span><br><span class="line">            value.set(v);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> Future&lt;T&gt;() &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">boolean</span> cancelled;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 取消执行</span></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">cancel</span><span class="params">(<span class="keyword">boolean</span> mayInterruptIfRunning)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (finished.getCount() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                cancelled = <span class="keyword">true</span>;</span><br><span class="line">                <span class="comment">// 取消正在执行的Observable</span></span><br><span class="line">                s.unsubscribe();</span><br><span class="line">                <span class="comment">// release the latch (a race condition may have already released it by now)</span></span><br><span class="line">                finished.countDown();</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">// can't cancel</span></span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//...</span></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> T <span class="title">get</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException, ExecutionException </span>&#123;</span><br><span class="line">            <span class="comment">// 等待结果返回</span></span><br><span class="line">            finished.await();</span><br><span class="line">            <span class="keyword">return</span> getValue();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">private</span> T <span class="title">getValue</span><span class="params">()</span> <span class="keyword">throws</span> ExecutionException </span>&#123;</span><br><span class="line">            <span class="keyword">final</span> Throwable throwable = error.get();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (throwable != <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> ExecutionException(<span class="string">"Observable onError"</span>, throwable);</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (cancelled) &#123;</span><br><span class="line">                <span class="comment">// Contract of Future.get() requires us to throw this:</span></span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> CancellationException(<span class="string">"Subscription unsubscribed"</span>);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> value.get();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>Hystrix开始执行</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//com.netflix.hystrix.AbstractCommand#toObservable</span></span><br><span class="line"><span class="comment">//...</span></span><br><span class="line"><span class="comment">// 设置一些回调</span></span><br><span class="line"><span class="comment">// 这里是之前执行的代码 返回的Observable</span></span><br><span class="line"><span class="comment">// 现在调用到它的call方法了</span></span><br><span class="line"><span class="keyword">return</span> Observable.defer(<span class="keyword">new</span> Func0&lt;Observable&lt;R&gt;&gt;() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Observable&lt;R&gt; <span class="title">call</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 状态不对直接返回</span></span><br><span class="line">        <span class="keyword">if</span> (!commandState.compareAndSet(CommandState.NOT_STARTED, CommandState.OBSERVABLE_CHAIN_CREATED)) &#123;</span><br><span class="line">            IllegalStateException ex = <span class="keyword">new</span> IllegalStateException(<span class="string">"This instance can only be executed once. Please instantiate a new instance."</span>);</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> HystrixRuntimeException(FailureType.BAD_REQUEST_EXCEPTION, _cmd.getClass(), getLogMessagePrefix() + <span class="string">" command executed multiple times - this is not permitted."</span>, ex, <span class="keyword">null</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        commandStartTimestamp = System.currentTimeMillis();</span><br><span class="line">        <span class="comment">//...</span></span><br><span class="line">        <span class="comment">// 这里是执行的核心逻辑 </span></span><br><span class="line">        <span class="comment">// 先声声明 稍后回调</span></span><br><span class="line">        <span class="keyword">final</span> Func0&lt;Observable&lt;R&gt;&gt; applyHystrixSemantics = <span class="keyword">new</span> Func0&lt;Observable&lt;R&gt;&gt;() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> Observable&lt;R&gt; <span class="title">call</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="keyword">if</span> (commandState.get().equals(CommandState.UNSUBSCRIBED)) &#123;</span><br><span class="line">                    <span class="keyword">return</span> Observable.never();</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">// 核心逻辑</span></span><br><span class="line">                <span class="keyword">return</span> applyHystrixSemantics(_cmd);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">        <span class="comment">// 是否开启请求缓存 默认是关闭的 一般也不会开启 没什么意义</span></span><br><span class="line">        <span class="keyword">final</span> <span class="keyword">boolean</span> requestCacheEnabled = isRequestCachingEnabled();</span><br><span class="line">        <span class="comment">//applyHystrixSemantics </span></span><br><span class="line">        Observable&lt;R&gt; hystrixObservable =</span><br><span class="line">                Observable.defer(applyHystrixSemantics)</span><br><span class="line">                        .map(wrapWithAllOnNextHooks);</span><br><span class="line"></span><br><span class="line">        Observable&lt;R&gt; afterCache;</span><br><span class="line">        <span class="comment">//...</span></span><br><span class="line">        <span class="comment">// 去掉一些缓存相关的逻辑</span></span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">        afterCache = hystrixObservable;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 执行核心逻辑</span></span><br><span class="line">        <span class="keyword">return</span> afterCache</span><br><span class="line">                .doOnTerminate(terminateCommandCleanup)     <span class="comment">// perform cleanup once (either on normal terminal state (this line), or unsubscribe (next line))</span></span><br><span class="line">                .doOnUnsubscribe(unsubscribeCommandCleanup) <span class="comment">// perform cleanup once</span></span><br><span class="line">                .doOnCompleted(fireOnCompletedHook);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>断路器判断</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//com.netflix.hystrix.AbstractCommand#applyHystrixSemantics</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> Observable&lt;R&gt; <span class="title">applyHystrixSemantics</span><span class="params">(<span class="keyword">final</span> AbstractCommand&lt;R&gt; _cmd)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// mark that we're starting execution on the ExecutionHook</span></span><br><span class="line">    <span class="comment">// if this hook throws an exception, then a fast-fail occurs with no fallback.  No state is left inconsistent</span></span><br><span class="line">    executionHook.onStart(_cmd);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* determine if we're allowed to execute */</span></span><br><span class="line">    <span class="comment">// 这里是判断断路器逻辑 下面分析</span></span><br><span class="line">    <span class="keyword">if</span> (circuitBreaker.allowRequest()) &#123;</span><br><span class="line">        <span class="comment">// 省略一堆信号量逻辑 因为一般不会用</span></span><br><span class="line">        <span class="comment">//..</span></span><br><span class="line">        <span class="keyword">return</span> executeCommandAndObserve(_cmd)</span><br><span class="line">                    .doOnError(markExceptionThrown)</span><br><span class="line">                    .doOnTerminate(singleSemaphoreRelease)</span><br><span class="line">                    .doOnUnsubscribe(singleSemaphoreRelease);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (RuntimeException e) &#123;</span><br><span class="line">            <span class="keyword">return</span> Observable.error(e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 走断路降级逻辑</span></span><br><span class="line">        <span class="keyword">return</span> handleShortCircuitViaFallback();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//com.netflix.hystrix.HystrixCircuitBreaker.HystrixCircuitBreakerImpl#allowRequest</span></span><br><span class="line"><span class="comment">// 请注意这里的 Open=断路器开启=不能通过 Close相反</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">allowRequest</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 断路器强制开启 直接失败</span></span><br><span class="line">    <span class="keyword">if</span> (properties.circuitBreakerForceOpen().get()) &#123;</span><br><span class="line">        <span class="comment">// properties have asked us to force the circuit open so we will allow NO requests</span></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 断路器强制关闭 直接成功</span></span><br><span class="line">    <span class="keyword">if</span> (properties.circuitBreakerForceClosed().get()) &#123;</span><br><span class="line">        <span class="comment">// we still want to allow isOpen() to perform it's calculations so we simulate normal behavior</span></span><br><span class="line">        isOpen();</span><br><span class="line">        <span class="comment">// properties have asked us to ignore errors so we will ignore the results of isOpen and just allow all traffic through</span></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 这里才是最常用的逻辑 </span></span><br><span class="line">    <span class="comment">// 没开启 || 半开</span></span><br><span class="line">    <span class="keyword">return</span> !isOpen() || allowSingleTest();</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//com.netflix.hystrix.HystrixCircuitBreaker.HystrixCircuitBreakerImpl#isOpen</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isOpen</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 如果已经开启了 直接返回开启</span></span><br><span class="line">        <span class="keyword">if</span> (circuitOpen.get()) &#123;</span><br><span class="line">            <span class="comment">// if we're open we immediately return true and don't bother attempting to 'close' ourself as that is left to allowSingleTest and a subsequent successful test to close</span></span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 下面是根据统计信息判断 是否是要开启</span></span><br><span class="line">        <span class="comment">// 统计信息</span></span><br><span class="line">        HealthCounts health = metrics.getHealthCounts();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 样本不足</span></span><br><span class="line">        <span class="keyword">if</span> (health.getTotalRequests() &lt; properties.circuitBreakerRequestVolumeThreshold().get()) &#123;</span><br><span class="line">            <span class="comment">// we are not past the minimum volume threshold for the statisticalWindow so we'll return false immediately and not calculate anything</span></span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 错误比例未达标</span></span><br><span class="line">        <span class="keyword">if</span> (health.getErrorPercentage() &lt; properties.circuitBreakerErrorThresholdPercentage().get()) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 这里说明有问题了 要断开断路器</span></span><br><span class="line">            <span class="comment">// 标记状态</span></span><br><span class="line">            <span class="keyword">if</span> (circuitOpen.compareAndSet(<span class="keyword">false</span>, <span class="keyword">true</span>)) &#123;</span><br><span class="line">                <span class="comment">// 标记半开时间</span></span><br><span class="line">                <span class="comment">// 这里是判断是否半开的关键 </span></span><br><span class="line">                <span class="comment">// 如果超过这个时间5s 就可以放一个请求过去 然后在设置这个时间 在等</span></span><br><span class="line">                circuitOpenedOrLastTestedTime.set(System.currentTimeMillis());</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">// How could previousValue be true? If another thread was going through this code at the same time a race-condition could have</span></span><br><span class="line">                <span class="comment">// caused another thread to set it to true already even though we were in the process of doing the same</span></span><br><span class="line">                <span class="comment">// In this case, we know the circuit is open, so let the other thread set the currentTime and report back that the circuit is open</span></span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//com.netflix.hystrix.HystrixCircuitBreaker.HystrixCircuitBreakerImpl#allowSingleTest</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">allowSingleTest</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">long</span> timeCircuitOpenedOrWasLastTested = circuitOpenedOrLastTestedTime.get();</span><br><span class="line">    <span class="comment">// 如果已经超过半开时间了</span></span><br><span class="line">    <span class="keyword">if</span> (circuitOpen.get() &amp;&amp; System.currentTimeMillis() &gt; timeCircuitOpenedOrWasLastTested + properties.circuitBreakerSleepWindowInMilliseconds().get()) &#123;</span><br><span class="line">       <span class="comment">// 尝试放一个请求过去 这里会有多线程问题 用Atomic解决</span></span><br><span class="line">       <span class="comment">// 然后再次保存这个时间</span></span><br><span class="line">       <span class="comment">// 下一个半开请求要再等5s</span></span><br><span class="line">        <span class="keyword">if</span> (circuitOpenedOrLastTestedTime.compareAndSet(timeCircuitOpenedOrWasLastTested, System.currentTimeMillis())) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//com.netflix.hystrix.HystrixCircuitBreaker.HystrixCircuitBreakerImpl#markSuccess</span></span><br><span class="line"><span class="comment">// 半开状态下请求成功</span></span><br><span class="line"><span class="comment">// 将断路由器闭合 并且重新开始统计</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">markSuccess</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (circuitOpen.get()) &#123;</span><br><span class="line">        <span class="comment">// 修改状态</span></span><br><span class="line">        <span class="keyword">if</span> (circuitOpen.compareAndSet(<span class="keyword">true</span>, <span class="keyword">false</span>)) &#123;</span><br><span class="line">            <span class="comment">// 重新开始统计</span></span><br><span class="line">            metrics.resetStream();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>断路器断开callback处理(其他错误的callback与这个主流程一致)</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// com.netflix.hystrix.AbstractCommand#handleShortCircuitViaFallback</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> Observable&lt;R&gt; <span class="title">handleShortCircuitViaFallback</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 标记一下失败类型</span></span><br><span class="line">    eventNotifier.markEvent(HystrixEventType.SHORT_CIRCUITED, commandKey);</span><br><span class="line">    <span class="comment">// short-circuit and go directly to fallback (or throw an exception if no fallback implemented)</span></span><br><span class="line">    Exception shortCircuitException = <span class="keyword">new</span> RuntimeException(<span class="string">"Hystrix circuit short-circuited and is OPEN"</span>);</span><br><span class="line">    executionResult = executionResult.setExecutionException(shortCircuitException);</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">//走统一的Fallback逻辑</span></span><br><span class="line">        <span class="keyword">return</span> getFallbackOrThrowException(<span class="keyword">this</span>, HystrixEventType.SHORT_CIRCUITED, FailureType.SHORTCIRCUIT,</span><br><span class="line">                <span class="string">"short-circuited"</span>, shortCircuitException);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        <span class="keyword">return</span> Observable.error(e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// com.netflix.hystrix.AbstractCommand#getFallbackOrThrowException</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> Observable&lt;R&gt; <span class="title">getFallbackOrThrowException</span><span class="params">(<span class="keyword">final</span> AbstractCommand&lt;R&gt; _cmd, <span class="keyword">final</span> HystrixEventType eventType, <span class="keyword">final</span> FailureType failureType, <span class="keyword">final</span> String message, <span class="keyword">final</span> Exception originalException)</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 省略1亿行非主流代码</span></span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">    <span class="comment">// 构建fallback链</span></span><br><span class="line">    Observable&lt;R&gt; fallbackExecutionChain;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// fallback也可以控制速率 但是一般没人控制</span></span><br><span class="line">    <span class="keyword">if</span> (fallbackSemaphore.tryAcquire()) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (isFallbackUserDefined()) &#123;</span><br><span class="line">                executionHook.onFallbackStart(<span class="keyword">this</span>);</span><br><span class="line">                <span class="comment">// 取fallbck实际实现</span></span><br><span class="line">                fallbackExecutionChain = getFallbackObservable();</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">//same logic as above without the hook invocation</span></span><br><span class="line">                fallbackExecutionChain = getFallbackObservable();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable ex) &#123;</span><br><span class="line">            <span class="comment">//If hook or user-fallback throws, then use that as the result of the fallback lookup</span></span><br><span class="line">            fallbackExecutionChain = Observable.error(ex);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 构建链 实际就看</span></span><br><span class="line">        <span class="keyword">return</span> fallbackExecutionChain</span><br><span class="line">                .doOnEach(setRequestContext)</span><br><span class="line">                .lift(<span class="keyword">new</span> FallbackHookApplication(_cmd))</span><br><span class="line">                .lift(<span class="keyword">new</span> DeprecatedOnFallbackHookApplication(_cmd))</span><br><span class="line">                .doOnNext(markFallbackEmit)</span><br><span class="line">                .doOnCompleted(markFallbackCompleted)</span><br><span class="line">                .onErrorResumeNext(handleFallbackError)</span><br><span class="line">                .doOnTerminate(singleSemaphoreRelease)</span><br><span class="line">                .doOnUnsubscribe(singleSemaphoreRelease);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> handleFallbackRejectionByEmittingError();</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> handleFallbackDisabledByEmittingError(originalException, failureType, message);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// com.netflix.hystrix.HystrixCommand#getFallbackObservable</span></span><br><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">protected</span> Observable&lt;R&gt; <span class="title">getFallbackObservable</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> Observable.defer(<span class="keyword">new</span> Func0&lt;Observable&lt;R&gt;&gt;() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> Observable&lt;R&gt; <span class="title">call</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// 返回自定义的fallback</span></span><br><span class="line">                <span class="keyword">return</span> Observable.just(getFallback());</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Throwable ex) &#123;</span><br><span class="line">                <span class="keyword">return</span> Observable.error(ex);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>线程池的隔离</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//com.netflix.hystrix.AbstractCommand#executeCommandAndObserve</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> Observable&lt;R&gt; <span class="title">executeCommandAndObserve</span><span class="params">(<span class="keyword">final</span> AbstractCommand&lt;R&gt; _cmd)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> HystrixRequestContext currentRequestContext = HystrixRequestContext.getContextForCurrentThread();</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">    <span class="comment">// 失败的回调</span></span><br><span class="line">    <span class="keyword">final</span> Func1&lt;Throwable, Observable&lt;R&gt;&gt; handleFallback = <span class="keyword">new</span> Func1&lt;Throwable, Observable&lt;R&gt;&gt;() &#123;</span><br><span class="line">        <span class="comment">// 这里的fallback逻辑和刚才的断路器断开基本上是一样的</span></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> Observable&lt;R&gt; <span class="title">call</span><span class="params">(Throwable t)</span> </span>&#123;</span><br><span class="line">            Exception e = getExceptionFromThrowable(t);</span><br><span class="line">            executionResult = executionResult.setExecutionException(e);</span><br><span class="line">            <span class="comment">// 队列过长</span></span><br><span class="line">            <span class="keyword">if</span> (e <span class="keyword">instanceof</span> RejectedExecutionException) &#123;</span><br><span class="line">                <span class="keyword">return</span> handleThreadPoolRejectionViaFallback(e);</span><br><span class="line">                <span class="comment">// 执行报错</span></span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (t <span class="keyword">instanceof</span> HystrixTimeoutException) &#123;</span><br><span class="line">                <span class="keyword">return</span> handleTimeoutViaFallback();</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (t <span class="keyword">instanceof</span> HystrixBadRequestException) &#123;</span><br><span class="line">                <span class="comment">// Bad Request</span></span><br><span class="line">                <span class="keyword">return</span> handleBadRequestByEmittingError(e);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">/*</span></span><br><span class="line"><span class="comment">                 * Treat HystrixBadRequestException from ExecutionHook like a plain HystrixBadRequestException.</span></span><br><span class="line"><span class="comment">                 */</span></span><br><span class="line">                <span class="keyword">if</span> (e <span class="keyword">instanceof</span> HystrixBadRequestException) &#123;</span><br><span class="line">                    eventNotifier.markEvent(HystrixEventType.BAD_REQUEST, commandKey);</span><br><span class="line">                    <span class="keyword">return</span> Observable.error(e);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span> handleFailureViaFallback(e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">   <span class="comment">//...</span></span><br><span class="line"></span><br><span class="line">    Observable&lt;R&gt; execution;</span><br><span class="line">    <span class="keyword">if</span> (properties.executionTimeoutEnabled().get()) &#123;</span><br><span class="line">        <span class="comment">// 取线程池执行</span></span><br><span class="line">        execution = executeCommandWithSpecifiedIsolation(_cmd)</span><br><span class="line">                <span class="comment">// 下面这个就是超时控制逻辑</span></span><br><span class="line">                .lift(<span class="keyword">new</span> HystrixObservableTimeoutOperator&lt;R&gt;(_cmd));</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        execution = executeCommandWithSpecifiedIsolation(_cmd);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> execution.doOnNext(markEmits)</span><br><span class="line">            .doOnCompleted(markOnCompleted)</span><br><span class="line">            .onErrorResumeNext(handleFallback)</span><br><span class="line">            .doOnEach(setRequestContext);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// com.netflix.hystrix.AbstractCommand#executeCommandWithSpecifiedIsolation</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> Observable&lt;R&gt; <span class="title">executeCommandWithSpecifiedIsolation</span><span class="params">(<span class="keyword">final</span> AbstractCommand&lt;R&gt; _cmd)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (properties.executionIsolationStrategy().get() == ExecutionIsolationStrategy.THREAD) &#123;</span><br><span class="line">        <span class="comment">// mark that we are executing in a thread (even if we end up being rejected we still were a THREAD execution and not SEMAPHORE)</span></span><br><span class="line">        <span class="keyword">return</span> Observable.defer(<span class="keyword">new</span> Func0&lt;Observable&lt;R&gt;&gt;() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> Observable&lt;R&gt; <span class="title">call</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="comment">//..</span></span><br><span class="line">                <span class="comment">// 省略1亿行判断</span></span><br><span class="line">                    <span class="keyword">try</span> &#123;</span><br><span class="line">                        executionHook.onThreadStart(_cmd);</span><br><span class="line">                        executionHook.onRunStart(_cmd);</span><br><span class="line">                        executionHook.onExecutionStart(_cmd);</span><br><span class="line">                        <span class="comment">// 这就是执行逻辑</span></span><br><span class="line">                        <span class="keyword">return</span> getUserExecutionObservable(_cmd);</span><br><span class="line">                    &#125; <span class="keyword">catch</span> (Throwable ex) &#123;</span><br><span class="line">                        <span class="keyword">return</span> Observable.error(ex);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    <span class="comment">//command has already been unsubscribed, so return immediately</span></span><br><span class="line">                    <span class="keyword">return</span> Observable.error(<span class="keyword">new</span> RuntimeException(<span class="string">"unsubscribed before executing run()"</span>));</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        <span class="comment">// 省略1亿个回调 </span></span><br><span class="line">        &#125;).subscribeOn(threadPool.getScheduler(<span class="keyword">new</span> Func0&lt;Boolean&gt;() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> Boolean <span class="title">call</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="comment">// 这就超时的判断逻辑</span></span><br><span class="line">                <span class="keyword">return</span> properties.executionIsolationThreadInterruptOnTimeout().get() &amp;&amp; _cmd.isCommandTimedOut.get() == TimedOutStatus.TIMED_OUT;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// com.netflix.hystrix.HystrixCommand#getExecutionObservable</span></span><br><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">protected</span> Observable&lt;R&gt; <span class="title">getExecutionObservable</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> Observable.defer(<span class="keyword">new</span> Func0&lt;Observable&lt;R&gt;&gt;() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> Observable&lt;R&gt; <span class="title">call</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// 返回自定义的run</span></span><br><span class="line">                <span class="keyword">return</span> Observable.just(run());</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Throwable ex) &#123;</span><br><span class="line">                <span class="keyword">return</span> Observable.error(ex);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;).doOnSubscribe(<span class="keyword">new</span> Action0() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">call</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="comment">// Save thread on which we get subscribed so that we can interrupt it later if needed</span></span><br><span class="line">            executionThread.set(Thread.currentThread());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// com.netflix.hystrix.strategy.concurrency.HystrixContextScheduler.HystrixContextSchedulerWorker#schedule(rx.functions.Action0, long, java.util.concurrent.TimeUnit)</span></span><br><span class="line"><span class="comment">// 订阅之后将任务放入队列中</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Subscription <span class="title">schedule</span><span class="params">(Action0 action, <span class="keyword">long</span> delayTime, TimeUnit unit)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (threadPool != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="comment">// 看队列是否还有空间</span></span><br><span class="line">        <span class="keyword">if</span> (!threadPool.isQueueSpaceAvailable()) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RejectedExecutionException(<span class="string">"Rejected command because thread-pool queueSize is at rejection threshold."</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 实际提交到线程池</span></span><br><span class="line">    <span class="keyword">return</span> worker.schedule(<span class="keyword">new</span> HystrixContexSchedulerAction(concurrencyStrategy, action), delayTime, unit);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//com.netflix.hystrix.strategy.concurrency.HystrixContextScheduler.ThreadPoolWorker#schedule(rx.functions.Action0)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Subscription <span class="title">schedule</span><span class="params">(<span class="keyword">final</span> Action0 action)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (subscription.isUnsubscribed()) &#123;</span><br><span class="line">        <span class="comment">// don't schedule, we are unsubscribed</span></span><br><span class="line">        <span class="keyword">return</span> Subscriptions.unsubscribed();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// This is internal RxJava API but it is too useful.</span></span><br><span class="line">    ScheduledAction sa = <span class="keyword">new</span> ScheduledAction(action);</span><br><span class="line"></span><br><span class="line">    subscription.add(sa);</span><br><span class="line">    sa.addParent(subscription);</span><br><span class="line">    <span class="comment">// 提交到自己的线程池中</span></span><br><span class="line">    ThreadPoolExecutor executor = (ThreadPoolExecutor) threadPool.getExecutor();</span><br><span class="line">    <span class="comment">// 返回一个future</span></span><br><span class="line">    FutureTask&lt;?&gt; f = (FutureTask&lt;?&gt;) executor.submit(sa);</span><br><span class="line">    <span class="comment">// 这历史超时处理的关键</span></span><br><span class="line">    sa.add(<span class="keyword">new</span> FutureCompleterWithConfigurableInterrupt(f, shouldInterruptThread, executor));</span><br><span class="line">    <span class="keyword">return</span> sa;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>超时处理</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//com.netflix.hystrix.AbstractCommand.HystrixObservableTimeoutOperator#call</span></span><br><span class="line"><span class="keyword">public</span> Subscriber&lt;? <span class="keyword">super</span> R&gt; call(<span class="keyword">final</span> Subscriber&lt;? <span class="keyword">super</span> R&gt; child) &#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line"></span><br><span class="line">    TimerListener listener = <span class="keyword">new</span> TimerListener() &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 到时间了 就去调用unsubscribe 尝试中断执行线程</span></span><br><span class="line">        <span class="comment">// 并取消客户端阻塞</span></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">tick</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="comment">// if we can go from NOT_EXECUTED to TIMED_OUT then we do the timeout codepath</span></span><br><span class="line">            <span class="comment">// otherwise it means we lost a race and the run() execution completed or did not start</span></span><br><span class="line">            <span class="keyword">if</span> (originalCommand.isCommandTimedOut.compareAndSet(TimedOutStatus.NOT_EXECUTED, TimedOutStatus.TIMED_OUT)) &#123;</span><br><span class="line">                <span class="comment">// report timeout failure</span></span><br><span class="line">                originalCommand.eventNotifier.markEvent(HystrixEventType.TIMEOUT, originalCommand.commandKey);</span><br><span class="line"></span><br><span class="line">                <span class="comment">// shut down the original request</span></span><br><span class="line">                s.unsubscribe();</span><br><span class="line"></span><br><span class="line">                timeoutRunnable.run();</span><br><span class="line">                <span class="comment">//if it did not start, then we need to mark a command start for concurrency metrics, and then issue the timeout</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getIntervalTimeInMilliseconds</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> originalCommand.properties.executionTimeoutInMilliseconds().get();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建一个timer</span></span><br><span class="line">    <span class="comment">// timer内部有调度线程池</span></span><br><span class="line">    <span class="keyword">final</span> Reference&lt;TimerListener&gt; tl = HystrixTimer.getInstance().addTimerListener(listener);</span><br><span class="line">    <span class="comment">// set externally so execute/queue can see this</span></span><br><span class="line">    originalCommand.timeoutTimer.set(tl);</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">    <span class="keyword">return</span> parent;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>太特么难了</p>
+
+      
+      <!-- reward -->
+      
+      <div id="reward-btn">
+        求打赏
+      </div>
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+        <div class="declare">
+          <ul class="post-copyright">
+            <li>
+              <i class="ri-copyright-line"></i>
+              <strong>Copyright： </strong>
+              Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
+            </li>
+          </ul>
+        </div>
+        
+    <footer class="article-footer">
+      
+          
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2020/03/01/29_Hystrix%E7%9A%84%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>
+      
+      
+
+    </footer>
+
+  </div>
+
+  
+  
+  <nav class="article-nav">
+    
+      <a href="/2020/03/10/30_%E8%87%AA%E5%B7%B1%E6%92%B8%E4%B8%80%E4%B8%AA%E7%86%94%E6%96%AD%E5%99%A8/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            自己撸一个熔断器
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2020/02/20/28_%E5%BD%93Feign%E9%81%87%E4%B8%8AHystrix/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">当Feign遇上Hystrix-初始化篇</div>
+      </a>
+    
+  </nav>
+
+
+  
+
+  
+  
+<!-- valine评论 -->
+<div id="vcomments-box">
+    <div id="vcomments">
+    </div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        app_id: 'j7og6mDnkAIEtuTza7hQ3LNa-gzGzoHsz',
+        app_key: 'MFzzLmRJtNRHg35aF1dvI3M5',
+        path: window.location.pathname,
+        notify: 'false',
+        verify: 'false',
+        avatar: 'monsterid',
+        placeholder: '给我的文章加点评论吧~',
+        recordIP: true
+    });
+    const infoEle = document.querySelector('#vcomments .info');
+    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+        infoEle.childNodes.forEach(function (item) {
+            item.parentNode.removeChild(item);
+        });
+    }
+</script>
+<style>
+    #vcomments-box {
+        padding: 5px 30px;
+    }
+
+    @media screen and (max-width: 800px) {
+        #vcomments-box {
+            padding: 5px 0px;
+        }
+    }
+
+    #vcomments-box #vcomments {
+        background-color: #fff;
+    }
+
+    .v .vlist .vcard .vh {
+        padding-right: 20px;
+    }
+
+    .v .vlist .vcard {
+        padding-left: 10px;
+    }
+</style>
+
+  
+
+  
+  
+  
+  
+  
+
+</article>
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2019-2020
+        <i class="ri-heart-fill heart_icon"></i> 向天再借两小时
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        
+        Powered by <a href="https://hexo.io" target="_blank">Hexo</a>
+        <span class="division">|</span>
+        Theme - <a href="https://github.com/Shen-Yu/hexo-theme-ayer" target="_blank">Ayer</a>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>Visitors:<span id="busuanzi_value_site_uv"></span></s>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>Views:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+      <div class="float_btns">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+      </div>
+    </main>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="向天再借两小时"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <script>
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        document.querySelector('.content').classList.remove('on');
+        document.querySelector('.sidebar').classList.remove('on');
+      }
+    </script>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+
+
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script>
+
+
+
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+
+<script type="text/javascript" src="https://js.users.51.la/20544303.js"></script>
+
+
+<!-- 复制 -->
+
+  
+<link rel="stylesheet" href="/css/clipboard.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+
+
+    
+    <div id="music">
+    
+    
+    
+    <iframe frameborder="no" border="1" marginwidth="0" marginheight="0" width="200" height="52"
+        src="//music.163.com/outchain/player?type=2&id=1437274426&auto=0&height=32"></iframe>
+</div>
+
+<style>
+    #music {
+        position: fixed;
+        right: 15px;
+        bottom: 0;
+        z-index: 998;
+    }
+</style>
+    
+  </div>
+</body>
+
+</html>
