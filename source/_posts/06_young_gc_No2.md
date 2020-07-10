@@ -1,6 +1,6 @@
 ---
 title: young gc No.2
-date: 2020-04-27 14:12:01
+date: 2019-10-01 14:12:01
 tags:
 categories:
 - JVM

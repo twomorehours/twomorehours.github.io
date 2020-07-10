@@ -1,6 +1,6 @@
 ---
 title: Dubbo SPI(Dubbo Service Provider Interface)
-date: 2020-06-19 17:00:39
+date: 2019-12-03 17:00:39
 tags:
 categories:
 - java
