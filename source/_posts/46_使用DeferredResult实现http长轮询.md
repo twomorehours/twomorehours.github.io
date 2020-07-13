@@ -41,5 +41,8 @@ public DeferredResult<String> longPoll() {
 - `DeferredResult`不阻塞服务端线程
 
 ## 使用方向
-- 配置中心配置变更通知（Apollo）
-- 任务处理进度条拉取 （共享单车开锁）
+- 变更通知
+  - 配置中心配置变更通知（Apollo）
+  - 任务处理进度条拉取 （共享单车开锁）
+- 异步处理
+  - 异步处理同步返回结果 （秒杀MQ处理）
