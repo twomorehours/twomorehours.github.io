@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    Apollo |  向天再借两小时
+    重新入门面向对象 |  向天再借两小时
   </title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   
@@ -43,83 +43,289 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
-  <article class="articles">
+  <article id="post-45_重新入门OOP" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
     
-    
-    <h1 class="page-type-title">Apollo</h1>
-    
-    
-  
-  
-  
-  
-  
-  
-  <div class="archives-wrap">
-    <div class="archive-year-wrap">
-      <a href="/archives/2020" class="archive-year">2020</a>
-    </div>
-    <div class="archives">
-      
-      <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2020/07/12/44_Apollo%E6%9C%8D%E5%8A%A1%E7%AB%AF%E6%B5%81%E7%A8%8B%E6%B5%85%E6%9E%90/" class="archive-article-date">
-  <time datetime="2020-07-12T17:30:39.000Z" itemprop="datePublished">07/12</time>
-</a>
+    <header class="article-header">
        
-<h2 itemprop="name">
-  <a class="archive-article-title" href="/2020/07/12/44_Apollo%E6%9C%8D%E5%8A%A1%E7%AB%AF%E6%B5%81%E7%A8%8B%E6%B5%85%E6%9E%90/"
-    >Apollo服务端流程浅析</a> 
-</h2>
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  重新入门面向对象
+</h1>
  
 
     </header>
     
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/java/">java</a> / <a class="article-category-link" href="/categories/java/Apollo/">Apollo</a>
-  </div>
 
     
-    
-  </div>
-</article>
-      
-  
-  
-      <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2020/07/12/43_Apollo%E6%95%B4%E5%90%88springboot%E5%8E%9F%E7%90%86/" class="archive-article-date">
-  <time datetime="2020-07-12T13:30:39.000Z" itemprop="datePublished">07/12</time>
+    <div class="article-meta">
+      <a href="/2020/07/13/45_%E9%87%8D%E6%96%B0%E5%85%A5%E9%97%A8OOP/" class="article-date">
+  <time datetime="2020-07-13T21:30:39.000Z" itemprop="datePublished">2020-07-13</time>
 </a>
-       
-<h2 itemprop="name">
-  <a class="archive-article-title" href="/2020/07/12/43_Apollo%E6%95%B4%E5%90%88springboot%E5%8E%9F%E7%90%86/"
-    >Apollo整合springboot原理</a> 
-</h2>
- 
-
-    </header>
-    
       
   <div class="article-category">
-    <a class="article-category-link" href="/categories/java/">java</a> / <a class="article-category-link" href="/categories/java/Apollo/">Apollo</a>
+    <a class="article-category-link" href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a>
   </div>
 
-    
-    
-  </div>
-</article>
       
+      
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">349</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">1 min</span>
+        </span>
+    </span>
+</div>
+
       
     </div>
+    
+
+    
+    
+    <div class="tocbot"></div>
+
+
+
+
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="什么是面向对象编程"><a href="#什么是面向对象编程" class="headerlink" title="什么是面向对象编程"></a>什么是面向对象编程</h2><p>用<code>类</code>或者<code>对象</code>组织数据或者逻辑的编程方式</p>
+<h2 id="什么是面向过程"><a href="#什么是面向过程" class="headerlink" title="什么是面向过程"></a>什么是面向过程</h2><p><code>数据</code>和<code>行为</code>是分离的，比如C语言中，数据用<code>结构体</code>表示，而行为用<code>函数表示</code>,而在面向对象编程时，两者通常是组织在一起的</p>
+<h2 id="面向对象的四大特征"><a href="#面向对象的四大特征" class="headerlink" title="面向对象的四大特征"></a>面向对象的四大特征</h2><ul>
+<li>封装<ul>
+<li>减少内部暴露，减少错误调用</li>
+</ul>
+</li>
+<li>抽象<ul>
+<li>只暴露接口，无需关心内部实现</li>
+</ul>
+</li>
+<li>继承<ul>
+<li>代码复用</li>
+</ul>
+</li>
+<li>多态<ul>
+<li>代码的扩展性</li>
+</ul>
+</li>
+</ul>
+<h2 id="面向对象的优势"><a href="#面向对象的优势" class="headerlink" title="面向对象的优势"></a>面向对象的优势</h2><ul>
+<li>逻辑清晰，职责明确，适用于大型系统</li>
+</ul>
+<h2 id="接口VS抽象类"><a href="#接口VS抽象类" class="headerlink" title="接口VS抽象类"></a>接口VS抽象类</h2><ul>
+<li><p>接口是一种<code>has a</code>的<code>契约关系</code></p>
+<ul>
+<li>接口用于解决<code>暴露扩展的问题</code></li>
+</ul>
+</li>
+<li><p>抽象类是一种<code>is a</code>的继承关系</p>
+<ul>
+<li>抽象类为了解决<code>代码复用的问题</code></li>
+</ul>
+</li>
+<li><p>如何选择</p>
+<ul>
+<li>如果<code>暴露外部调用</code>,就使用接口<ul>
+<li>例如 Filter</li>
+</ul>
+</li>
+<li>如果<code>代码复用</code>,就是使用抽象类<ul>
+<li>例如 AQS</li>
+</ul>
+</li>
+<li>如果两者都有，那就两者都用<ul>
+<li>例如List</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>如果内部调用，不可能变动的情况，可以不用接口</p>
+</li>
+</ul>
+<h2 id="组合VS继承"><a href="#组合VS继承" class="headerlink" title="组合VS继承"></a>组合VS继承</h2><p>组合与继承都是来实现<code>代码复用的</code></p>
+<ul>
+<li>继承<ul>
+<li>有<code>is a</code>的情况使用继承，但是要控制继承深度(不要超过3层)</li>
+<li>没有<code>is a</code>的情况必须使用组合</li>
+</ul>
+</li>
+</ul>
+
+      
+      <!-- reward -->
+      
+      <div id="reward-btn">
+        求打赏
+      </div>
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+        <div class="declare">
+          <ul class="post-copyright">
+            <li>
+              <i class="ri-copyright-line"></i>
+              <strong>Copyright： </strong>
+              Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
+            </li>
+          </ul>
+        </div>
+        
+    <footer class="article-footer">
+      
+          
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://yoursite.com/2020/07/13/45_%E9%87%8D%E6%96%B0%E5%85%A5%E9%97%A8OOP/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>
+      
+      
+
+    </footer>
+
   </div>
+
   
+  
+  <nav class="article-nav">
+    
+    
+      <a href="/2020/07/12/44_Apollo%E6%9C%8D%E5%8A%A1%E7%AB%AF%E6%B5%81%E7%A8%8B%E6%B5%85%E6%9E%90/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">Apollo服务端流程浅析</div>
+      </a>
+    
+  </nav>
+
+
   
 
   
+  
+<!-- valine评论 -->
+<div id="vcomments-box">
+    <div id="vcomments">
+    </div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        app_id: 'j7og6mDnkAIEtuTza7hQ3LNa-gzGzoHsz',
+        app_key: 'MFzzLmRJtNRHg35aF1dvI3M5',
+        path: window.location.pathname,
+        notify: 'false',
+        verify: 'false',
+        avatar: 'monsterid',
+        placeholder: '给我的文章加点评论吧~',
+        recordIP: true
+    });
+    const infoEle = document.querySelector('#vcomments .info');
+    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+        infoEle.childNodes.forEach(function (item) {
+            item.parentNode.removeChild(item);
+        });
+    }
+</script>
+<style>
+    #vcomments-box {
+        padding: 5px 30px;
+    }
+
+    @media screen and (max-width: 800px) {
+        #vcomments-box {
+            padding: 5px 0px;
+        }
+    }
+
+    #vcomments-box #vcomments {
+        background-color: #fff;
+    }
+
+    .v .vlist .vcard .vh {
+        padding-right: 20px;
+    }
+
+    .v .vlist .vcard {
+        padding-left: 10px;
+    }
+</style>
+
+  
+
+  
+  
+  
+  
+  
+
+</article>
 </section>
       <footer class="footer">
   <div class="outer">
@@ -251,6 +457,24 @@
 
 
 
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
 
 
 
