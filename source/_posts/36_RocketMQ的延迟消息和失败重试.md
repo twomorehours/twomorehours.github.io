@@ -3,7 +3,6 @@ title: RocketMQ的延时消息和失败重试
 date: 2019-05-30 10:07:39
 tags:
 categories:
-- java
 - RocketMQ
 ---
 

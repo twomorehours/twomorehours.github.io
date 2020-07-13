@@ -3,7 +3,6 @@ title: RocketMQ生产消费流程浅析
 date: 2020-05-23 10:07:39
 tags:
 categories:
-- java
 - RocketMQ
 ---
 

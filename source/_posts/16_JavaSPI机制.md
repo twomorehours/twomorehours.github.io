@@ -3,7 +3,7 @@ title: Java SPI(Service Provider Interface)
 date: 2019-11-29 14:30:39
 tags:
 categories:
-- java
+- Java
 ---
 
 

@@ -3,7 +3,7 @@ title: http、rpc、mqtt的区别
 date: 2019-10-30 15:30:51
 tags:
 categories:
-- JVM
+- http
 ---
 
 ## http、rpc、mqtt的区别（待完善）

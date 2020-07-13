@@ -2,9 +2,7 @@
 title: 两张图看懂XXL-JOB基本流程
 date: 2019-10-15 18:01:26
 categories:
-- 分布式
 - 任务调度
-
 ---
 
 ## [调度器](https://www.processon.com/view/link/5df74459e4b0c4255e9d5418)

@@ -3,7 +3,6 @@ title: 详解spring的注解事务管理
 date: 2020-04-23 14:31:39
 tags:
 categories:
-- java
 - springboot
 ---
 

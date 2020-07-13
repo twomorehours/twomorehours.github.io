@@ -3,7 +3,6 @@ title: SpringBoot下Dubbo的启动流程（简化版）
 date: 2019-12-10 13:00:39
 tags:
 categories:
-- java
 - dubbo
 ---
 

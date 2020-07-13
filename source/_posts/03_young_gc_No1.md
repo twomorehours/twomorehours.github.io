@@ -2,8 +2,7 @@
 title: young gc No.1
 date: 2019-09-16 15:29:26
 categories: 
-- JVM
-
+- Java
 ---
 
 
