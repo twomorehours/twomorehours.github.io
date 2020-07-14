@@ -110,7 +110,20 @@
 
       
       <h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>单例模式一般指整个进程中或者线程中只有一个类只有一个实例</p>
-<h2 id="实现类型"><a href="#实现类型" class="headerlink" title="实现类型"></a>实现类型</h2><p>代码就不写了，太简单了</p>
+<h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><ul>
+<li>全局唯一</li>
+<li>无需扩展<ul>
+<li>因为不是通过接口定义的，不好扩展</li>
+<li>私有化构造函数，不好继承</li>
+<li>如有需求，应使用工厂模式</li>
+</ul>
+</li>
+<li>无参构造<ul>
+<li>如果有参数应该使用工厂模式</li>
+</ul>
+</li>
+</ul>
+<h2 id="具体实现"><a href="#具体实现" class="headerlink" title="具体实现"></a>具体实现</h2><p>代码就不写了，太简单了</p>
 <ul>
 <li>饿汉式<ul>
 <li>立即初始化使用</li>
@@ -130,19 +143,6 @@
 </li>
 <li>枚举式<ul>
 <li>延迟初始化，推荐</li>
-</ul>
-</li>
-</ul>
-<h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><ul>
-<li>全局唯一</li>
-<li>无需扩展<ul>
-<li>因为不是通过接口定义的，不好扩展</li>
-<li>私有化构造函数，不好继承</li>
-<li>如有需求，应使用工厂模式</li>
-</ul>
-</li>
-<li>无参构造<ul>
-<li>如果有参数应该使用工厂模式</li>
 </ul>
 </li>
 </ul>
