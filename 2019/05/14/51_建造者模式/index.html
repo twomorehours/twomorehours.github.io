@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    使用DeferredResult实现http长轮询 |  向天再借两小时
+    建造者模式 |  向天再借两小时
   </title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   
@@ -43,7 +43,7 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
-  <article id="post-46_使用DeferredResult实现http长轮询" class="article article-type-post" itemscope
+  <article id="post-51_建造者模式" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -51,7 +51,7 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  使用DeferredResult实现http长轮询
+  建造者模式
 </h1>
  
 
@@ -60,12 +60,12 @@
 
     
     <div class="article-meta">
-      <a href="/2019/04/13/46_%E4%BD%BF%E7%94%A8DeferredResult%E5%AE%9E%E7%8E%B0http%E9%95%BF%E8%BD%AE%E8%AF%A2/" class="article-date">
-  <time datetime="2019-04-13T21:30:39.000Z" itemprop="datePublished">2019-04-13</time>
+      <a href="/2019/05/14/51_%E5%BB%BA%E9%80%A0%E8%80%85%E6%A8%A1%E5%BC%8F/" class="article-date">
+  <time datetime="2019-05-14T21:30:39.000Z" itemprop="datePublished">2019-05-14</time>
 </a>
       
   <div class="article-category">
-    <a class="article-category-link" href="/categories/springboot/">springboot</a>
+    <a class="article-category-link" href="/categories/%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1/">程序设计</a>
   </div>
 
       
@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">221</span>
+            <span class="post-count">279</span>
         </span>
     </span>
 
@@ -109,37 +109,22 @@
       
 
       
-      <h2 id="客户端如何及时感知服务端的变化"><a href="#客户端如何及时感知服务端的变化" class="headerlink" title="客户端如何及时感知服务端的变化"></a>客户端如何及时感知服务端的变化</h2><ul>
-<li>轮询<ul>
-<li>频率低了不及时，频率高了占用服务端资源(cpu和网络)</li>
+      <h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>用来处理参数过多，参数间有相互校验逻辑的情况</p>
+<h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><ul>
+<li>参数过多<ul>
+<li>构造参数复杂</li>
 </ul>
 </li>
-<li>推送<ul>
-<li>websocket编程比较复杂</li>
+<li>不变对象<ul>
+<li>不允许使用set</li>
 </ul>
 </li>
-<li>长轮询<ul>
-<li>实时性较高，占用资源较低，编程模型简单</li>
-</ul>
-</li>
-</ul>
-<h2 id="使用spring-DeferredResult-实现http长轮询"><a href="#使用spring-DeferredResult-实现http长轮询" class="headerlink" title="使用spring DeferredResult 实现http长轮询"></a>使用<code>spring DeferredResult</code> 实现http长轮询</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RequestMapping</span>(<span class="string">"/longpoll"</span>)</span><br><span class="line"><span class="function"><span class="keyword">public</span> DeferredResult&lt;String&gt; <span class="title">longPoll</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 设置一个超时时间 和超时默认值</span></span><br><span class="line">    DeferredResult&lt;String&gt; result = <span class="keyword">new</span> DeferredResult&lt;&gt;(<span class="number">5000L</span>, <span class="string">"timeout"</span>);</span><br><span class="line">    <span class="comment">// 异步处理</span></span><br><span class="line">    <span class="keyword">new</span> Thread(() -&gt; &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Thread.sleep(<span class="number">2000</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (Math.random() &gt; <span class="number">0.5</span>) &#123;</span><br><span class="line">            <span class="comment">// 设置结果</span></span><br><span class="line">            result.setResult(<span class="string">"success"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;).start();</span><br><span class="line">    <span class="comment">// 直接返回</span></span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="优势"><a href="#优势" class="headerlink" title="优势"></a>优势</h2><ul>
-<li><code>DeferredResult</code>不阻塞服务端线程</li>
-</ul>
-<h2 id="使用方向"><a href="#使用方向" class="headerlink" title="使用方向"></a>使用方向</h2><ul>
-<li>变更通知<ul>
-<li>配置中心配置变更通知（Apollo）</li>
-<li>任务处理进度条拉取 （共享单车开锁）</li>
-</ul>
-</li>
-<li>异步处理<ul>
-<li>异步处理同步返回结果 （秒杀MQ处理）</li>
+<li>参数之前有校验联系<ul>
+<li>set实现不了</li>
 </ul>
 </li>
 </ul>
-
+<h2 id="具体实现"><a href="#具体实现" class="headerlink" title="具体实现"></a>具体实现</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ComplexObject</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> a;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> b;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> c;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> d;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> e;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> f;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">ComplexObject</span><span class="params">(Builder builder)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.a = builder.a;</span><br><span class="line">        <span class="keyword">this</span>.b = builder.b;</span><br><span class="line">        <span class="keyword">this</span>.c = builder.c;</span><br><span class="line">        <span class="keyword">this</span>.d = builder.d;</span><br><span class="line">        <span class="keyword">this</span>.e = builder.e;</span><br><span class="line">        <span class="keyword">this</span>.f = builder.f;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Builder</span> </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> DEFAULT_A = -<span class="number">1</span>;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> DEFAULT_B = -<span class="number">1</span>;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> DEFAULT_C = -<span class="number">1</span>;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> DEFAULT_D = -<span class="number">1</span>;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> DEFAULT_E = -<span class="number">1</span>;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> DEFAULT_F = -<span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">int</span> a;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">int</span> b;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">int</span> c;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">int</span> d;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">int</span> e;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">int</span> f;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> ComplexObject <span class="title">build</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="comment">// 模拟参数相互关联的情况</span></span><br><span class="line">            <span class="keyword">if</span> (a &gt; -<span class="number">1</span>) &#123;</span><br><span class="line">                <span class="keyword">if</span> (b == -<span class="number">1</span>) &#123;</span><br><span class="line">                    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (c == <span class="number">0</span>) &#123;</span><br><span class="line">                    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> ComplexObject(<span class="keyword">this</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setA</span><span class="params">(<span class="keyword">int</span> a)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.a = a;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setB</span><span class="params">(<span class="keyword">int</span> b)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.b = b;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setC</span><span class="params">(<span class="keyword">int</span> c)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.c = c;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setD</span><span class="params">(<span class="keyword">int</span> d)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.d = d;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setE</span><span class="params">(<span class="keyword">int</span> e)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.e = e;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setF</span><span class="params">(<span class="keyword">int</span> f)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.f = f;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
       
       <!-- reward -->
       
@@ -170,19 +155,19 @@
   
   <nav class="article-nav">
     
-      <a href="/2019/05/12/52_%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F/" class="article-nav-link">
+      <a href="/2019/05/16/50_%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/" class="article-nav-link">
         <strong class="article-nav-caption">上一篇</strong>
         <div class="article-nav-title">
           
-            原型模式
+            工厂模式
           
         </div>
       </a>
     
     
-      <a href="/2019/04/10/47_%E8%AE%BE%E8%AE%A1%E4%B8%80%E4%B8%AA%E7%94%9F%E4%BA%A7%E7%8E%AF%E5%A2%83%E5%8F%AF%E7%94%A8%E7%9A%84%E9%89%B4%E6%9D%83%E5%8A%9F%E8%83%BD/" class="article-nav-link">
+      <a href="/2019/05/12/52_%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">设计一个生产环境可用的鉴权功能</div>
+        <div class="article-nav-title">原型模式</div>
       </a>
     
   </nav>
