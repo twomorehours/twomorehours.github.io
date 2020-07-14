@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    使用DeferredResult实现http长轮询 |  向天再借两小时
+    工厂模式 |  向天再借两小时
   </title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   
@@ -43,7 +43,7 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
-  <article id="post-46_使用DeferredResult实现http长轮询" class="article article-type-post" itemscope
+  <article id="post-50_工厂模式" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -51,7 +51,7 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  使用DeferredResult实现http长轮询
+  工厂模式
 </h1>
  
 
@@ -60,12 +60,12 @@
 
     
     <div class="article-meta">
-      <a href="/2019/04/13/46_%E4%BD%BF%E7%94%A8DeferredResult%E5%AE%9E%E7%8E%B0http%E9%95%BF%E8%BD%AE%E8%AF%A2/" class="article-date">
-  <time datetime="2019-04-13T21:30:39.000Z" itemprop="datePublished">2019-04-13</time>
+      <a href="/2019/05/16/50_%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/" class="article-date">
+  <time datetime="2019-05-16T21:30:39.000Z" itemprop="datePublished">2019-05-16</time>
 </a>
       
   <div class="article-category">
-    <a class="article-category-link" href="/categories/springboot/">springboot</a>
+    <a class="article-category-link" href="/categories/%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1/">程序设计</a>
   </div>
 
       
@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">221</span>
+            <span class="post-count">244</span>
         </span>
     </span>
 
@@ -109,35 +109,21 @@
       
 
       
-      <h2 id="客户端如何及时感知服务端的变化"><a href="#客户端如何及时感知服务端的变化" class="headerlink" title="客户端如何及时感知服务端的变化"></a>客户端如何及时感知服务端的变化</h2><ul>
-<li>轮询<ul>
-<li>频率低了不及时，频率高了占用服务端资源(cpu和网络)</li>
+      <h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>工厂模式用来封装创建对象的复杂逻辑</p>
+<h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><ul>
+<li>创建一个对象之前有很多准备逻辑</li>
+<li>根据不同的参数创建不同的实现</li>
+<li>以上两者兼备</li>
 </ul>
+<h2 id="具体实现"><a href="#具体实现" class="headerlink" title="具体实现"></a>具体实现</h2><ul>
+<li><p>构建复杂逻辑对象 使用简单工厂</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">StorageFactory</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Storage <span class="title">create</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 复</span></span><br><span class="line">        <span class="comment">// 杂</span></span><br><span class="line">        <span class="comment">// 逻</span></span><br><span class="line">        <span class="comment">// 辑</span></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> MysqlStorageImpl();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 </li>
-<li>推送<ul>
-<li>websocket编程比较复杂</li>
-</ul>
+<li><p>分支判断创建简单对象 使用简单工厂</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">StorageFactory</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Storage <span class="title">create</span><span class="params">(<span class="keyword">int</span> a)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> a == <span class="number">0</span> ? <span class="keyword">new</span> MysqlStorageImpl() : <span class="keyword">new</span> RedisStorageImpl();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 </li>
-<li>长轮询<ul>
-<li>实时性较高，占用资源较低，编程模型简单</li>
-</ul>
-</li>
-</ul>
-<h2 id="使用spring-DeferredResult-实现http长轮询"><a href="#使用spring-DeferredResult-实现http长轮询" class="headerlink" title="使用spring DeferredResult 实现http长轮询"></a>使用<code>spring DeferredResult</code> 实现http长轮询</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RequestMapping</span>(<span class="string">"/longpoll"</span>)</span><br><span class="line"><span class="function"><span class="keyword">public</span> DeferredResult&lt;String&gt; <span class="title">longPoll</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 设置一个超时时间 和超时默认值</span></span><br><span class="line">    DeferredResult&lt;String&gt; result = <span class="keyword">new</span> DeferredResult&lt;&gt;(<span class="number">5000L</span>, <span class="string">"timeout"</span>);</span><br><span class="line">    <span class="comment">// 异步处理</span></span><br><span class="line">    <span class="keyword">new</span> Thread(() -&gt; &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Thread.sleep(<span class="number">2000</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (Math.random() &gt; <span class="number">0.5</span>) &#123;</span><br><span class="line">            <span class="comment">// 设置结果</span></span><br><span class="line">            result.setResult(<span class="string">"success"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;).start();</span><br><span class="line">    <span class="comment">// 直接返回</span></span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="优势"><a href="#优势" class="headerlink" title="优势"></a>优势</h2><ul>
-<li><code>DeferredResult</code>不阻塞服务端线程</li>
-</ul>
-<h2 id="使用方向"><a href="#使用方向" class="headerlink" title="使用方向"></a>使用方向</h2><ul>
-<li>变更通知<ul>
-<li>配置中心配置变更通知（Apollo）</li>
-<li>任务处理进度条拉取 （共享单车开锁）</li>
-</ul>
-</li>
-<li>异步处理<ul>
-<li>异步处理同步返回结果 （秒杀MQ处理）</li>
-</ul>
-</li>
+<li><p>逻辑复杂+分支判断 使用工厂方法(多工厂)</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">StorageFactory</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Map&lt;Integer, InnerStorageFactory&gt; FACTORIES = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        FACTORIES.put(<span class="number">1</span>, <span class="keyword">new</span> RedisStorageFactory());</span><br><span class="line">        FACTORIES.put(<span class="number">2</span>, <span class="keyword">new</span> MysqlStorageFactory());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Storage <span class="title">create</span><span class="params">(<span class="keyword">int</span> a)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (!FACTORIES.containsKey(a)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> FACTORIES.get(a).create();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">interface</span> <span class="title">InnerStorageFactory</span> </span>&#123;</span><br><span class="line">        <span class="function">Storage <span class="title">create</span><span class="params">()</span></span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">RedisStorageFactory</span> <span class="keyword">implements</span> <span class="title">InnerStorageFactory</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> Storage <span class="title">create</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="comment">// 复</span></span><br><span class="line">            <span class="comment">// 杂</span></span><br><span class="line">            <span class="comment">// 逻</span></span><br><span class="line">            <span class="comment">// 辑</span></span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> RedisStorageImpl();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">MysqlStorageFactory</span> <span class="keyword">implements</span> <span class="title">InnerStorageFactory</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> Storage <span class="title">create</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="comment">// 复</span></span><br><span class="line">            <span class="comment">// 杂</span></span><br><span class="line">            <span class="comment">// 逻</span></span><br><span class="line">            <span class="comment">// 辑</span></span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> MysqlStorageImpl();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
 </ul>
 
       
@@ -170,19 +156,19 @@
   
   <nav class="article-nav">
     
-      <a href="/2019/05/16/50_%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/" class="article-nav-link">
+      <a href="/2019/05/18/49_%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/" class="article-nav-link">
         <strong class="article-nav-caption">上一篇</strong>
         <div class="article-nav-title">
           
-            工厂模式
+            单例模式
           
         </div>
       </a>
     
     
-      <a href="/2019/04/10/47_%E8%AE%BE%E8%AE%A1%E4%B8%80%E4%B8%AA%E7%94%9F%E4%BA%A7%E7%8E%AF%E5%A2%83%E5%8F%AF%E7%94%A8%E7%9A%84%E9%89%B4%E6%9D%83%E5%8A%9F%E8%83%BD/" class="article-nav-link">
+      <a href="/2019/04/13/46_%E4%BD%BF%E7%94%A8DeferredResult%E5%AE%9E%E7%8E%B0http%E9%95%BF%E8%BD%AE%E8%AF%A2/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">设计一个生产环境可用的鉴权功能</div>
+        <div class="article-nav-title">使用DeferredResult实现http长轮询</div>
       </a>
     
   </nav>
