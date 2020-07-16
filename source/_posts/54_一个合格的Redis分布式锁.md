@@ -1,5 +1,5 @@
 ---
-title: 典型的用户信息存储架构
+title: 一个合格的Redis分布式锁
 date: 2020-07-15 21:30:39
 categories:
 - redis
