@@ -3,7 +3,7 @@ title: SpringBoot下Dubbo的启动流程（简化版）
 date: 2019-12-10 13:00:39
 tags:
 categories:
-- dubbo
+- Dubbo
 ---
 
 ## 服务端Bean以及客户端Bean的注册(@Service & @Reference)

@@ -3,7 +3,7 @@ title: Dubbo SPI(Dubbo Service Provider Interface)
 date: 2019-12-03 17:00:39
 tags:
 categories:
-- dubbo
+- Dubbo
 ---
 
 

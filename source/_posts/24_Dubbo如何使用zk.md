@@ -3,7 +3,7 @@ title: Dubbo如何使用zk
 date: 2020-01-15 10:34:39
 tags:
 categories:
-- dubbo
+- Dubbo
 ---
 
 ## 启动注册

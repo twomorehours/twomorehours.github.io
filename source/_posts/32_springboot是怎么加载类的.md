@@ -153,4 +153,4 @@ class org.springframework.boot.loader.LaunchedURLClassLoader
 
 ## 结论
 - Idea启动时是Idea帮我们设置classpath，然后Appclassloader读classpath实现的
-- java -jar 启动时是springboot的JarLauncher创建了一个特殊的加载器实现的
+- Java -jar 启动时是springboot的JarLauncher创建了一个特殊的加载器实现的
