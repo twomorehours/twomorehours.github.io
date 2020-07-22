@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    分布式系统概念 |  向天再借两小时
+    运维知识 |  向天再借两小时
   </title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   
@@ -43,346 +43,56 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
-  <article id="post-42_分布式系统概念" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
+  <article class="articles">
     
-    <header class="article-header">
+    
+    <h1 class="page-type-title">运维知识</h1>
+    
+    
+  
+  
+  
+  
+  
+  
+  <div class="archives-wrap">
+    <div class="archive-year-wrap">
+      <a href="/archives/2020" class="archive-year">2020</a>
+    </div>
+    <div class="archives">
+      
+      <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2020/07/22/63_DNS%E5%85%A5%E9%97%A8/" class="archive-article-date">
+  <time datetime="2020-07-22T21:30:39.000Z" itemprop="datePublished">07/22</time>
+</a>
        
-<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  分布式系统概念
-</h1>
+<h2 itemprop="name">
+  <a class="archive-article-title" href="/2020/07/22/63_DNS%E5%85%A5%E9%97%A8/"
+    >DNS入门</a> 
+</h2>
  
 
     </header>
     
-
-    
-    <div class="article-meta">
-      <a href="/2020/07/12/42_%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%A6%82%E5%BF%B5/" class="article-date">
-  <time datetime="2020-07-12T09:30:39.000Z" itemprop="datePublished">2020-07-12</time>
-</a>
       
   <div class="article-category">
-    <a class="article-category-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a>
+    <a class="article-category-link" href="/categories/%E8%BF%90%E7%BB%B4%E7%9F%A5%E8%AF%86/">运维知识</a>
   </div>
 
-      
-      
-<div class="word_count">
-    <span class="post-time">
-        <span class="post-meta-item-icon">
-            <i class="ri-quill-pen-line"></i>
-            <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">609</span>
-        </span>
-    </span>
-
-    <span class="post-time">
-        &nbsp; | &nbsp;
-        <span class="post-meta-item-icon">
-            <i class="ri-book-open-line"></i>
-            <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">2 min</span>
-        </span>
-    </span>
-</div>
-
-      
-    </div>
-    
-
     
     
-    <div class="tocbot"></div>
-
-
-
-
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>分布式系统是<code>软硬件分开部署</code>,<code>通过网络通信</code>的一种系统，我们平常见到的基本都可以称之为分布式系统，无论是<code>集群部署</code>，还是<code>系统间的分工协作</code></p>
-<h2 id="分布式系统关注的点"><a href="#分布式系统关注的点" class="headerlink" title="分布式系统关注的点"></a>分布式系统关注的点</h2><ul>
-<li>吞吐量<ul>
-<li>保证吞吐量的方式除了保证代码性能外，最通用的手段就是<code>集群部署</code></li>
-</ul>
-</li>
-<li>可靠性<ul>
-<li>保证可靠性最通用的方法也是<code>集群冗余部署</code></li>
-</ul>
-</li>
-<li>扩展性(快速扩容)<ul>
-<li>要实现服务的<code>无状态化</code>，方能快速扩容</li>
-</ul>
-</li>
-</ul>
-<h2 id="架构分类"><a href="#架构分类" class="headerlink" title="架构分类"></a>架构分类</h2><ul>
-<li>all in one（单体架构）<ul>
-<li>优点<ul>
-<li>开发简单 </li>
-<li>性能好 </li>
-<li>运维简单 </li>
-<li>架构简单</li>
-</ul>
-</li>
-<li>缺点<ul>
-<li>隔离性差 </li>
-<li>协同效率低</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>分体架构<ul>
-<li>优点<ul>
-<li>迭代快 </li>
-<li>稳定性高 </li>
-<li>故障范围小 </li>
-<li>容易扩展</li>
-</ul>
-</li>
-<li>缺点<ul>
-<li>开发成本高 </li>
-<li>基础依赖度高 </li>
-<li>运维复杂 </li>
-<li>性能差</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="如何选择"><a href="#如何选择" class="headerlink" title="如何选择"></a>如何选择</h2><ul>
-<li>结合公司情况和业务目标</li>
-<li>架构不是一成不变</li>
-<li>避免过度设计（够用就好）</li>
-</ul>
-<h2 id="分布式架构技术挑战"><a href="#分布式架构技术挑战" class="headerlink" title="分布式架构技术挑战"></a>分布式架构技术挑战</h2><ul>
-<li>节点故障 <ul>
-<li>节点多 </li>
-<li>问题的快速定位</li>
-</ul>
-</li>
-<li>机器性能差异 <ul>
-<li>性能预估 </li>
-<li>合理利用资源</li>
-</ul>
-</li>
-<li>网络不可靠性  <ul>
-<li>错误兼容</li>
-</ul>
-</li>
-<li>基础组件   <ul>
-<li>通用</li>
-<li>赋能业务</li>
-</ul>
-</li>
-<li>服务治理 <ul>
-<li>复杂度高</li>
-</ul>
-</li>
-</ul>
-<h2 id="分布式架构技术点"><a href="#分布式架构技术点" class="headerlink" title="分布式架构技术点"></a>分布式架构技术点</h2><ul>
-<li>运行环境<ul>
-<li>物理机</li>
-<li>虚拟机</li>
-<li>容器</li>
-</ul>
-</li>
-<li>基础设施<ul>
-<li>nginx </li>
-<li>dns </li>
-<li>cdn</li>
-</ul>
-</li>
-<li>模块划分<ul>
-<li>业务边界    </li>
-</ul>
-</li>
-<li>存储资源<ul>
-<li>rdbms </li>
-<li>kv </li>
-<li>对象存储</li>
-</ul>
-</li>
-<li>基础组件<ul>
-<li>springboot</li>
-<li>other</li>
-</ul>
-</li>
-<li>测试运维<ul>
-<li>CI/CD </li>
-<li>devops</li>
-</ul>
-</li>
-</ul>
-<h2 id="分布式系统的标准"><a href="#分布式系统的标准" class="headerlink" title="分布式系统的标准"></a>分布式系统的标准</h2><ul>
-<li>可用性<ul>
-<li>要保持持续可用 </li>
-</ul>
-</li>
-<li>性能/吞吐量：<ul>
-<li>保证够用</li>
-</ul>
-</li>
-<li>扩展性<ul>
-<li>无状态</li>
-</ul>
-</li>
-<li>一致性<ul>
-<li>分布式事务</li>
-</ul>
-</li>
-</ul>
-<h2 id="主要技术点"><a href="#主要技术点" class="headerlink" title="主要技术点"></a>主要技术点</h2><ul>
-<li>负载均衡</li>
-<li>session管理 </li>
-<li>通讯 rpc</li>
-<li>服务注册与发现</li>
-<li>消息队列</li>
-<li>配置中心</li>
-<li>分布式锁</li>
-<li>分布式事务</li>
-<li>缓存/分布式缓存</li>
-<li>存储/分布式存储</li>
-</ul>
-<h2 id="常见架构方式"><a href="#常见架构方式" class="headerlink" title="常见架构方式"></a>常见架构方式</h2><ul>
-<li>单体架构</li>
-<li>单体分层架构<ul>
-<li>就是单体架构的水平拆分</li>
-</ul>
-</li>
-<li>微服务（SOA） <ul>
-<li>按照业务垂直拆</li>
-<li>存储独占</li>
-<li>有时候也会进行单个微服务的水平拆分</li>
-</ul>
-</li>
-</ul>
-<h2 id="分布式架构的结构"><a href="#分布式架构的结构" class="headerlink" title="分布式架构的结构"></a>分布式架构的结构</h2><pre><code>网关    鉴权 协议转发 数据校验 负载均衡
-业务    处理业务</code></pre><h2 id="分布式架构技术选型"><a href="#分布式架构技术选型" class="headerlink" title="分布式架构技术选型"></a>分布式架构技术选型</h2><pre><code>网关： spring-cloud-gateway
-监控平台：prometheus
-rpc： http 
-注册中心： zk
-mq: （日志）kafka / rabbitmq(业务)
-配置中心: Apollo</code></pre>
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-        <div class="declare">
-          <ul class="post-copyright">
-            <li>
-              <i class="ri-copyright-line"></i>
-              <strong>Copyright： </strong>
-              Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
-            </li>
-          </ul>
-        </div>
-        
-    <footer class="article-footer">
-      
-      
-
-    </footer>
-
   </div>
-
-  
-  
-  <nav class="article-nav">
-    
-      <a href="/2020/07/12/43_Apollo%E6%95%B4%E5%90%88springboot%E5%8E%9F%E7%90%86/" class="article-nav-link">
-        <strong class="article-nav-caption">上一篇</strong>
-        <div class="article-nav-title">
-          
-            Apollo整合springboot原理
-          
-        </div>
-      </a>
-    
-    
-      <a href="/2020/07/10/41_%E4%B8%80%E4%B8%AA%E7%94%B1LinkedTreeMap%E5%BC%95%E5%8F%91%E7%9A%84%E8%A1%80%E6%A1%88/" class="article-nav-link">
-        <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">一个由LinkedTreeMap引发的血案</div>
-      </a>
-    
-  </nav>
-
-
-  
-
-  
-  
-<!-- valine评论 -->
-<div id="vcomments-box">
-    <div id="vcomments">
-    </div>
-</div>
-<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
-<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
-<script>
-    new Valine({
-        el: '#vcomments',
-        app_id: 'j7og6mDnkAIEtuTza7hQ3LNa-gzGzoHsz',
-        app_key: 'MFzzLmRJtNRHg35aF1dvI3M5',
-        path: window.location.pathname,
-        notify: 'false',
-        verify: 'false',
-        avatar: 'monsterid',
-        placeholder: '给我的文章加点评论吧~',
-        recordIP: true
-    });
-    const infoEle = document.querySelector('#vcomments .info');
-    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
-        infoEle.childNodes.forEach(function (item) {
-            item.parentNode.removeChild(item);
-        });
-    }
-</script>
-<style>
-    #vcomments-box {
-        padding: 5px 30px;
-    }
-
-    @media screen and (max-width: 800px) {
-        #vcomments-box {
-            padding: 5px 0px;
-        }
-    }
-
-    #vcomments-box #vcomments {
-        background-color: #fff;
-    }
-
-    .v .vlist .vcard .vh {
-        padding-right: 20px;
-    }
-
-    .v .vlist .vcard {
-        padding-left: 10px;
-    }
-</style>
-
-  
-
-  
-  
-  
-  
-  
-
 </article>
+      
+      
+    </div>
+  </div>
+  
+  
+
+  
 </section>
       <footer class="footer">
   <div class="outer">
@@ -512,24 +222,6 @@ mq: （日志）kafka / rabbitmq(业务)
 
 
 
-
-
-<script src="/js/tocbot.min.js"></script>
-
-<script>
-  // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
-  tocbot.init({
-    tocSelector: '.tocbot',
-    contentSelector: '.article-entry',
-    headingSelector: 'h1, h2, h3, h4, h5, h6',
-    hasInnerContainers: true,
-    scrollSmooth: true,
-    scrollContainer: 'main',
-    positionFixedSelector: '.tocbot',
-    positionFixedClass: 'is-position-fixed',
-    fixedSidebarOffset: 'auto'
-  });
-</script>
 
 
 
