@@ -21,7 +21,7 @@ subtitle:
 
 # 网站图标和侧边栏logo
 favicon: /favicon.ico
-logo: /images/ayer-side.svg
+# logo: /images/ayer-side.svg
 
 # 封面配置
 # enable-是否启用封面；path-封面背景图；logo-封面logo
@@ -40,7 +40,7 @@ excerpt_link: 阅读更多...
 excerpt_all: true
 
 # 是否开启代码复制按钮
-copy_btn: false
+copy_btn: true
 # 是否开启文章分享按钮
 share_enable: false
 # 国内的社交平台(If you are not in China, maybe you prefer to set:false)
