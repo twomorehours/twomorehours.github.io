@@ -67,7 +67,7 @@ image_viewer: true
 word_count:
   enable: true
   # 只在文章详情显示(不在首页显示)
-  only_article_visit: true
+  only_article_visit: false
 
 # 打赏
 # 打赏type设定：0-关闭打赏； 1-文章对应的md文件里有reward:true属性，才有打赏； 2-所有文章均有打赏
