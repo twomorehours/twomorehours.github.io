@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+
+
+<html lang="chinese">
+
+
+<head>
+  <meta charset="utf-8" />
+    
+  <meta name="description" content="two more hours company" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+    DNS入门 |  向天再借两小时
+  </title>
+  <meta name="generator" content="hexo-theme-yilia-plus">
+  
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
+  
+<link rel="stylesheet" href="/dist/main.css">
+
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/css/remixicon.min.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+  
+<script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+
+  
+  
+
+  
+
+</head>
+
+</html>
+
+<body>
+  <div id="app">
+    <main class="content on">
+      <section class="outer">
+  <article id="post-63_DNS入门" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  DNS入门
+</h1>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/07/23/63_DNS%E5%85%A5%E9%97%A8/" class="article-date">
+  <time datetime="2020-07-23T21:30:39.000Z" itemprop="datePublished">2020-07-23</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E8%BF%90%E7%BB%B4%E7%9F%A5%E8%AF%86/">运维知识</a>
+  </div>
+
+      
+      
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">1.1k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">5 min</span>
+        </span>
+    </span>
+</div>
+
+      
+    </div>
+    
+
+    
+    
+    <div class="tocbot"></div>
+
+
+
+
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="什么是DNS"><a href="#什么是DNS" class="headerlink" title="什么是DNS"></a>什么是DNS</h2><p>DNS全称<code>Domain Name System</code>，作用是保存<code>域名</code>到<code>IP地址</code>的映射关系，当我们需要访问网络时，首先要将我们知道的域名转换成IP才能访问，这个转换的过程就要依靠DNS实现</p>
+<h2 id="DNS的分类"><a href="#DNS的分类" class="headerlink" title="DNS的分类"></a>DNS的分类</h2><ul>
+<li>LocalDNS <ul>
+<li>这种DNS是直接与客户端交互的DNS，只保存根DNS服务器的地址，我们所熟知的DNS服务器，如<code>114</code>，就是LocalDNS</li>
+</ul>
+</li>
+<li>NS<ul>
+<li>这种DNS保存真正的映射关系</li>
+</ul>
+</li>
+</ul>
+<h2 id="DNS的层次结构"><a href="#DNS的层次结构" class="headerlink" title="DNS的层次结构"></a>DNS的层次结构</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">            |     根DNS                         ROOTDNS</span><br><span class="line">            |                                &#x2F;   |   \</span><br><span class="line">LocalDNS    |    顶级域名DNS                 com  ...   cn      </span><br><span class="line">            |                            &#x2F;  |   \</span><br><span class="line">            |    (二级域名)权威域名DNS baidu.com   ...   jd.com</span><br></pre></td></tr></table></figure>
+
+<h2 id="DNS的解析过程"><a href="#DNS的解析过程" class="headerlink" title="DNS的解析过程"></a>DNS的解析过程</h2><p>以<code>www.baidu.com</code>为例</p>
+<ul>
+<li>客户端向LocalDNS发起解析请求</li>
+<li>LocalDNS查看本地缓存，有就直接返回</li>
+<li>localDNS拉取所有根域名服务器地址</li>
+<li>localDNS选择一台根服务器询问com</li>
+<li>根服务器返回com顶级域名服务器地址</li>
+<li>localDNS选择一台com顶级域名服务器询问baidu.com地址</li>
+<li>顶级域名服务器返回baidu.com权威服务器列表</li>
+<li>localDNS选择一台baidu.com的权威域名服务器询问<a href="http://www.baidu.com的地址" target="_blank" rel="noopener">www.baidu.com的地址</a></li>
+<li>权威域名服务器返回地址给localDNS</li>
+<li>localdns加入缓存并返回给客户端</li>
+</ul>
+<p>客户端查询LocalDNS叫做递归查询，LocalDNS查询NS叫做迭代查询</p>
+<h2 id="实战DNS解析过程"><a href="#实战DNS解析过程" class="headerlink" title="实战DNS解析过程"></a>实战DNS解析过程</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ dig yuhao.pro +trace</span><br><span class="line"></span><br><span class="line">; &lt;&lt;&gt;&gt; DiG 9.11.4-P2-RedHat-9.11.4-16.P2.el8 &lt;&lt;&gt;&gt; yuhao.pro +trace</span><br><span class="line">;; global options: +cmd</span><br><span class="line">.			600	IN	NS	m.root-servers.net.</span><br><span class="line">.			600	IN	NS	e.root-servers.net.</span><br><span class="line">.			600	IN	NS	b.root-servers.net.</span><br><span class="line">.			600	IN	NS	i.root-servers.net.</span><br><span class="line">.			600	IN	NS	g.root-servers.net.</span><br><span class="line">.			600	IN	NS	j.root-servers.net.</span><br><span class="line">.			600	IN	NS	h.root-servers.net.</span><br><span class="line">.			600	IN	NS	c.root-servers.net.</span><br><span class="line">.			600	IN	NS	k.root-servers.net.</span><br><span class="line">.			600	IN	NS	l.root-servers.net.</span><br><span class="line">.			600	IN	NS	a.root-servers.net.</span><br><span class="line">.			600	IN	NS	d.root-servers.net.</span><br><span class="line">.			600	IN	NS	f.root-servers.net.</span><br><span class="line">拉取所有根域名服务器</span><br><span class="line">;; Received 239 bytes from 192.168.0.2#53(192.168.0.2) in 1 ms </span><br><span class="line"></span><br><span class="line">pro.			172800	IN	NS	b0.pro.afilias-nst.org.</span><br><span class="line">pro.			172800	IN	NS	a0.pro.afilias-nst.info.</span><br><span class="line">pro.			172800	IN	NS	a2.pro.afilias-nst.info.</span><br><span class="line">pro.			172800	IN	NS	b2.pro.afilias-nst.org.</span><br><span class="line">pro.			172800	IN	NS	c0.pro.afilias-nst.info.</span><br><span class="line">pro.			172800	IN	NS	d0.pro.afilias-nst.org.</span><br><span class="line">pro.			86400	IN	DS	47221 7 2 5A10389E282CB03F1083C1662B218B97CFE61024B991C7C5D8BB5685 AD6487CA</span><br><span class="line">pro.			86400	IN	DS	47221 7 1 00CBFCBDC9C6E659FB2385B3982E93E98D71052D</span><br><span class="line">pro.			86400	IN	RRSIG	DS 8 1 86400 20200803200000 20200721190000 46594 . nIm6n8HFFi&#x2F;6UTswoVBk7r6fklC30g30CpGo1+u9cvhH+qzw14btQXdI SZXrBabTZS4BSGvfxyCz8Rbz71MwNxyl&#x2F;6n0VW6epeD3QB&#x2F;pV2l1EC3J KG3c2fVwrF0ZVwEv520mL+MW0CU2yE6Mvw8Vb1HjWzuUkgkNvAMS0nGW QPjN&#x2F;TIWZib0leySInK9ATVRDsMlas62MNejG9wI5qtO4gXWnmh7SrcG 71HOenhYzn2x+y4s678oYTgoyH+Cos77e3s4Bb7HgdDTkU0F2GZYAqsx wFKwv6Q9BfKm6RkPn7e0vFbXcbO3RgaWFzCsnPe&#x2F;z7JfabUD&#x2F;TauLAHm CFbHDA&#x3D;&#x3D;</span><br><span class="line">从c.root-servers.net拉取到所有pro顶级域名服务器</span><br><span class="line">;; Received 842 bytes from 192.33.4.12#53(c.root-servers.net) in 271 ms</span><br><span class="line"></span><br><span class="line">yuhao.pro.		86400	IN	NS	ns1.bdydns.cn.</span><br><span class="line">yuhao.pro.		86400	IN	NS	ns2.bdydns.cn.</span><br><span class="line">kp4p6t009beh7uf024robe8itfrmgqig.pro. 900 IN NSEC3 1 1 1 D399EAAB KP923TGNHEHHP0DKGQIPBJUEV47IAG41 NS SOA RRSIG DNSKEY NSEC3PARAM</span><br><span class="line">kp4p6t009beh7uf024robe8itfrmgqig.pro. 900 IN RRSIG NSEC3 7 2 900 20200812033203 20200722023203 21233 pro. FyLY6TBGs74o04ZhIcU36E2E0MqTaDHVKuN2I7KMFSzF414LNkdxXC8N cBLnd70erOvG8iio7+e4MXLOiGKaN79tpoQKMSV8Sk8OX96C2GfwGAba LJAwNII&#x2F;PK0EpBPVoElwbz76Y995LGnd7DtGYB9tJKpna3NwOCQEcmWH J34&#x3D;</span><br><span class="line">uck85dbhstr8r41ga67kbqtb3obasndh.pro. 900 IN NSEC3 1 1 1 D399EAAB UCOT87OS98FL5PBK9AMVK6Q3PRPAR9DB NS DS RRSIG</span><br><span class="line">uck85dbhstr8r41ga67kbqtb3obasndh.pro. 900 IN RRSIG NSEC3 7 2 900 20200807151823 20200717141823 21233 pro. +f4QcUECnTM2RAZ6dva3vkCJ8TnX96xDSbIumNKIT1f3X6qNSnBjqE&#x2F;5 UpCjxRE+duxAUP0vafx&#x2F;mNBMEMqvoMP0LW8yO&#x2F;d6xlh9SHyfNRiMpZ&#x2F;M 6vY2ZVu87qPHG27gUz2lhz2rLJYJqERltUvSWu7P1B2aPoeCWh&#x2F;L8fEa gxM&#x3D;</span><br><span class="line">从b0.pro.afilias-nst.org拉取到yuhao.pro的权威域名服务器</span><br><span class="line">;; Received 576 bytes from 199.182.1.1#53(b0.pro.afilias-nst.org) in 208 ms</span><br><span class="line"></span><br><span class="line">yuhao.pro.		300	IN	A	106.12.15.56</span><br><span class="line">从ns2.bdydns.cn取到yuhao.pro的IP地址</span><br><span class="line">;; Received 54 bytes from 112.80.248.202#53(ns2.bdydns.cn) in 5 ms</span><br></pre></td></tr></table></figure>
+
+<h2 id="DNS记录"><a href="#DNS记录" class="headerlink" title="DNS记录"></a>DNS记录</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">yuhao.pro.		86400	IN	NS	ns1.bdydns.cn.</span><br><span class="line">yuhao.pro.: 记录名</span><br><span class="line">86400: ttl</span><br><span class="line">IN: type IN指代Internet</span><br><span class="line">NS: Name Service 域名服务器</span><br><span class="line">ns1.bdydns.cn.: 存储的值</span><br><span class="line"></span><br><span class="line">yuhao.pro.		300	IN	A	106.12.15.56</span><br><span class="line">yuhao.pro.: 记录名</span><br><span class="line">300: ttl</span><br><span class="line">IN: type IN指代Internet</span><br><span class="line">A: A记录 指代Ipv4地址</span><br><span class="line">106.12.15.56： 存储的值</span><br></pre></td></tr></table></figure>
+
+<h2 id="DNS的传输协议"><a href="#DNS的传输协议" class="headerlink" title="DNS的传输协议"></a>DNS的传输协议</h2><p>DNS的传输协议是UDP，因为只请求一次就进行，没要进行TCP连接，但是同样也带来了安全问题</p>
+<h2 id="如何选择DNS"><a href="#如何选择DNS" class="headerlink" title="如何选择DNS"></a>如何选择DNS</h2><ul>
+<li>如果不设置，默认都是使用的ISP提供的LocalDNS</li>
+<li>自己设置可以设置阿里，腾讯，114的DNS地址</li>
+</ul>
+<h2 id="DNS劫持"><a href="#DNS劫持" class="headerlink" title="DNS劫持"></a>DNS劫持</h2><ul>
+<li>LocalDNS被控制，DNS记录被篡改，用户拿到的地址是错误的地址</li>
+<li>用户访问了伪装的LocalDNS，直接就拿到了错误的地址</li>
+<li>请求被拦截，并且在响应中插入了错误的地址</li>
+</ul>
+<h2 id="避免DNS劫持"><a href="#避免DNS劫持" class="headerlink" title="避免DNS劫持"></a>避免DNS劫持</h2><ul>
+<li>使用正规的LocalDNS，如阿里，114等</li>
+<li>企业可以设置备用域名</li>
+</ul>
+<h2 id="智能DNS"><a href="#智能DNS" class="headerlink" title="智能DNS"></a>智能DNS</h2><ul>
+<li>概念<ul>
+<li>传统的DNS对于多条A记录只能进行静态轮询，而智能DNS可以根据诸如位置信息，延时信息等指标选择相对较优的IP返回</li>
+</ul>
+</li>
+<li>常见的智能DNS<ul>
+<li>现在的大多数DNS都是智能DNS</li>
+</ul>
+</li>
+</ul>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+        <div class="declare">
+          <ul class="post-copyright">
+            <li>
+              <i class="ri-copyright-line"></i>
+              <strong>Copyright： </strong>
+              Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
+            </li>
+          </ul>
+        </div>
+        
+    <footer class="article-footer">
+      
+      
+
+    </footer>
+
+  </div>
+
+  
+  
+  <nav class="article-nav">
+    
+      <a href="/2020/07/24/64_%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%8A%80%E6%9C%AF%E7%82%B9/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            分布式系统技术点
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2020/07/22/62_%E8%A7%82%E5%AF%9F%E8%80%85&%E6%A8%A1%E6%9D%BF&%E7%AD%96%E7%95%A5/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">观察者模式 &amp;&amp; 模板模式 &amp;&amp; 策略模式</div>
+      </a>
+    
+  </nav>
+
+
+  
+
+  
+  
+<!-- valine评论 -->
+<div id="vcomments-box">
+    <div id="vcomments">
+    </div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        app_id: 'j7og6mDnkAIEtuTza7hQ3LNa-gzGzoHsz',
+        app_key: 'MFzzLmRJtNRHg35aF1dvI3M5',
+        path: window.location.pathname,
+        notify: 'false',
+        verify: 'false',
+        avatar: 'monsterid',
+        placeholder: '给我的文章加点评论吧~',
+        recordIP: true
+    });
+    const infoEle = document.querySelector('#vcomments .info');
+    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+        infoEle.childNodes.forEach(function (item) {
+            item.parentNode.removeChild(item);
+        });
+    }
+</script>
+<style>
+    #vcomments-box {
+        padding: 5px 30px;
+    }
+
+    @media screen and (max-width: 800px) {
+        #vcomments-box {
+            padding: 5px 0px;
+        }
+    }
+
+    #vcomments-box #vcomments {
+        background-color: #fff;
+    }
+
+    .v .vlist .vcard .vh {
+        padding-right: 20px;
+    }
+
+    .v .vlist .vcard {
+        padding-left: 10px;
+    }
+</style>
+
+  
+
+  
+  
+  
+  
+  
+
+</article>
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2019-2020
+        <i class="ri-heart-fill heart_icon"></i> 向天再借两小时
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        
+        Powered by <a href="https://hexo.io" target="_blank">Hexo</a>
+        <span class="division">|</span>
+        Theme - <a href="https://github.com/Shen-Yu/hexo-theme-ayer" target="_blank">Ayer</a>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>Visitors:<span id="busuanzi_value_site_uv"></span></s>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>Views:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+      <div class="float_btns">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+      </div>
+    </main>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <script>
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        document.querySelector('.content').classList.remove('on');
+        document.querySelector('.sidebar').classList.remove('on');
+      }
+    </script>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+
+
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script>
+
+
+
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+
+<script type="text/javascript" src="https://js.users.51.la/20544303.js"></script>
+
+
+<!-- 复制 -->
+
+  
+<link rel="stylesheet" href="/css/clipboard.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+
+
+    
+    <div id="music">
+    
+    
+    
+    <iframe frameborder="no" border="1" marginwidth="0" marginheight="0" width="200" height="52"
+        src="//music.163.com/outchain/player?type=2&id=1437274426&auto=0&height=32"></iframe>
+</div>
+
+<style>
+    #music {
+        position: fixed;
+        right: 15px;
+        bottom: 0;
+        z-index: 998;
+    }
+</style>
+    
+  </div>
+</body>
+
+</html>

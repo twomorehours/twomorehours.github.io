@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+
+
+<html lang="chinese">
+
+
+<head>
+  <meta charset="utf-8" />
+    
+  <meta name="description" content="two more hours company" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+    RocketMQ实现自定义延时消息 |  向天再借两小时
+  </title>
+  <meta name="generator" content="hexo-theme-yilia-plus">
+  
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
+  
+<link rel="stylesheet" href="/dist/main.css">
+
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/css/remixicon.min.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+  
+<script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+
+  
+  
+
+  
+
+</head>
+
+</html>
+
+<body>
+  <div id="app">
+    <main class="content on">
+      <section class="outer">
+  <article id="post-39_RocketMQ实现自定义延时消息" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  RocketMQ实现自定义延时消息
+</h1>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/06/22/39_RocketMQ%E5%AE%9E%E7%8E%B0%E8%87%AA%E5%AE%9A%E4%B9%89%E5%BB%B6%E6%97%B6%E6%B6%88%E6%81%AF/" class="article-date">
+  <time datetime="2020-06-22T21:07:39.000Z" itemprop="datePublished">2020-06-22</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/RocketMQ/">RocketMQ</a>
+  </div>
+
+      
+      
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">1k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">5 min</span>
+        </span>
+    </span>
+</div>
+
+      
+    </div>
+    
+
+    
+    
+    <div class="tocbot"></div>
+
+
+
+
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="实现步骤"><a href="#实现步骤" class="headerlink" title="实现步骤"></a>实现步骤</h2><ul>
+<li>拦截构建队列DispatchRequest</li>
+<li>将消息从commitLog取出，存入自定义目录</li>
+<li>将索引放入时间轮</li>
+<li>时间轮到时间了，用索引将消息取出发回</li>
+<li>时间轮只hold30分钟内的数据，提前10s将下一个三十分钟的数据载入时间轮</li>
+<li>定时checkpoint</li>
+</ul>
+<h2 id="具体代码"><a href="#具体代码" class="headerlink" title="具体代码"></a>具体代码</h2><ul>
+<li><p>拦截构建队列DispatchRequest</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// org.apache.rocketmq.store.DefaultMessageStore.CommitLogDispatcherBuildConsumeQueue#dispatch</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">dispatch</span><span class="params">(DispatchRequest request)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">boolean</span> isDelay = request.getPropertiesMap().containsKey(MessageConst.PROPERTY_DELAY_TIME_IN_SECONDS);</span><br><span class="line">    <span class="keyword">if</span>(isDelay)&#123;</span><br><span class="line">        DefaultMessageStore.<span class="keyword">this</span>.getScheduleMessageService2().scheduleRequest(request);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>将消息从commitLog取出，存入自定义目录</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// org.apache.rocketmq.store.schedule.ScheduleMessageService2#scheduleRequest</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">scheduleRequest</span><span class="params">(DispatchRequest request)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">long</span> now = System.currentTimeMillis();</span><br><span class="line">    MessageExt messageExt = defaultMessageStore.lookMessageByOffset(</span><br><span class="line">            request.getCommitLogOffset(), request.getMsgSize());</span><br><span class="line">    <span class="keyword">if</span> (messageExt == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    String property = messageExt.getProperty(MessageConst.PROPERTY_DELAY_TIME_IN_SECONDS);</span><br><span class="line">    <span class="keyword">long</span> executeTime = Long.parseLong(property) * <span class="number">1000</span> + now;</span><br><span class="line">    messageExt.putUserProperty(MessageConst.PROPERTY_EXECUTE_TIME_IN_SECONDS,</span><br><span class="line">            String.valueOf(executeTime / <span class="number">1000</span>));</span><br><span class="line">    MessageAccessor.clearProperty(messageExt, MessageConst.PROPERTY_DELAY_TIME_IN_SECONDS);</span><br><span class="line">    <span class="keyword">long</span> executeTimeInNumber = timeInNumber(executeTime);</span><br><span class="line">    MappedFile mappedFile = logMap.get(executeTimeInNumber);</span><br><span class="line">    <span class="keyword">if</span> (mappedFile == <span class="keyword">null</span>) &#123;</span><br><span class="line">        String storePathRootDir = defaultMessageStore.getMessageStoreConfig().getStorePathRootDir();</span><br><span class="line">        String logPath = storePathRootDir + File.separator + <span class="string">"schedulelog"</span> + File.separator + executeTimeInNumber;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            mappedFile = <span class="keyword">new</span> MappedFile(logPath, <span class="number">10</span> * <span class="number">1024</span> * <span class="number">1024</span>);</span><br><span class="line">            logMap.put(executeTimeInNumber, mappedFile);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    AppendMessageResult result = mappedFile.appendMessage(toInner(messageExt),</span><br><span class="line">            <span class="keyword">this</span>.appendMessageCallback);</span><br><span class="line">    <span class="keyword">if</span> (!result.isOk()) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (now / <span class="number">1000</span> + MINUTES_IN_MEMORY * <span class="number">60</span> &gt;= executeTime / <span class="number">1000</span>) &#123;</span><br><span class="line">        <span class="comment">// 直接进入时间轮</span></span><br><span class="line">        timeWheel.addTask(executeTime / <span class="number">1000</span>,</span><br><span class="line">                <span class="keyword">new</span> TimeWheelTask(executeTimeInNumber, (<span class="keyword">int</span>) result.getWroteOffset(),</span><br><span class="line">                        result.getWroteBytes(), defaultMessageStore, logMap));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>时间轮到时间了，用索引将消息取出发回</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//org.apache.rocketmq.store.schedule.TimeWheelTask#run</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    MappedFile mappedFile = logMap.get(timeInNumber);</span><br><span class="line">    <span class="keyword">if</span> (mappedFile == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    SelectMappedBufferResult mappedBuffer = mappedFile.selectMappedBuffer(offset, size);</span><br><span class="line">    MessageExt messageExt = MessageDecoder.decode(mappedBuffer.getByteBuffer(), <span class="keyword">true</span>, <span class="keyword">false</span>);</span><br><span class="line">    store.putMessage(ScheduleMessageService2.toInner(messageExt));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>定时载入消息,checkpoint</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//org.apache.rocketmq.store.schedule.ScheduleMessageService2#start</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!<span class="keyword">this</span>.started.compareAndSet(<span class="keyword">false</span>, <span class="keyword">true</span>)) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    reputMessageThreadPool = Executors.newSingleThreadExecutor();</span><br><span class="line">    scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();</span><br><span class="line">    <span class="keyword">this</span>.timeWheel = <span class="keyword">new</span> TimeWheel(MINUTES_IN_MEMORY * <span class="number">60</span> + LOAD_IN_ADVANCE,</span><br><span class="line">            reputMessageThreadPool);</span><br><span class="line">    <span class="keyword">this</span>.timeWheel.start();</span><br><span class="line">    <span class="comment">// 将checkpoint后的数据加载到内存</span></span><br><span class="line">    <span class="keyword">for</span> (Map.Entry&lt;Long, MappedFile&gt; entry : logMap.entrySet()) &#123;</span><br><span class="line">        MappedFile file = entry.getValue();</span><br><span class="line">        <span class="keyword">int</span> pos = loadMappedFile(entry.getKey(), file);</span><br><span class="line">        file.setWrotePosition(pos);</span><br><span class="line">        file.setFlushedPosition(pos);</span><br><span class="line">        file.setCommittedPosition(pos);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//启动checkpoint</span></span><br><span class="line">    scheduledExecutorService.scheduleAtFixedRate(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// checkpoint</span></span><br><span class="line">                <span class="keyword">long</span> checkpoint = timeWheel.getCurrentScheduleTime();</span><br><span class="line">                setCheckPoint(checkpoint);</span><br><span class="line">                <span class="comment">// 清理内存</span></span><br><span class="line">                Iterator&lt;Map.Entry&lt;Long, MappedFile&gt;&gt; iterator = logMap.entrySet().iterator();</span><br><span class="line">                <span class="keyword">while</span> (iterator.hasNext()) &#123;</span><br><span class="line">                    Map.Entry&lt;Long, MappedFile&gt; entry = iterator.next();</span><br><span class="line">                    <span class="keyword">if</span> (entry.getKey() &lt; checkpoint) &#123;</span><br><span class="line">                        entry.getValue().release();</span><br><span class="line">                        iterator.remove();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">long</span> now = System.currentTimeMillis();</span><br><span class="line">            <span class="keyword">long</span> nowNumber = timeInNumber(now);</span><br><span class="line">            <span class="keyword">long</span> nextNumber = timeInNumber(now + LOAD_IN_ADVANCE * <span class="number">1000</span>);</span><br><span class="line">            <span class="keyword">if</span> (nowNumber == nextNumber || !logMap.containsKey(nextNumber)) &#123;</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            loadMappedFile(nextNumber, logMap.get(nextNumber));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;, <span class="number">0L</span>, <span class="number">5L</span>, TimeUnit.SECONDS);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//org.apache.rocketmq.store.schedule.ScheduleMessageService2#loadMappedFile</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">loadMappedFile</span><span class="params">(<span class="keyword">long</span> key, MappedFile file)</span> </span>&#123;</span><br><span class="line">    ByteBuffer byteBuffer = file.getMappedByteBuffer().slice();</span><br><span class="line">    <span class="keyword">int</span> pos = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">        byteBuffer.position(pos);</span><br><span class="line">        <span class="keyword">int</span> msgLength = byteBuffer.getInt();</span><br><span class="line">        byteBuffer.position(pos);</span><br><span class="line">        <span class="keyword">if</span> (msgLength == <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        MessageExt messageExt = MessageDecoder.decode(byteBuffer, <span class="keyword">true</span>, <span class="keyword">false</span>);</span><br><span class="line">        String property = messageExt.getProperty(</span><br><span class="line">                MessageConst.PROPERTY_EXECUTE_TIME_IN_SECONDS);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// checkpoint 之前的不用处理</span></span><br><span class="line">            <span class="keyword">if</span> (Long.parseLong(property) &lt;= getCheckpoint()) &#123;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(e);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        timeWheel.addTask(Long.parseLong(property),</span><br><span class="line">                <span class="keyword">new</span> TimeWheelTask(key, pos, msgLength, defaultMessageStore, logMap));</span><br><span class="line">        pos += msgLength;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> pos;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>时间轮实现</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> org.apache.rocketmq.store.util;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.*;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.atomic.AtomicBoolean;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 时间轮线程调度器</span></span><br><span class="line"><span class="comment">*</span></span><br><span class="line"><span class="comment">* <span class="doctag">@author</span> zy-user</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TimeWheel</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> ConcurrentLinkedDeque&lt;Runnable&gt;[] buckets;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">int</span> currIndex = -<span class="number">1</span>;</span><br><span class="line">    <span class="keyword">private</span> ExecutorService executorService;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> timeSpanInSeconds;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> startTime;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> scheduleCount;</span><br><span class="line">    <span class="keyword">private</span> AtomicBoolean started = <span class="keyword">new</span> AtomicBoolean(<span class="keyword">false</span>);</span><br><span class="line">    <span class="keyword">private</span> ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@param</span> timeSpanInSeconds 时间轮的跨度</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@param</span> executorService   时间到了提交任务线程</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">TimeWheel</span><span class="params">(<span class="keyword">int</span> timeSpanInSeconds, ExecutorService executorService)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (timeSpanInSeconds &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"wrong timeSpanInSeconds"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">this</span>.timeSpanInSeconds = timeSpanInSeconds;</span><br><span class="line">        <span class="keyword">if</span> (executorService == <span class="keyword">null</span> || executorService.isShutdown()) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"wrong executorService"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">this</span>.executorService = executorService;</span><br><span class="line">        <span class="keyword">this</span>.buckets = <span class="keyword">new</span> ConcurrentLinkedDeque[timeSpanInSeconds + <span class="number">1</span>];</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; buckets.length; i++) &#123;</span><br><span class="line">            buckets[i] = <span class="keyword">new</span> ConcurrentLinkedDeque&lt;&gt;();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addTask</span><span class="params">(<span class="keyword">long</span> executeTimeInSeconds, Runnable runnable)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">long</span> now = System.currentTimeMillis() / <span class="number">1000</span>;</span><br><span class="line">        <span class="keyword">if</span> (executeTimeInSeconds &lt;= now) &#123;</span><br><span class="line">            scheduledExecutorService.execute(runnable);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (executeTimeInSeconds &gt; now + timeSpanInSeconds) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"wrong executeTime"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">int</span> newIndex = (((<span class="keyword">int</span>) (executeTimeInSeconds - now)) + currIndex) % buckets.length;</span><br><span class="line">        buckets[newIndex].addFirst(runnable);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (!started.compareAndSet(<span class="keyword">false</span>, <span class="keyword">true</span>)) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        startTime = System.currentTimeMillis() / <span class="number">1000</span>;</span><br><span class="line">        scheduledExecutorService.schedule(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="keyword">if</span> (!started.get()) &#123;</span><br><span class="line">                    <span class="keyword">return</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">// 本轮的index</span></span><br><span class="line">                currIndex = (currIndex + <span class="number">1</span>) % buckets.length;</span><br><span class="line">                ConcurrentLinkedDeque&lt;Runnable&gt; bucket = buckets[currIndex];</span><br><span class="line">                Runnable r;</span><br><span class="line">                <span class="keyword">while</span> ((r = bucket.pollLast()) != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    executorService.execute(r);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">// 调度的次数</span></span><br><span class="line">                scheduleCount++;</span><br><span class="line">                <span class="comment">// 下一次执行的时间=调度的次数</span></span><br><span class="line">                <span class="comment">// 第一次调度在0s 第二次在1s ...</span></span><br><span class="line">                <span class="comment">// 这样来补偿因为线程延迟带来的误差</span></span><br><span class="line">                <span class="keyword">long</span> timeWait = scheduleCount - (System.currentTimeMillis() / <span class="number">1000</span> - startTime);</span><br><span class="line">                scheduledExecutorService.schedule(<span class="keyword">this</span>, timeWait &lt;= <span class="number">0</span> ? <span class="number">0</span> : timeWait,</span><br><span class="line">                        TimeUnit.SECONDS);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;, <span class="number">0</span>, TimeUnit.SECONDS);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">stop</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (started.compareAndSet(<span class="keyword">true</span>, <span class="keyword">false</span>)) &#123;</span><br><span class="line">            scheduledExecutorService.shutdown();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">long</span> <span class="title">getCurrentScheduleTime</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> startTime + scheduleCount;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+</li>
+</ul>
+<h2 id="详细代码"><a href="#详细代码" class="headerlink" title="详细代码"></a>详细代码</h2><p>点击 <a href="https://github.com/twomorehours/rocketmq/tree/delay_message" target="_blank" rel="noopener" title="延时消息实现">详细代码</a>. </p>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+        <div class="declare">
+          <ul class="post-copyright">
+            <li>
+              <i class="ri-copyright-line"></i>
+              <strong>Copyright： </strong>
+              Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
+            </li>
+          </ul>
+        </div>
+        
+    <footer class="article-footer">
+      
+      
+
+    </footer>
+
+  </div>
+
+  
+  
+  <nav class="article-nav">
+    
+      <a href="/2020/07/10/40_%E9%9B%AA%E8%8A%B1%E7%AE%97%E6%B3%95/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            雪花算法
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2020/06/03/37_%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E5%8F%AF%E4%BB%A5%E5%94%A4%E9%86%92%E7%9A%84%E5%BC%82%E6%AD%A5%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">实现一个可以唤醒的异步定时任务</div>
+      </a>
+    
+  </nav>
+
+
+  
+
+  
+  
+<!-- valine评论 -->
+<div id="vcomments-box">
+    <div id="vcomments">
+    </div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        app_id: 'j7og6mDnkAIEtuTza7hQ3LNa-gzGzoHsz',
+        app_key: 'MFzzLmRJtNRHg35aF1dvI3M5',
+        path: window.location.pathname,
+        notify: 'false',
+        verify: 'false',
+        avatar: 'monsterid',
+        placeholder: '给我的文章加点评论吧~',
+        recordIP: true
+    });
+    const infoEle = document.querySelector('#vcomments .info');
+    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+        infoEle.childNodes.forEach(function (item) {
+            item.parentNode.removeChild(item);
+        });
+    }
+</script>
+<style>
+    #vcomments-box {
+        padding: 5px 30px;
+    }
+
+    @media screen and (max-width: 800px) {
+        #vcomments-box {
+            padding: 5px 0px;
+        }
+    }
+
+    #vcomments-box #vcomments {
+        background-color: #fff;
+    }
+
+    .v .vlist .vcard .vh {
+        padding-right: 20px;
+    }
+
+    .v .vlist .vcard {
+        padding-left: 10px;
+    }
+</style>
+
+  
+
+  
+  
+  
+  
+  
+
+</article>
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2019-2020
+        <i class="ri-heart-fill heart_icon"></i> 向天再借两小时
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        
+        Powered by <a href="https://hexo.io" target="_blank">Hexo</a>
+        <span class="division">|</span>
+        Theme - <a href="https://github.com/Shen-Yu/hexo-theme-ayer" target="_blank">Ayer</a>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>Visitors:<span id="busuanzi_value_site_uv"></span></s>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>Views:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+      <div class="float_btns">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+      </div>
+    </main>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <script>
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        document.querySelector('.content').classList.remove('on');
+        document.querySelector('.sidebar').classList.remove('on');
+      }
+    </script>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+
+
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script>
+
+
+
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+
+<script type="text/javascript" src="https://js.users.51.la/20544303.js"></script>
+
+
+<!-- 复制 -->
+
+  
+<link rel="stylesheet" href="/css/clipboard.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+
+
+    
+    <div id="music">
+    
+    
+    
+    <iframe frameborder="no" border="1" marginwidth="0" marginheight="0" width="200" height="52"
+        src="//music.163.com/outchain/player?type=2&id=1437274426&auto=0&height=32"></iframe>
+</div>
+
+<style>
+    #music {
+        position: fixed;
+        right: 15px;
+        bottom: 0;
+        z-index: 998;
+    }
+</style>
+    
+  </div>
+</body>
+
+</html>

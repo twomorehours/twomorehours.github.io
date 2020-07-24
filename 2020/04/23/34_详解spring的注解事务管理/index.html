@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+
+
+<html lang="chinese">
+
+
+<head>
+  <meta charset="utf-8" />
+    
+  <meta name="description" content="two more hours company" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+    详解spring的注解事务管理 |  向天再借两小时
+  </title>
+  <meta name="generator" content="hexo-theme-yilia-plus">
+  
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
+  
+<link rel="stylesheet" href="/dist/main.css">
+
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/css/remixicon.min.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+  
+<script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+
+  
+  
+
+  
+
+</head>
+
+</html>
+
+<body>
+  <div id="app">
+    <main class="content on">
+      <section class="outer">
+  <article id="post-34_详解spring的注解事务管理" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  详解spring的注解事务管理
+</h1>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/04/23/34_%E8%AF%A6%E8%A7%A3spring%E7%9A%84%E6%B3%A8%E8%A7%A3%E4%BA%8B%E5%8A%A1%E7%AE%A1%E7%90%86/" class="article-date">
+  <time datetime="2020-04-23T14:31:39.000Z" itemprop="datePublished">2020-04-23</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/springboot/">springboot</a>
+  </div>
+
+      
+      
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">2.1k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">11 min</span>
+        </span>
+    </span>
+</div>
+
+      
+    </div>
+    
+
+    
+    
+    <div class="tocbot"></div>
+
+
+
+
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="前置知识"><a href="#前置知识" class="headerlink" title="前置知识"></a>前置知识</h2><ul>
+<li>spring的是事务依赖数据库事务，spring本身没有事务</li>
+<li>注解式事务管理是依赖AOP机制实现的</li>
+<li>事务管理的顶级接口是<code>org.springframework.transaction.PlatformTransactionManager</code></li>
+<li>本文以<code>Mybatis</code>为例</li>
+</ul>
+<h2 id="大致流程-伪代码"><a href="#大致流程-伪代码" class="headerlink" title="大致流程(伪代码)"></a>大致流程(伪代码)</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 假设这里是代理的invoke方法</span></span><br><span class="line"><span class="comment">// 这个method 就是实际要执行的业务逻辑</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(MethodInvocation invocation)</span><span class="keyword">throws</span> Throwable</span>;&#123;</span><br><span class="line">    <span class="comment">// 1.取出一个Connection 并放入threadlocal中</span></span><br><span class="line">    <span class="keyword">try</span>&#123;</span><br><span class="line">        <span class="comment">// 2.执行方法</span></span><br><span class="line">        <span class="comment">// 这个方法里面的dao要能拿到上面取到的相同的Connection</span></span><br><span class="line">        invocation.proceed();</span><br><span class="line">    &#125;<span class="keyword">catch</span>(Exception e)&#123;</span><br><span class="line">        <span class="comment">//3. 出错回滚</span></span><br><span class="line">        Connection.rollback();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 4. 成功提交</span></span><br><span class="line">    Connection.commit();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="详细流程"><a href="#详细流程" class="headerlink" title="详细流程"></a>详细流程</h2><ul>
+<li><p>取出一个Connection并开启事务</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br></pre></td><td class="code"><pre><span class="line">   <span class="comment">//org.springframework.transaction.interceptor.TransactionInterceptor#invoke</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(MethodInvocation invocation)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">	<span class="comment">//...</span></span><br><span class="line">	<span class="keyword">return</span> invokeWithinTransaction(invocation.getMethod(), targetClass, invocation::proceed);</span><br><span class="line">&#125;</span><br><span class="line">   <span class="comment">//org.springframework.transaction.interceptor.TransactionAspectSupport#invokeWithinTransaction</span></span><br><span class="line">   <span class="function"><span class="keyword">protected</span> Object <span class="title">invokeWithinTransaction</span><span class="params">(Method method, @Nullable Class&lt;?&gt; targetClass,</span></span></span><br><span class="line"><span class="function"><span class="params">		<span class="keyword">final</span> InvocationCallback invocation)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line"></span><br><span class="line">       <span class="comment">//...</span></span><br><span class="line">	PlatformTransactionManager ptm = asPlatformTransactionManager(tm);</span><br><span class="line">	<span class="keyword">final</span> String joinpointIdentification = methodIdentification(method, targetClass, txAttr);</span><br><span class="line"></span><br><span class="line">       <span class="comment">// 如果@Transction为空的话 则没有事务(如果之前有事务 就会使用当前事务)</span></span><br><span class="line">	<span class="keyword">if</span> (txAttr == <span class="keyword">null</span> || !(ptm <span class="keyword">instanceof</span> CallbackPreferringPlatformTransactionManager)) &#123;</span><br><span class="line">		<span class="comment">// 创建事务</span></span><br><span class="line">		TransactionInfo txInfo = createTransactionIfNecessary(ptm, txAttr, joinpointIdentification);</span><br><span class="line"></span><br><span class="line">		Object retVal;</span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			<span class="comment">// 调用实际逻辑</span></span><br><span class="line">			retVal = invocation.proceedWithInvocation();</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (Throwable ex) &#123;</span><br><span class="line">			<span class="comment">// 报错了回滚</span></span><br><span class="line">			completeTransactionAfterThrowing(txInfo, ex);</span><br><span class="line">			<span class="keyword">throw</span> ex;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">finally</span> &#123;</span><br><span class="line">			cleanupTransactionInfo(txInfo);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (vavrPresent &amp;&amp; VavrDelegate.isVavrTry(retVal)) &#123;</span><br><span class="line">			<span class="comment">// Set rollback-only in case of Vavr failure matching our rollback rules...</span></span><br><span class="line">			TransactionStatus status = txInfo.getTransactionStatus();</span><br><span class="line">			<span class="keyword">if</span> (status != <span class="keyword">null</span> &amp;&amp; txAttr != <span class="keyword">null</span>) &#123;</span><br><span class="line">				retVal = VavrDelegate.evaluateTryFailure(retVal, txAttr, status);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">           <span class="comment">// 成功提交事务</span></span><br><span class="line">		commitTransactionAfterReturning(txInfo);</span><br><span class="line">		<span class="keyword">return</span> retVal;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//...</span></span><br><span class="line">&#125;</span><br><span class="line">   <span class="comment">//org.springframework.transaction.interceptor.TransactionAspectSupport#createTransactionIfNecessary</span></span><br><span class="line">   <span class="function"><span class="keyword">protected</span> TransactionInfo <span class="title">createTransactionIfNecessary</span><span class="params">(@Nullable PlatformTransactionManager tm,</span></span></span><br><span class="line"><span class="function"><span class="params">		@Nullable TransactionAttribute txAttr, <span class="keyword">final</span> String joinpointIdentification)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//...</span></span><br><span class="line">	TransactionStatus status = <span class="keyword">null</span>;</span><br><span class="line">	<span class="keyword">if</span> (txAttr != <span class="keyword">null</span>) &#123;</span><br><span class="line">		<span class="keyword">if</span> (tm != <span class="keyword">null</span>) &#123;</span><br><span class="line">               <span class="comment">// 从事务管理器中取一个事务</span></span><br><span class="line">			status = tm.getTransaction(txAttr);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">				logger.debug(<span class="string">"Skipping transactional joinpoint ["</span> + joinpointIdentification +</span><br><span class="line">						<span class="string">"] because no transaction manager has been configured"</span>);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> prepareTransactionInfo(tm, txAttr, joinpointIdentification, status);</span><br><span class="line">&#125;</span><br><span class="line">   <span class="comment">//org.springframework.transaction.support.AbstractPlatformTransactionManager#getTransaction</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> TransactionStatus <span class="title">getTransaction</span><span class="params">(@Nullable TransactionDefinition definition)</span></span></span><br><span class="line"><span class="function">		<span class="keyword">throws</span> TransactionException </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//..</span></span><br><span class="line">       <span class="comment">// 取出一个事务</span></span><br><span class="line">	Object transaction = doGetTransaction();</span><br><span class="line">	</span><br><span class="line">       <span class="comment">// 判断当前是否已经在事务中了</span></span><br><span class="line">	<span class="keyword">if</span> (isExistingTransaction(transaction)) &#123;</span><br><span class="line">		<span class="comment">// 如果是 则走这个逻辑 这里就是事务传播相关的东西了 本次就不分析了</span></span><br><span class="line">		<span class="keyword">return</span> handleExistingTransaction(def, transaction, debugEnabled);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//...</span></span><br><span class="line">       <span class="comment">// 这里默认是PROPAGATION_REQUIRED</span></span><br><span class="line">	<span class="keyword">else</span> <span class="keyword">if</span> (def.getPropagationBehavior() == TransactionDefinition.PROPAGATION_REQUIRED ||</span><br><span class="line">			def.getPropagationBehavior() == TransactionDefinition.PROPAGATION_REQUIRES_NEW ||</span><br><span class="line">			def.getPropagationBehavior() == TransactionDefinition.PROPAGATION_NESTED) &#123;</span><br><span class="line">		<span class="comment">//...</span></span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">               <span class="comment">// 开启一个事务</span></span><br><span class="line">			<span class="keyword">return</span> startTransaction(def, transaction, debugEnabled, suspendedResources);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (RuntimeException | Error ex) &#123;</span><br><span class="line">			resume(<span class="keyword">null</span>, suspendedResources);</span><br><span class="line">			<span class="keyword">throw</span> ex;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//...</span></span><br><span class="line">&#125;</span><br><span class="line">   <span class="comment">//org.springframework.transaction.support.AbstractPlatformTransactionManager#startTransaction</span></span><br><span class="line">   <span class="function"><span class="keyword">private</span> TransactionStatus <span class="title">startTransaction</span><span class="params">(TransactionDefinition definition, Object transaction,</span></span></span><br><span class="line"><span class="function"><span class="params">		<span class="keyword">boolean</span> debugEnabled, @Nullable SuspendedResourcesHolder suspendedResources)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">boolean</span> newSynchronization = (getTransactionSynchronization() != SYNCHRONIZATION_NEVER);</span><br><span class="line">	DefaultTransactionStatus status = newTransactionStatus(</span><br><span class="line">			definition, transaction, <span class="keyword">true</span>, newSynchronization, debugEnabled, suspendedResources);</span><br><span class="line">       <span class="comment">// 开启事务</span></span><br><span class="line">	doBegin(transaction, definition);</span><br><span class="line">	prepareSynchronization(status, definition);</span><br><span class="line">	<span class="keyword">return</span> status;</span><br><span class="line">&#125;</span><br><span class="line">   <span class="comment">//org.springframework.jdbc.datasource.DataSourceTransactionManager#doBegin</span></span><br><span class="line">   <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doBegin</span><span class="params">(Object transaction, TransactionDefinition definition)</span> </span>&#123;</span><br><span class="line">	DataSourceTransactionObject txObject = (DataSourceTransactionObject) transaction;</span><br><span class="line">	Connection con = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> (!txObject.hasConnectionHolder() ||</span><br><span class="line">				txObject.getConnectionHolder().isSynchronizedWithTransaction()) &#123;</span><br><span class="line">               <span class="comment">// 从连接池取一个连接</span></span><br><span class="line">			Connection newCon = obtainDataSource().getConnection();</span><br><span class="line">			<span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">				logger.debug(<span class="string">"Acquired Connection ["</span> + newCon + <span class="string">"] for JDBC transaction"</span>);</span><br><span class="line">			&#125;</span><br><span class="line">               <span class="comment">// 保存到事务中</span></span><br><span class="line">			txObject.setConnectionHolder(<span class="keyword">new</span> ConnectionHolder(newCon), <span class="keyword">true</span>);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		txObject.getConnectionHolder().setSynchronizedWithTransaction(<span class="keyword">true</span>);</span><br><span class="line">		con = txObject.getConnectionHolder().getConnection();</span><br><span class="line"></span><br><span class="line">		Integer previousIsolationLevel = DataSourceUtils.prepareConnectionForTransaction(con, definition);</span><br><span class="line">		txObject.setPreviousIsolationLevel(previousIsolationLevel);</span><br><span class="line">		txObject.setReadOnly(definition.isReadOnly());</span><br><span class="line"></span><br><span class="line">		</span><br><span class="line">           <span class="comment">// 设置为非自动提交</span></span><br><span class="line">		<span class="keyword">if</span> (con.getAutoCommit()) &#123;</span><br><span class="line">               <span class="comment">// 事务结束后 要设置会原来的提交状态 否则没有事务的方法永远都不能提交</span></span><br><span class="line">			txObject.setMustRestoreAutoCommit(<span class="keyword">true</span>);</span><br><span class="line">			<span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">				logger.debug(<span class="string">"Switching JDBC Connection ["</span> + con + <span class="string">"] to manual commit"</span>);</span><br><span class="line">			&#125;</span><br><span class="line">			con.setAutoCommit(<span class="keyword">false</span>);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		prepareTransactionalConnection(con, definition);</span><br><span class="line">		txObject.getConnectionHolder().setTransactionActive(<span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">int</span> timeout = determineTimeout(definition);</span><br><span class="line">		<span class="keyword">if</span> (timeout != TransactionDefinition.TIMEOUT_DEFAULT) &#123;</span><br><span class="line">			txObject.getConnectionHolder().setTimeoutInSeconds(timeout);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// Bind the connection holder to the thread.</span></span><br><span class="line">		<span class="keyword">if</span> (txObject.isNewConnectionHolder()) &#123;</span><br><span class="line">               <span class="comment">// 将获取的连接保存到ThreadLocal中 下面分析</span></span><br><span class="line">			TransactionSynchronizationManager.bindResource(obtainDataSource(), txObject.getConnectionHolder());</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">catch</span> (Throwable ex) &#123;</span><br><span class="line">		<span class="keyword">if</span> (txObject.isNewConnectionHolder()) &#123;</span><br><span class="line">			DataSourceUtils.releaseConnection(con, obtainDataSource());</span><br><span class="line">			txObject.setConnectionHolder(<span class="keyword">null</span>, <span class="keyword">false</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">throw</span> <span class="keyword">new</span> CannotCreateTransactionException(<span class="string">"Could not open JDBC Connection for transaction"</span>, ex);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line">   <span class="comment">//org.springframework.transaction.support.TransactionSynchronizationManager#bindResource</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">bindResource</span><span class="params">(Object key, Object value)</span> <span class="keyword">throws</span> IllegalStateException </span>&#123;</span><br><span class="line">	Object actualKey = TransactionSynchronizationUtils.unwrapResourceIfNecessary(key);</span><br><span class="line">	Assert.notNull(value, <span class="string">"Value must not be null"</span>);</span><br><span class="line">       <span class="comment">// ThreadLocal Key是Datasource value是ConnectionHolder 也就是连接对象</span></span><br><span class="line">	Map&lt;Object, Object&gt; map = resources.get();</span><br><span class="line">	<span class="comment">// set ThreadLocal Map if none found</span></span><br><span class="line">	<span class="keyword">if</span> (map == <span class="keyword">null</span>) &#123;</span><br><span class="line">		map = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">		resources.set(map);</span><br><span class="line">	&#125;</span><br><span class="line">       <span class="comment">// 放进去</span></span><br><span class="line">	Object oldValue = map.put(actualKey, value);</span><br><span class="line">	<span class="comment">//...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>Mybatis是怎么精准的取到之前的连接的</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br></pre></td><td class="code"><pre><span class="line">   <span class="comment">// 连接池声明</span></span><br><span class="line">   <span class="meta">@Bean</span>(name = <span class="string">"dbds"</span>, initMethod = <span class="string">"init"</span>, destroyMethod = <span class="string">"close"</span>)</span><br><span class="line">   <span class="function"><span class="keyword">public</span> DruidDataSource <span class="title">getDataSource</span><span class="params">()</span> </span>&#123;</span><br><span class="line">       DruidDataSource dataSource = <span class="keyword">new</span> DruidDataSource();</span><br><span class="line">       dataSource.setUrl(url);</span><br><span class="line">       dataSource.setUsername(userName);</span><br><span class="line">       dataSource.setPassword(password);</span><br><span class="line">       <span class="comment">//..</span></span><br><span class="line">       <span class="keyword">return</span> dataSource;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">// 事务管理器声明</span></span><br><span class="line">   <span class="meta">@Bean</span>(<span class="string">"transactionManager"</span>)</span><br><span class="line">   <span class="function"><span class="keyword">public</span> DataSourceTransactionManager <span class="title">sentinelTransactionManager</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">           @Qualifier(<span class="string">"dbds"</span>)</span> DataSource dataSource) </span>&#123;</span><br><span class="line">       <span class="keyword">return</span> <span class="keyword">new</span> DataSourceTransactionManager(dataSource);</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">// Mybatis声明</span></span><br><span class="line">   <span class="meta">@Bean</span>(name = <span class="string">"dbSqlSessionFactory"</span>)</span><br><span class="line">   <span class="function"><span class="keyword">public</span> SqlSessionFactory <span class="title">getSqlSessionFactory</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">           @Qualifier(<span class="string">"dbds"</span>)</span> DataSource ds) <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">       SqlSessionFactoryBean bean = <span class="keyword">new</span> SqlSessionFactoryBean();</span><br><span class="line">       ResourcePatternResolver resolver = <span class="keyword">new</span> PathMatchingResourcePatternResolver();</span><br><span class="line">       bean.setMapperLocations(resolver.getResources(<span class="string">"classpath:mapper/*.xml"</span>));</span><br><span class="line">       bean.setDataSource(ds);</span><br><span class="line">       PageInterceptor pageInterceptor = <span class="keyword">new</span> PageInterceptor();</span><br><span class="line">       Properties properties = <span class="keyword">new</span> Properties();</span><br><span class="line">       properties.setProperty(<span class="string">"helperDialect"</span>,<span class="string">"mysql"</span>);</span><br><span class="line">       properties.put(<span class="string">"reasonable"</span>,<span class="string">"true"</span>);</span><br><span class="line">       properties.put(<span class="string">"supportMethodsArguments"</span>,<span class="string">"true"</span>);</span><br><span class="line">       properties.put(<span class="string">"autoRuntimeDialect"</span>,<span class="string">"true"</span>);</span><br><span class="line">       pageInterceptor.setProperties(properties);</span><br><span class="line">       bean.setPlugins(pageInterceptor);</span><br><span class="line">       <span class="keyword">return</span> bean.getObject();</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="meta">@Bean</span>(name = <span class="string">"sqlSessionTemplate"</span>)</span><br><span class="line">   <span class="function"><span class="keyword">public</span> SqlSessionTemplate <span class="title">sentinelSqlSessionTemplate</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">           @Qualifier(<span class="string">"dbSqlSessionFactory"</span>)</span> SqlSessionFactory sessionFactory) </span>&#123;</span><br><span class="line">       <span class="keyword">return</span> <span class="keyword">new</span> SqlSessionTemplate(sessionFactory);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">//Mybatis 接口代理的执行入口</span></span><br><span class="line">   <span class="comment">//org.apache.ibatis.binding.MapperProxy#invoke</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">       <span class="keyword">try</span> &#123;</span><br><span class="line">           <span class="keyword">if</span> (Object<span class="class">.<span class="keyword">class</span>.<span class="title">equals</span>(<span class="title">method</span>.<span class="title">getDeclaringClass</span>())) </span>&#123;</span><br><span class="line">               <span class="keyword">return</span> method.invoke(<span class="keyword">this</span>, args);</span><br><span class="line">           &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">               <span class="comment">// 执行</span></span><br><span class="line">               <span class="comment">// 这里的sqlSession实际上就是sqlSessionTemplate</span></span><br><span class="line">               <span class="keyword">return</span> cachedInvoker(method).invoke(proxy, method, args, sqlSession);</span><br><span class="line">           &#125;</span><br><span class="line">       &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">           <span class="keyword">throw</span> ExceptionUtil.unwrapThrowable(t);</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">//org.apache.ibatis.binding.MapperMethod#execute</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> Object <span class="title">execute</span><span class="params">(SqlSession sqlSession, Object[] args)</span> </span>&#123;</span><br><span class="line">   Object result;</span><br><span class="line">       <span class="keyword">switch</span> (command.getType()) &#123;</span><br><span class="line">           <span class="comment">// 这里仅以INSERT为例</span></span><br><span class="line">           <span class="keyword">case</span> INSERT: &#123;</span><br><span class="line">               Object param = method.convertArgsToSqlCommandParam(args);</span><br><span class="line">               <span class="comment">// sqlSession.insert 实际就是sqlSessionTemplate.insert()</span></span><br><span class="line">               result = rowCountResult(sqlSession.insert(command.getName(), param));</span><br><span class="line">               <span class="keyword">break</span>;</span><br><span class="line">           &#125;</span><br><span class="line">           <span class="comment">//...</span></span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       <span class="keyword">return</span> result;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">//org.mybatis.spring.SqlSessionTemplate#insert</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">insert</span><span class="params">(String statement, Object parameter)</span> </span>&#123;</span><br><span class="line">       <span class="comment">// sqlSessionProxy是对SqlSessionFactory的包装 我们来看一下</span></span><br><span class="line">       <span class="keyword">return</span> <span class="keyword">this</span>.sqlSessionProxy.insert(statement, parameter);</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">//org.mybatis.spring.SqlSessionTemplate#SqlSessionTemplate</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="title">SqlSessionTemplate</span><span class="params">(SqlSessionFactory sqlSessionFactory, ExecutorType executorType,</span></span></span><br><span class="line"><span class="function"><span class="params">     PersistenceExceptionTranslator exceptionTranslator)</span> </span>&#123;</span><br><span class="line">       <span class="comment">//...</span></span><br><span class="line">       <span class="comment">// 实际调用会被指派到SqlSessionInterceptor中</span></span><br><span class="line">       <span class="keyword">this</span>.sqlSessionProxy = (SqlSession) newProxyInstance(SqlSessionFactory<span class="class">.<span class="keyword">class</span>.<span class="title">getClassLoader</span>(),</span></span><br><span class="line">           new Class[] &#123; SqlSession.class &#125;, new SqlSessionInterceptor());</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">//org.mybatis.spring.SqlSessionTemplate.SqlSessionInterceptor#invoke</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">     <span class="comment">// 从传入的sqlSessionFactory中取出SqlSession 连接也在这里面 所以这就话是核心</span></span><br><span class="line">     SqlSession sqlSession = getSqlSession(SqlSessionTemplate.<span class="keyword">this</span>.sqlSessionFactory,</span><br><span class="line">         SqlSessionTemplate.<span class="keyword">this</span>.executorType, SqlSessionTemplate.<span class="keyword">this</span>.exceptionTranslator);</span><br><span class="line">       <span class="comment">//...</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">//org.mybatis.spring.SqlSessionUtils#getSqlSession</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> SqlSession <span class="title">getSqlSession</span><span class="params">(SqlSessionFactory sessionFactory, ExecutorType executorType,</span></span></span><br><span class="line"><span class="function"><span class="params">       //...</span></span></span><br><span class="line"><span class="function"><span class="params">       LOGGER.debug(()</span> -&gt; "Creating a new SqlSession")</span>;</span><br><span class="line">       <span class="comment">// 创建一个连接会话</span></span><br><span class="line">       session = sessionFactory.openSession(executorType);</span><br><span class="line">       registerSessionHolder(sessionFactory, executorType, exceptionTranslator, session);</span><br><span class="line">       <span class="keyword">return</span> session;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">//org.apache.ibatis.session.defaults.DefaultSqlSessionFactory#openSessionFromDataSource</span></span><br><span class="line">   <span class="function"><span class="keyword">private</span> SqlSession <span class="title">openSessionFromDataSource</span><span class="params">(ExecutorType execType, TransactionIsolationLevel level, <span class="keyword">boolean</span> autoCommit)</span> </span>&#123;</span><br><span class="line">       Transaction tx = <span class="keyword">null</span>;</span><br><span class="line">       <span class="keyword">try</span> &#123;</span><br><span class="line">           <span class="keyword">final</span> Environment environment = configuration.getEnvironment();</span><br><span class="line">           <span class="comment">// 取出TransactionFactory 这个TransactionFactory是构建SessionFactory时指定的</span></span><br><span class="line">           <span class="keyword">final</span> TransactionFactory transactionFactory = getTransactionFactoryFromEnvironment(environment);</span><br><span class="line">           <span class="comment">// 取一个事务 这事务也就是之前开启的事物</span></span><br><span class="line">           tx = transactionFactory.newTransaction(environment.getDataSource(), level, autoCommit);</span><br><span class="line">           <span class="comment">// 保存到executor </span></span><br><span class="line">           <span class="keyword">final</span> Executor executor = configuration.newExecutor(tx, execType);</span><br><span class="line">           <span class="comment">// 后面查询数据库的链接一定是从tx中取出的</span></span><br><span class="line">           <span class="keyword">return</span> <span class="keyword">new</span> DefaultSqlSession(configuration, executor, autoCommit);</span><br><span class="line">       &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">           closeTransaction(tx); <span class="comment">// may have fetched a connection so lets call close()</span></span><br><span class="line">           <span class="keyword">throw</span> ExceptionFactory.wrapException(<span class="string">"Error opening session.  Cause: "</span> + e, e);</span><br><span class="line">       &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">           ErrorContext.instance().reset();</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">// TransactionFactory的构建</span></span><br><span class="line">   <span class="comment">//org.mybatis.spring.SqlSessionFactoryBean#buildSqlSessionFactory</span></span><br><span class="line">   <span class="function"><span class="keyword">protected</span> SqlSessionFactory <span class="title">buildSqlSessionFactory</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">       <span class="comment">//...</span></span><br><span class="line">       <span class="comment">// 默认是SpringManagedTransactionFactory</span></span><br><span class="line">       targetConfiguration.setEnvironment(<span class="keyword">new</span> Environment(<span class="keyword">this</span>.environment,</span><br><span class="line">           <span class="keyword">this</span>.transactionFactory == <span class="keyword">null</span> ? <span class="keyword">new</span> SpringManagedTransactionFactory() : <span class="keyword">this</span>.transactionFactory,</span><br><span class="line">           <span class="keyword">this</span>.dataSource));</span><br><span class="line">       <span class="comment">//...</span></span><br><span class="line">       <span class="keyword">return</span> <span class="keyword">this</span>.sqlSessionFactoryBuilder.build(targetConfiguration);</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">//org.mybatis.spring.transaction.SpringManagedTransactionFactory#newTransaction</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> Transaction <span class="title">newTransaction</span><span class="params">(DataSource dataSource, TransactionIsolationLevel level, <span class="keyword">boolean</span> autoCommit)</span> </span>&#123;</span><br><span class="line">       <span class="comment">// 返回一个SpringManagedTransaction</span></span><br><span class="line">       <span class="keyword">return</span> <span class="keyword">new</span> SpringManagedTransaction(dataSource);</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">//org.mybatis.spring.transaction.SpringManagedTransaction#getConnection</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> Connection <span class="title">getConnection</span><span class="params">()</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">       <span class="keyword">if</span> (<span class="keyword">this</span>.connection == <span class="keyword">null</span>) &#123;</span><br><span class="line">           <span class="comment">// 开启一个连接</span></span><br><span class="line">           openConnection();</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">return</span> <span class="keyword">this</span>.connection;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">//org.mybatis.spring.transaction.SpringManagedTransaction#openConnection</span></span><br><span class="line">   <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">openConnection</span><span class="params">()</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">       <span class="comment">// 取链接</span></span><br><span class="line">       <span class="keyword">this</span>.connection = DataSourceUtils.getConnection(<span class="keyword">this</span>.dataSource);</span><br><span class="line">       <span class="keyword">this</span>.autoCommit = <span class="keyword">this</span>.connection.getAutoCommit();</span><br><span class="line">       <span class="keyword">this</span>.isConnectionTransactional = DataSourceUtils.isConnectionTransactional(<span class="keyword">this</span>.connection, <span class="keyword">this</span>.dataSource);</span><br><span class="line"></span><br><span class="line">       LOGGER.debug(() -&gt; <span class="string">"JDBC Connection ["</span> + <span class="keyword">this</span>.connection + <span class="string">"] will"</span></span><br><span class="line">       + (<span class="keyword">this</span>.isConnectionTransactional ? <span class="string">" "</span> : <span class="string">" not "</span>) + <span class="string">"be managed by Spring"</span>);</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">//org.springframework.jdbc.datasource.DataSourceUtils#doGetConnection</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Connection <span class="title">doGetConnection</span><span class="params">(DataSource dataSource)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">	Assert.notNull(dataSource, <span class="string">"No DataSource specified"</span>);</span><br><span class="line">       <span class="comment">// 这里就是去取之前放在ThreadLocal中的链接</span></span><br><span class="line">	ConnectionHolder conHolder = (ConnectionHolder) TransactionSynchronizationManager.getResource(dataSource);</span><br><span class="line">	<span class="keyword">return</span> conHolder.getCon();</span><br><span class="line">&#125;</span><br><span class="line">   <span class="comment">//org.springframework.transaction.support.TransactionSynchronizationManager#doGetResource</span></span><br><span class="line">   <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> Object <span class="title">doGetResource</span><span class="params">(Object actualKey)</span> </span>&#123;</span><br><span class="line">       <span class="comment">// 这就是之前放进去的</span></span><br><span class="line">	Map&lt;Object, Object&gt; map = resources.get();</span><br><span class="line">	<span class="keyword">if</span> (map == <span class="keyword">null</span>) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	Object value = map.get(actualKey);</span><br><span class="line">	<span class="comment">//...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>提交事务</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br></pre></td><td class="code"><pre><span class="line">   <span class="comment">//org.springframework.transaction.interceptor.TransactionAspectSupport#commitTransactionAfterReturning</span></span><br><span class="line">   <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">commitTransactionAfterReturning</span><span class="params">(@Nullable TransactionInfo txInfo)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (txInfo != <span class="keyword">null</span> &amp;&amp; txInfo.getTransactionStatus() != <span class="keyword">null</span>) &#123;</span><br><span class="line">		<span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">			logger.trace(<span class="string">"Completing transaction for ["</span> + txInfo.getJoinpointIdentification() + <span class="string">"]"</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		txInfo.getTransactionManager().commit(txInfo.getTransactionStatus());</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line">   <span class="comment">//org.springframework.transaction.support.AbstractPlatformTransactionManager#commit</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">commit</span><span class="params">(TransactionStatus status)</span> <span class="keyword">throws</span> TransactionException </span>&#123;</span><br><span class="line">	<span class="comment">//...</span></span><br><span class="line">	processCommit(defStatus);</span><br><span class="line">&#125;</span><br><span class="line">   <span class="comment">//org.springframework.transaction.support.AbstractPlatformTransactionManager#processCommit</span></span><br><span class="line">   <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">processCommit</span><span class="params">(DefaultTransactionStatus status)</span> <span class="keyword">throws</span> TransactionException </span>&#123;</span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">               <span class="comment">//...</span></span><br><span class="line">			<span class="comment">// 提交</span></span><br><span class="line">               doCommit(status);</span><br><span class="line">			</span><br><span class="line">	&#125;<span class="keyword">finally</span> &#123;</span><br><span class="line">           <span class="comment">// 处理收尾逻辑</span></span><br><span class="line">		cleanupAfterCompletion(status);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line">   <span class="comment">//org.springframework.jdbc.datasource.DataSourceTransactionManager#doCommit</span></span><br><span class="line">   <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doCommit</span><span class="params">(DefaultTransactionStatus status)</span> </span>&#123;</span><br><span class="line">	DataSourceTransactionObject txObject = (DataSourceTransactionObject) status.getTransaction();</span><br><span class="line">	Connection con = txObject.getConnectionHolder().getConnection();</span><br><span class="line">	<span class="keyword">if</span> (status.isDebug()) &#123;</span><br><span class="line">		logger.debug(<span class="string">"Committing JDBC transaction on Connection ["</span> + con + <span class="string">"]"</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">           <span class="comment">// 调用JDBC远程connection提交</span></span><br><span class="line">		con.commit();</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">catch</span> (SQLException ex) &#123;</span><br><span class="line">		<span class="keyword">throw</span> <span class="keyword">new</span> TransactionSystemException(<span class="string">"Could not commit JDBC transaction"</span>, ex);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line">   <span class="comment">//org.springframework.transaction.support.AbstractPlatformTransactionManager#cleanupAfterCompletion</span></span><br><span class="line">   <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">cleanupAfterCompletion</span><span class="params">(DefaultTransactionStatus status)</span> </span>&#123;</span><br><span class="line">	status.setCompleted();</span><br><span class="line">	<span class="keyword">if</span> (status.isNewSynchronization()) &#123;</span><br><span class="line">		TransactionSynchronizationManager.clear();</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (status.isNewTransaction()) &#123;</span><br><span class="line">           <span class="comment">// 收尾处理</span></span><br><span class="line">		doCleanupAfterCompletion(status.getTransaction());</span><br><span class="line">	&#125;</span><br><span class="line">       <span class="comment">//..</span></span><br><span class="line">&#125;</span><br><span class="line">   <span class="comment">//org.springframework.jdbc.datasource.DataSourceTransactionManager#doCleanupAfterCompletion</span></span><br><span class="line">   <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doCleanupAfterCompletion</span><span class="params">(Object transaction)</span> </span>&#123;</span><br><span class="line">	DataSourceTransactionObject txObject = (DataSourceTransactionObject) transaction;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 将链接与当前线程解除绑定 从ThreadLocal中移除</span></span><br><span class="line">	<span class="keyword">if</span> (txObject.isNewConnectionHolder()) &#123;</span><br><span class="line">		TransactionSynchronizationManager.unbindResource(obtainDataSource());</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 将AutoCommit设置回原来的状态</span></span><br><span class="line">	Connection con = txObject.getConnectionHolder().getConnection();</span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> (txObject.isMustRestoreAutoCommit()) &#123;</span><br><span class="line">			con.setAutoCommit(<span class="keyword">true</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		DataSourceUtils.resetConnectionAfterTransaction(</span><br><span class="line">				con, txObject.getPreviousIsolationLevel(), txObject.isReadOnly());</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">catch</span> (Throwable ex) &#123;</span><br><span class="line">		logger.debug(<span class="string">"Could not reset JDBC Connection after transaction"</span>, ex);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (txObject.isNewConnectionHolder()) &#123;</span><br><span class="line">		<span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">			logger.debug(<span class="string">"Releasing JDBC Connection ["</span> + con + <span class="string">"] after transaction"</span>);</span><br><span class="line">		&#125;</span><br><span class="line">           <span class="comment">// 将连接放回连接池</span></span><br><span class="line">		DataSourceUtils.releaseConnection(con, <span class="keyword">this</span>.dataSource);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	txObject.getConnectionHolder().clear();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>回滚事务<br>rollback的过程和commit的过程一致，除了一个调用commit，一个调用rollback </p>
+</li>
+</ul>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+        <div class="declare">
+          <ul class="post-copyright">
+            <li>
+              <i class="ri-copyright-line"></i>
+              <strong>Copyright： </strong>
+              Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
+            </li>
+          </ul>
+        </div>
+        
+    <footer class="article-footer">
+      
+      
+
+    </footer>
+
+  </div>
+
+  
+  
+  <nav class="article-nav">
+    
+      <a href="/2020/05/23/35_RocketMQ%E7%94%9F%E4%BA%A7%E6%B6%88%E8%B4%B9%E6%B5%81%E7%A8%8B%E6%B5%85%E6%9E%90/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            RocketMQ生产消费流程浅析
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2020/04/12/33_spring%20cloud%20gateway%E7%9A%84%E8%AF%B7%E6%B1%82%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">spring cloud gateway的请求执行流程</div>
+      </a>
+    
+  </nav>
+
+
+  
+
+  
+  
+<!-- valine评论 -->
+<div id="vcomments-box">
+    <div id="vcomments">
+    </div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        app_id: 'j7og6mDnkAIEtuTza7hQ3LNa-gzGzoHsz',
+        app_key: 'MFzzLmRJtNRHg35aF1dvI3M5',
+        path: window.location.pathname,
+        notify: 'false',
+        verify: 'false',
+        avatar: 'monsterid',
+        placeholder: '给我的文章加点评论吧~',
+        recordIP: true
+    });
+    const infoEle = document.querySelector('#vcomments .info');
+    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+        infoEle.childNodes.forEach(function (item) {
+            item.parentNode.removeChild(item);
+        });
+    }
+</script>
+<style>
+    #vcomments-box {
+        padding: 5px 30px;
+    }
+
+    @media screen and (max-width: 800px) {
+        #vcomments-box {
+            padding: 5px 0px;
+        }
+    }
+
+    #vcomments-box #vcomments {
+        background-color: #fff;
+    }
+
+    .v .vlist .vcard .vh {
+        padding-right: 20px;
+    }
+
+    .v .vlist .vcard {
+        padding-left: 10px;
+    }
+</style>
+
+  
+
+  
+  
+  
+  
+  
+
+</article>
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2019-2020
+        <i class="ri-heart-fill heart_icon"></i> 向天再借两小时
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        
+        Powered by <a href="https://hexo.io" target="_blank">Hexo</a>
+        <span class="division">|</span>
+        Theme - <a href="https://github.com/Shen-Yu/hexo-theme-ayer" target="_blank">Ayer</a>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>Visitors:<span id="busuanzi_value_site_uv"></span></s>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>Views:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+      <div class="float_btns">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+      </div>
+    </main>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <script>
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        document.querySelector('.content').classList.remove('on');
+        document.querySelector('.sidebar').classList.remove('on');
+      }
+    </script>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+
+
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script>
+
+
+
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+
+<script type="text/javascript" src="https://js.users.51.la/20544303.js"></script>
+
+
+<!-- 复制 -->
+
+  
+<link rel="stylesheet" href="/css/clipboard.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+
+
+    
+    <div id="music">
+    
+    
+    
+    <iframe frameborder="no" border="1" marginwidth="0" marginheight="0" width="200" height="52"
+        src="//music.163.com/outchain/player?type=2&id=1437274426&auto=0&height=32"></iframe>
+</div>
+
+<style>
+    #music {
+        position: fixed;
+        right: 15px;
+        bottom: 0;
+        z-index: 998;
+    }
+</style>
+    
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+
+
+<html lang="chinese">
+
+
+<head>
+  <meta charset="utf-8" />
+    
+  <meta name="description" content="two more hours company" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+    young gc No.1 |  向天再借两小时
+  </title>
+  <meta name="generator" content="hexo-theme-yilia-plus">
+  
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
+  
+<link rel="stylesheet" href="/dist/main.css">
+
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/css/remixicon.min.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+  
+<script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+
+  
+  
+
+  
+
+</head>
+
+</html>
+
+<body>
+  <div id="app">
+    <main class="content on">
+      <section class="outer">
+  <article id="post-03_young_gc_No1" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  young gc No.1
+</h1>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2019/09/16/03_young_gc_No1/" class="article-date">
+  <time datetime="2019-09-16T15:29:26.000Z" itemprop="datePublished">2019-09-16</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Java/">Java</a>
+  </div>
+
+      
+      
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">1.2k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">5 min</span>
+        </span>
+    </span>
+</div>
+
+      
+    </div>
+    
+
+    
+    
+    <div class="tocbot"></div>
+
+
+
+
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="JVM常用启动参数"><a href="#JVM常用启动参数" class="headerlink" title="JVM常用启动参数"></a>JVM常用启动参数</h2><table>
+<thead>
+<tr>
+<th>参数名称</th>
+<th align="center">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-Xms</td>
+<td align="center">堆最小内存</td>
+</tr>
+<tr>
+<td>-Xmx</td>
+<td align="center">堆最大内存</td>
+</tr>
+<tr>
+<td>-XX:NewSize</td>
+<td align="center">新生代内存</td>
+</tr>
+<tr>
+<td>-XX:MaxNewSize</td>
+<td align="center">新生代最大内存</td>
+</tr>
+<tr>
+<td>-XX:SurvivorRatio</td>
+<td align="center">新生代内存比例默认为8:1:1  如果设置为5:1:1则值为5,eden占:5/7</td>
+</tr>
+<tr>
+<td>-XX:PretenureSizeThreshold</td>
+<td align="center">大对象直接进入老年代的阀值</td>
+</tr>
+<tr>
+<td>-XX:MaxTenuringThreshold</td>
+<td align="center">新生代对象进入老年代的年龄阀值,默认为15(对象头:4字节最大1111)</td>
+</tr>
+<tr>
+<td>-XX:TargetSurvivorRatio</td>
+<td align="center">动态年龄判断条件,新生代对象占s0区域的比率,默认为50%</td>
+</tr>
+<tr>
+<td>-XX:+UseParNewGC</td>
+<td align="center">新生代使用parNew收集器(多线程并发标记, stop the world)</td>
+</tr>
+<tr>
+<td>-XX:+UseConcMarkSweepGC</td>
+<td align="center">老年代使用CMS收集器</td>
+</tr>
+<tr>
+<td>-XX:+PrintGCDetails</td>
+<td align="center">打印gc日志详情</td>
+</tr>
+<tr>
+<td>-XX:+PrintGCTimeStamps</td>
+<td align="center">打印gc时间戳</td>
+</tr>
+<tr>
+<td>-Xloggc:gc.log</td>
+<td align="center">gc日志对应的文件</td>
+</tr>
+</tbody></table>
+<h2 id="堆内存对象分配流程"><a href="#堆内存对象分配流程" class="headerlink" title="堆内存对象分配流程"></a>堆内存对象分配流程</h2><ol>
+<li>对象优先分配新生代eden区(大对象直接进入老年代)</li>
+<li>当eden区域没有可用内存空间分配时触发young gc</li>
+<li>young gc触发时进行分配担当判断(保证young gc成功)<ul>
+<li>判断老年代可用连续空间是否大于新生代,大于则分配担当成功</li>
+<li>小于,则判断老年代可用连续空间是否大于历次新生代进入老年代的对象平均大小,大于则分配担当成功</li>
+<li>小于则先执行full gc保证老年代空间够用</li>
+</ul>
+</li>
+<li>执行young gc时通过gc root可达性算法(gc root对象有局部变量和静态变量或常量)标记新生代中存活的对象</li>
+<li>第一次young gc时将eden中存活的对象通过复制算法复制到新生代 survival0,第二次即将eden和survival0中存活对象复制到survival1(每次保证s0或s1为空用来放young gc后存活对象)</li>
+</ol>
+<h2 id="新生代对象何时进入老年代"><a href="#新生代对象何时进入老年代" class="headerlink" title="新生代对象何时进入老年代"></a>新生代对象何时进入老年代</h2><ol>
+<li><p>新生代young gc时存活的对象大于新生代s0堆内存大小</p>
+</li>
+<li><p>新生代young gc后存在某个对象的年龄大于等于了进入老年代对象的阀值(默认15)</p>
+</li>
+<li><p>新生代young gc后满足动态年龄判断条件,比如新生代中年龄代0,1,2占比49%  3:2% 4:49%,此时年龄0+1+2+3对象占比为51%,则大于等于年龄3的对象进入老年代即年龄3和4</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jdk源码地址:http:<span class="comment">//hg.openjdk.java.net/jdk8/jdk8/hotspot/file/87ee5ee27509/src/share/vm/gc_implementation/shared/ageTable.cpp#l81</span></span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ol>
+<h2 id="young-gc存活对象大于s0例子"><a href="#young-gc存活对象大于s0例子" class="headerlink" title="young gc存活对象大于s0例子"></a>young gc存活对象大于s0例子</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> &lt;a href="mailto:twomorehours@163.com"&gt;twomorehours&lt;/a&gt;</span></span><br><span class="line"><span class="comment"> * Date: 2020-04-23 15:23</span></span><br><span class="line"><span class="comment"> * version: 1.0</span></span><br><span class="line"><span class="comment"> * Description:young gc后存活的对象大于s0堆大小导致对象进入老年代</span></span><br><span class="line"><span class="comment"> **/</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">YoungGcIntoOldByGreaterS0Demo</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * jvm参数:</span></span><br><span class="line"><span class="comment">     * -XX:NewSize=10M -XX:MaxNewSize=10M -Xms20M -Xmx20M -XX:SurvivorRatio=8 -XX:PretenureSizeThreshold=10M -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.log</span></span><br><span class="line"><span class="comment">     * &lt;p&gt;</span></span><br><span class="line"><span class="comment">     * 参数分析:</span></span><br><span class="line"><span class="comment">     * 1.新生代 10M eden:8M s0:1M s1:1M</span></span><br><span class="line"><span class="comment">     * 2.老年代 10M</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> args</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">byte</span>[] array01 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">        array01 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">128</span> * <span class="number">1024</span>];</span><br><span class="line">        array01 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">        array01 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line"></span><br><span class="line">        <span class="keyword">byte</span>[] array02 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过:java jvm参数  -jar demo.jar  启动后gc.log信息</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Java <span class="title">HotSpot</span><span class="params">(TM)</span> 64-Bit Server <span class="title">VM</span> <span class="params">(<span class="number">25.211</span>-b12)</span> <span class="keyword">for</span> bsd-amd64 <span class="title">JRE</span> <span class="params">(<span class="number">1.8</span><span class="number">.0</span>_211-b12)</span>, built on Apr  1 2019 20:53:18 by "java_re" with gcc 4.2.1 <span class="params">(Based on Apple Inc. build <span class="number">5658</span>)</span> <span class="params">(LLVM build <span class="number">2336.11</span><span class="number">.00</span>)</span></span></span><br><span class="line"><span class="function">Memory: 4k page, physical 33554432<span class="title">k</span><span class="params">(<span class="number">2646028</span>k free)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">/proc/meminfo:</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">CommandLine flags: -XX:InitialHeapSize</span>=<span class="number">20971520</span> -XX:MaxHeapSize=<span class="number">20971520</span> -XX:MaxNewSize=<span class="number">10485760</span> -XX:NewSize=<span class="number">10485760</span> -XX:OldPLABSize=<span class="number">16</span> -XX:PretenureSizeThreshold=<span class="number">10485760</span> -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:SurvivorRatio=<span class="number">8</span> -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseConcMarkSweepGC -XX:+UseParNewGC </span><br><span class="line"><span class="number">0.080</span>: [GC (Allocation Failure) <span class="number">0.080</span>: [ParNew: <span class="number">6943</span>K-&gt;<span class="number">333</span>K(<span class="number">9216</span>K), <span class="number">0.0014860</span> secs] <span class="number">6943</span>K-&gt;<span class="number">2383</span>K(<span class="number">19456</span>K), <span class="number">0.0015622</span> secs] [Times: user=<span class="number">0.01</span> sys=<span class="number">0.00</span>, real=<span class="number">0.01</span> secs] </span><br><span class="line">Heap</span><br><span class="line"> par <span class="keyword">new</span> generation   total <span class="number">9216</span>K, used <span class="number">2463</span>K [<span class="number">0x00000007bec00000</span>, <span class="number">0x00000007bf600000</span>, <span class="number">0x00000007bf600000</span>)</span><br><span class="line">  eden space <span class="number">8192</span>K,  <span class="number">26</span>% used [<span class="number">0x00000007bec00000</span>, <span class="number">0x00000007bee14930</span>, <span class="number">0x00000007bf400000</span>)</span><br><span class="line">  from space <span class="number">1024</span>K,  <span class="number">32</span>% used [<span class="number">0x00000007bf500000</span>, <span class="number">0x00000007bf553518</span>, <span class="number">0x00000007bf600000</span>)</span><br><span class="line">  to   space <span class="number">1024</span>K,   <span class="number">0</span>% used [<span class="number">0x00000007bf400000</span>, <span class="number">0x00000007bf400000</span>, <span class="number">0x00000007bf500000</span>)</span><br><span class="line"> concurrent mark-sweep generation total <span class="number">10240</span>K, used <span class="number">2050</span>K [<span class="number">0x00000007bf600000</span>, <span class="number">0x00000007c0000000</span>, <span class="number">0x00000007c0000000</span>)</span><br><span class="line"> Metaspace       used <span class="number">2728</span>K, capacity <span class="number">4486</span>K, committed <span class="number">4864</span>K, reserved <span class="number">1056768</span>K</span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">space</span>    <span class="title">used</span> 293<span class="title">K</span>, <span class="title">capacity</span> 386<span class="title">K</span>, <span class="title">committed</span> 512<span class="title">K</span>, <span class="title">reserved</span> 1048576<span class="title">K</span></span></span><br><span class="line"><span class="class"></span></span><br><span class="line">-- 分析:新生代 8M 1M 1M 老年代:10M</span><br><span class="line"><span class="number">0</span>.ParNew: <span class="number">6943</span>K-&gt;<span class="number">333</span>K(<span class="number">9216</span>K), <span class="number">0.0014860</span> secs,新生代堆总大小<span class="number">9</span>M,gc回收对象从<span class="number">6.9</span>M--&gt;<span class="number">333</span>k,<span class="number">333</span>k未知对象在from区存活,占survival from:<span class="number">32</span>%,耗时<span class="number">1.4</span>ms                                                           </span><br><span class="line"><span class="number">1</span>.当分配array02:<span class="number">2</span>M对象时,此时eden中对象大小为<span class="number">6943</span>K无法分配<span class="number">2</span>M对象导致<span class="function">Allocation <span class="title">Failure</span><span class="params">(分配失败)</span>触发young gc,young gc进行分配担当判断此时老年代空间大于新生代内存空间不需要触发full gc</span></span><br><span class="line"><span class="function">                                                            </span></span><br><span class="line"><span class="function">2.6943K-&gt;2383<span class="title">K</span><span class="params">(<span class="number">19456</span>K)</span>, 0.0015622 secs,堆总大小19M,回收前:6.9M 回收后:2M+333k                                                             </span></span><br><span class="line"><span class="function">2.young gc存活的对象为array01引用2M对象,回收:2M+2M+128K对象,通过复制算法加入到s0时发现空间不够,2M对象进入老年代,剩下未知对象333k,s0可以放下</span></span><br><span class="line"><span class="function">                                                            </span></span><br><span class="line"><span class="function">3.最后eden中分配2M对象,此时对的占用情况为</span></span><br><span class="line"><span class="function">eden:2M 占比26%</span></span><br><span class="line"><span class="function">from:333K 占比32%</span></span><br><span class="line"><span class="function">to:0 占用0%</span></span><br><span class="line"><span class="function">CMS即old区域:2M</span></span><br></pre></td></tr></table></figure>
+
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+        <div class="declare">
+          <ul class="post-copyright">
+            <li>
+              <i class="ri-copyright-line"></i>
+              <strong>Copyright： </strong>
+              Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
+            </li>
+          </ul>
+        </div>
+        
+    <footer class="article-footer">
+      
+      
+
+    </footer>
+
+  </div>
+
+  
+  
+  <nav class="article-nav">
+    
+      <a href="/2019/09/24/04_Java%E7%9A%84pecs%E6%B3%95%E5%88%99/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            不变、协变、逆变和PECS
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2019/09/07/02_%E6%8B%86%E5%8C%85%E7%B2%98%E5%8C%85/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">粘包拆包</div>
+      </a>
+    
+  </nav>
+
+
+  
+
+  
+  
+<!-- valine评论 -->
+<div id="vcomments-box">
+    <div id="vcomments">
+    </div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        app_id: 'j7og6mDnkAIEtuTza7hQ3LNa-gzGzoHsz',
+        app_key: 'MFzzLmRJtNRHg35aF1dvI3M5',
+        path: window.location.pathname,
+        notify: 'false',
+        verify: 'false',
+        avatar: 'monsterid',
+        placeholder: '给我的文章加点评论吧~',
+        recordIP: true
+    });
+    const infoEle = document.querySelector('#vcomments .info');
+    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+        infoEle.childNodes.forEach(function (item) {
+            item.parentNode.removeChild(item);
+        });
+    }
+</script>
+<style>
+    #vcomments-box {
+        padding: 5px 30px;
+    }
+
+    @media screen and (max-width: 800px) {
+        #vcomments-box {
+            padding: 5px 0px;
+        }
+    }
+
+    #vcomments-box #vcomments {
+        background-color: #fff;
+    }
+
+    .v .vlist .vcard .vh {
+        padding-right: 20px;
+    }
+
+    .v .vlist .vcard {
+        padding-left: 10px;
+    }
+</style>
+
+  
+
+  
+  
+  
+  
+  
+
+</article>
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2019-2020
+        <i class="ri-heart-fill heart_icon"></i> 向天再借两小时
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        
+        Powered by <a href="https://hexo.io" target="_blank">Hexo</a>
+        <span class="division">|</span>
+        Theme - <a href="https://github.com/Shen-Yu/hexo-theme-ayer" target="_blank">Ayer</a>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>Visitors:<span id="busuanzi_value_site_uv"></span></s>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>Views:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+      <div class="float_btns">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+      </div>
+    </main>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <script>
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        document.querySelector('.content').classList.remove('on');
+        document.querySelector('.sidebar').classList.remove('on');
+      }
+    </script>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+
+
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script>
+
+
+
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+
+<script type="text/javascript" src="https://js.users.51.la/20544303.js"></script>
+
+
+<!-- 复制 -->
+
+  
+<link rel="stylesheet" href="/css/clipboard.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+
+
+    
+    <div id="music">
+    
+    
+    
+    <iframe frameborder="no" border="1" marginwidth="0" marginheight="0" width="200" height="52"
+        src="//music.163.com/outchain/player?type=2&id=1437274426&auto=0&height=32"></iframe>
+</div>
+
+<style>
+    #music {
+        position: fixed;
+        right: 15px;
+        bottom: 0;
+        z-index: 998;
+    }
+</style>
+    
+  </div>
+</body>
+
+</html>
