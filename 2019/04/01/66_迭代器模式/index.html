@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    责任链模式 |  向天再借两小时
+    迭代器模式 |  向天再借两小时
   </title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   
@@ -43,7 +43,7 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
-  <article id="post-65_责任链模式" class="article article-type-post" itemscope
+  <article id="post-66_迭代器模式" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -51,7 +51,7 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  责任链模式
+  迭代器模式
 </h1>
  
 
@@ -60,8 +60,8 @@
 
     
     <div class="article-meta">
-      <a href="/2019/04/05/65_%E8%B4%A3%E4%BB%BB%E9%93%BE%E6%A8%A1%E5%BC%8F/" class="article-date">
-  <time datetime="2019-04-05T21:30:39.000Z" itemprop="datePublished">2019-04-05</time>
+      <a href="/2019/04/01/66_%E8%BF%AD%E4%BB%A3%E5%99%A8%E6%A8%A1%E5%BC%8F/" class="article-date">
+  <time datetime="2019-04-01T21:30:39.000Z" itemprop="datePublished">2019-04-01</time>
 </a>
       
   <div class="article-category">
@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">515</span>
+            <span class="post-count">319</span>
         </span>
     </span>
 
@@ -84,7 +84,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">2 min</span>
+            <span class="post-count">1 min</span>
         </span>
     </span>
 </div>
@@ -109,40 +109,15 @@
       
 
       
-      <h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>责任链模式是指一个请求有多个处理阶段，阶段之间相互独立，前面的阶段可以拦截请求，使之到不了后面的阶段，这种模式减少了处理阶段之间的耦合，便于扩展</p>
+      <h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>迭代器模式是将元素逐个从容器中取出的一种抽象，迭代器隐藏了各种容器内部的存储细节</p>
 <h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><ul>
-<li>一个请求有多个处理阶段</li>
-<li>阶段之间相互独立</li>
-<li>阶段个数可能有频繁的增减</li>
+<li>多种需要迭代的容器，内部实现不相同</li>
+<li>某种容器需要实现多种迭代算法</li>
 </ul>
-<h2 id="具体实现"><a href="#具体实现" class="headerlink" title="具体实现"></a>具体实现</h2><p>J2EE中的<code>Filter</code>便是典型的责任链模式</p>
+<h2 id="具体实现"><a href="#具体实现" class="headerlink" title="具体实现"></a>具体实现</h2><p>Java Collection 中的<code>Interator</code>就是迭代器的典型实现</p>
 <ul>
-<li><p><code>FilterChain</code>责任链接口</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//javax.servlet.FilterChain</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">FilterChain</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 处理过来的请求和响应</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span><span class="params">(ServletRequest request, ServletResponse response)</span></span></span><br><span class="line"><span class="function">            <span class="keyword">throws</span> IOException, ServletException</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p><code>Filter</code>过滤器接口</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//javax.servlet.Filter</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Filter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">default</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">(FilterConfig filterConfig)</span> <span class="keyword">throws</span> ServletException </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * Filter的处理接口</span></span><br><span class="line"><span class="comment">    * 这里将FilterChain传入有两个目的</span></span><br><span class="line"><span class="comment">    *   1.是否调用下一个Filter的决定权在本Fiter</span></span><br><span class="line"><span class="comment">    *   2.在调用下一个Filter前后都可以写处理逻辑</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span><span class="params">(ServletRequest request, ServletResponse response,</span></span></span><br><span class="line"><span class="function"><span class="params">            FilterChain chain)</span> <span class="keyword">throws</span> IOException, ServletException</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">default</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p><code>FilterChain</code>责任链实现</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//org.apache.catalina.core.ApplicationFilterChain</span></span><br><span class="line"><span class="comment">// Tomcat实现的ApplicationFilterChain 经过简化</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">ApplicationFilterChain</span> <span class="keyword">implements</span> <span class="title">FilterChain</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">int</span> pos = <span class="number">0</span>; <span class="comment">//当前执行到了哪个filter</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">int</span> n; <span class="comment">//filter的个数</span></span><br><span class="line">  <span class="keyword">private</span> ApplicationFilterConfig[] filters;</span><br><span class="line">  <span class="keyword">private</span> Servlet servlet;</span><br><span class="line">  </span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span><span class="params">(ServletRequest request, ServletResponse response)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (pos &lt; n) &#123;</span><br><span class="line">        <span class="comment">// 每调用一次增加一次pos 指向下一个Filter</span></span><br><span class="line">      ApplicationFilterConfig filterConfig = filters[pos++];</span><br><span class="line">      Filter filter = filterConfig.getFilter();</span><br><span class="line">      <span class="comment">// 调用Filter</span></span><br><span class="line">      filter.doFilter(request, response, <span class="keyword">this</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="comment">// filter都处理完毕后，执行servlet</span></span><br><span class="line">      servlet.service(request, response);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>一个简单的FilterChain执行次序</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FilterA</span> <span class="keyword">implements</span> <span class="title">Filter</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span><span class="params">(ServletRequest request, ServletResponse response,</span></span></span><br><span class="line"><span class="function"><span class="params">            FilterChain chain)</span> <span class="keyword">throws</span> IOException, ServletException </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"a1"</span>);</span><br><span class="line">        chain.doFilter(request, response);</span><br><span class="line">        System.out.println(<span class="string">"a2"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FilterB</span> <span class="keyword">implements</span> <span class="title">Filter</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span><span class="params">(ServletRequest request, ServletResponse response,</span></span></span><br><span class="line"><span class="function"><span class="params">            FilterChain chain)</span> <span class="keyword">throws</span> IOException, ServletException </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"b1"</span>);</span><br><span class="line">        chain.doFilter(request, response);</span><br><span class="line">        System.out.println(<span class="string">"b2"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<ul>
-<li>外部调用chain.doFilter</li>
-<li>chain调用FilterA</li>
-<li>FilterA输出a1</li>
-<li>FilterA调用chain.doFilter</li>
-<li>chain调用FilterB</li>
-<li>FilterB输出b1</li>
-<li>FilterB调用chain.doFilter，无Filter结束</li>
-<li>FilterB输出b2</li>
-<li>FilterA调用chain.doFilter结束</li>
-<li>FilterA输出a2</li>
-<li>chain调用FilterA结束</li>
-<li>外部调用chain.doFilter结束<br>整个调用顺序是一个<code>后进先出</code>的顺序</li>
-</ul>
-</li>
+<li>ArrayList的迭代器实现<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//java.util.ArrayList.Itr</span></span><br><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">Itr</span> <span class="keyword">implements</span> <span class="title">Iterator</span>&lt;<span class="title">E</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> cursor;       <span class="comment">// index of next element to return</span></span><br><span class="line">    <span class="keyword">int</span> lastRet = -<span class="number">1</span>; <span class="comment">// index of last element returned; -1 if no such</span></span><br><span class="line">    <span class="keyword">int</span> expectedModCount = modCount;</span><br><span class="line"></span><br><span class="line">    Itr() &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">hasNext</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 判断是否到了最后</span></span><br><span class="line">        <span class="keyword">return</span> cursor != size;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@SuppressWarnings</span>(<span class="string">"unchecked"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> E <span class="title">next</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        checkForComodification();</span><br><span class="line">        <span class="comment">// 本次要取出的元素</span></span><br><span class="line">        <span class="keyword">int</span> i = cursor;</span><br><span class="line">        <span class="keyword">if</span> (i &gt;= size)</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> NoSuchElementException();</span><br><span class="line">        Object[] elementData = ArrayList.<span class="keyword">this</span>.elementData;</span><br><span class="line">        <span class="keyword">if</span> (i &gt;= elementData.length)</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ConcurrentModificationException();</span><br><span class="line">        <span class="comment">// 指向下一个元素</span></span><br><span class="line">        cursor = i + <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">return</span> (E) elementData[lastRet = i];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>LinkedList的迭代器实现<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//java.util.LinkedList.ListItr</span></span><br><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">ListItr</span> <span class="keyword">implements</span> <span class="title">ListIterator</span>&lt;<span class="title">E</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> Node&lt;E&gt; lastReturned;</span><br><span class="line">    <span class="keyword">private</span> Node&lt;E&gt; next;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> nextIndex;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> expectedModCount = modCount;</span><br><span class="line"></span><br><span class="line">    ListItr(<span class="keyword">int</span> index) &#123;</span><br><span class="line">        <span class="comment">// assert isPositionIndex(index);</span></span><br><span class="line">        <span class="comment">// 取出第一个节点</span></span><br><span class="line">        next = (index == size) ? <span class="keyword">null</span> : node(index);</span><br><span class="line">        nextIndex = index;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">hasNext</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 判断是否结束</span></span><br><span class="line">        <span class="keyword">return</span> nextIndex &lt; size;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> E <span class="title">next</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        checkForComodification();</span><br><span class="line">        <span class="keyword">if</span> (!hasNext())</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> NoSuchElementException();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 当前取出的节点</span></span><br><span class="line">        lastReturned = next;</span><br><span class="line">        <span class="comment">// 下一个节点</span></span><br><span class="line">        next = next.next;</span><br><span class="line">        nextIndex++;</span><br><span class="line">        <span class="keyword">return</span> lastReturned.item;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
 </ul>
 
       
@@ -175,20 +150,15 @@
   
   <nav class="article-nav">
     
-      <a href="/2019/04/10/47_%E8%AE%BE%E8%AE%A1%E4%B8%80%E4%B8%AA%E7%94%9F%E4%BA%A7%E7%8E%AF%E5%A2%83%E5%8F%AF%E7%94%A8%E7%9A%84%E9%89%B4%E6%9D%83%E5%8A%9F%E8%83%BD/" class="article-nav-link">
+      <a href="/2019/04/05/65_%E8%B4%A3%E4%BB%BB%E9%93%BE%E6%A8%A1%E5%BC%8F/" class="article-nav-link">
         <strong class="article-nav-caption">上一篇</strong>
         <div class="article-nav-title">
           
-            设计一个生产环境可用的鉴权功能
+            责任链模式
           
         </div>
       </a>
     
-    
-      <a href="/2019/04/01/66_%E8%BF%AD%E4%BB%A3%E5%99%A8%E6%A8%A1%E5%BC%8F/" class="article-nav-link">
-        <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">迭代器模式</div>
-      </a>
     
   </nav>
 
