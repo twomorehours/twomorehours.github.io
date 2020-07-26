@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    适配器模式 |  向天再借两小时
+    nginx入门 |  向天再借两小时
   </title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   
@@ -43,7 +43,7 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
-  <article id="post-57_适配器模式" class="article article-type-post" itemscope
+  <article id="post-69_Nginx入门" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -51,7 +51,7 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  适配器模式
+  nginx入门
 </h1>
  
 
@@ -60,12 +60,12 @@
 
     
     <div class="article-meta">
-      <a href="/2020/07/18/57_%E9%80%82%E9%85%8D%E5%99%A8%E6%A8%A1%E5%BC%8F/" class="article-date">
-  <time datetime="2020-07-18T21:30:39.000Z" itemprop="datePublished">2020-07-18</time>
+      <a href="/2019/03/22/69_Nginx%E5%85%A5%E9%97%A8/" class="article-date">
+  <time datetime="2019-03-22T21:30:39.000Z" itemprop="datePublished">2019-03-22</time>
 </a>
       
   <div class="article-category">
-    <a class="article-category-link" href="/categories/%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1/">程序设计</a>
+    <a class="article-category-link" href="/categories/nginx/">nginx</a>
   </div>
 
       
@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">341</span>
+            <span class="post-count">1.2k</span>
         </span>
     </span>
 
@@ -84,7 +84,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">1 min</span>
+            <span class="post-count">4 min</span>
         </span>
     </span>
 </div>
@@ -109,31 +109,158 @@
       
 
       
-      <h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>把一个接口转换为对另外一个接口的调用</p>
-<h2 id="特点"><a href="#特点" class="headerlink" title="特点"></a>特点</h2><ul>
-<li>适配器实现新接口</li>
-<li>适配器包装老接口<ul>
-<li>如果接口重复很多就继承老接口实现</li>
-<li>如果接口重复很少就组合老接口</li>
-<li>和装饰者模式的区别<ul>
-<li>装饰者和被装饰者实现的是同一个接口，而适配器实现的是新的接口</li>
+      <h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>nginx是一个web服务器，一般用于静态文件服务器，或者http反向代理服务器，用于反向代理服务器时，nginx根据http报文中的数据进行转发</p>
+<h2 id="组成"><a href="#组成" class="headerlink" title="组成"></a>组成</h2><ul>
+<li>二进制文件<ul>
+<li>nginx编译之后就是一个二进制可执行文件<br>nginx.conf</li>
+<li>nginx的核心配置文件，所有配置都写在这里，当然可以进行<code>include</code><br>access.log</li>
+<li>nginx的访问日志<br>errer.log</li>
+<li>nginx的错误日志</li>
 </ul>
 </li>
 </ul>
-</li>
-</ul>
-<h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><ul>
-<li>需要的接口数据和已有的接口数据不一致</li>
-</ul>
-<h2 id="具体实现"><a href="#具体实现" class="headerlink" title="具体实现"></a>具体实现</h2><p>springmvc响应适配器,我们自己实现的controller（也就是handler）有各种各样的返回值类型，springmvc需要把这些返回值类型通通处理为<code>ModelAndView</code>,用于处理这个过程的就是适配器</p>
+<h2 id="nginx的模块化设计"><a href="#nginx的模块化设计" class="headerlink" title="nginx的模块化设计"></a>nginx的模块化设计</h2><p>nginx使用模块化设计，需要什么功能就引入什么模块</p>
 <ul>
-<li><p>接口</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">HandlerAdapter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">boolean</span> <span class="title">supports</span><span class="params">(Object handler)</span></span>;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	<span class="function">ModelAndView <span class="title">handle</span><span class="params">(HttpServletRequest request, HttpServletResponse response, Object handler)</span> <span class="keyword">throws</span> Exception</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">long</span> <span class="title">getLastModified</span><span class="params">(HttpServletRequest request, Object handler)</span></span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>随便找一个实现</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter#handleInternal</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> ModelAndView <span class="title">handleInternal</span><span class="params">(HttpServletRequest request,</span></span></span><br><span class="line"><span class="function"><span class="params">			HttpServletResponse response, HandlerMethod handlerMethod)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line"></span><br><span class="line">    ModelAndView mav;</span><br><span class="line">    checkRequest(request);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Execute invokeHandlerMethod in synchronized block if required.</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.synchronizeOnSession) &#123;</span><br><span class="line">        HttpSession session = request.getSession(<span class="keyword">false</span>);</span><br><span class="line">        <span class="keyword">if</span> (session != <span class="keyword">null</span>) &#123;</span><br><span class="line">            Object mutex = WebUtils.getSessionMutex(session);</span><br><span class="line">            <span class="keyword">synchronized</span> (mutex) &#123;</span><br><span class="line">                mav = invokeHandlerMethod(request, response, handlerMethod);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// No HttpSession available -&gt; no mutex necessary</span></span><br><span class="line">            mav = invokeHandlerMethod(request, response, handlerMethod);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// No synchronization on session demanded at all...</span></span><br><span class="line">        mav = invokeHandlerMethod(request, response, handlerMethod);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!response.containsHeader(HEADER_CACHE_CONTROL)) &#123;</span><br><span class="line">        <span class="keyword">if</span> (getSessionAttributesHandler(handlerMethod).hasSessionAttributes()) &#123;</span><br><span class="line">            applyCacheSeconds(response, <span class="keyword">this</span>.cacheSecondsForSessionAttributeHandlers);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            prepareResponse(response);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> mav;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>核心模块</li>
+<li>HTTP模块<ul>
+<li>处理http请求</li>
 </ul>
+</li>
+<li>SSL模块<ul>
+<li>处理https</li>
+</ul>
+</li>
+<li>gzip模块<ul>
+<li>处理压缩</li>
+</ul>
+</li>
+<li>…</li>
+</ul>
+<h2 id="nginx的事件驱动模型"><a href="#nginx的事件驱动模型" class="headerlink" title="nginx的事件驱动模型"></a>nginx的事件驱动模型</h2><p>nginx采用的是多进程单线程的模型，使用epoll模型实现非阻塞网络通信</p>
+<h2 id="nginx的多进程模型"><a href="#nginx的多进程模型" class="headerlink" title="nginx的多进程模型"></a>nginx的多进程模型</h2><ul>
+<li><p>Master</p>
+<ul>
+<li>管理工作进程<ul>
+<li>监视worker状态，使之保持在配置的个数</li>
+<li>处理各种信号（reload/quit/stop），并通知worker</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Worker</p>
+<ul>
+<li>处理客户端请求</li>
+<li>接收主进程的信号</li>
+</ul>
+</li>
+<li><p>Cache Loader</p>
+<ul>
+<li>启动定时加载缓存</li>
+</ul>
+</li>
+<li><p>Cache Manager</p>
+<ul>
+<li>管理缓存的进程，实现缓存的淘汰等</li>
+</ul>
+</li>
+<li><p>优点</p>
+<ul>
+<li>多Worker稳定性高 相互不影响</li>
+<li>进程独立，减小锁开销</li>
+</ul>
+</li>
+</ul>
+<h2 id="nginx的进程通信"><a href="#nginx的进程通信" class="headerlink" title="nginx的进程通信"></a>nginx的进程通信</h2><ul>
+<li>worker间共享内存<ul>
+<li>虚拟内存指向一块物理内存</li>
+<li>共享缓存数据</li>
+<li>共享流量控制信息</li>
+</ul>
+</li>
+<li>信号<ul>
+<li>Master到worker下发指令的方式</li>
+</ul>
+</li>
+</ul>
+<h2 id="nginx的反向代理请求处理流程"><a href="#nginx的反向代理请求处理流程" class="headerlink" title="nginx的反向代理请求处理流程"></a>nginx的反向代理请求处理流程</h2><ul>
+<li>Master绑定端口</li>
+<li>接收客户端请求</li>
+<li>注册socket read事件</li>
+<li>处理可读事件</li>
+<li>客户端发送请求头</li>
+<li>客户端发送包体</li>
+<li>nginx调用各个模块处理</li>
+<li>nginx请求真正的后端</li>
+<li>nginx缓存响应</li>
+<li>响应客户端</li>
+</ul>
+<h2 id="nginx的常见参数配置"><a href="#nginx的常见参数配置" class="headerlink" title="nginx的常见参数配置"></a>nginx的常见参数配置</h2><ul>
+<li>worker process<ul>
+<li>worker的进程数，一般设置为cpu的核数即可，因为nginx是非阻塞模型，更倾向于cpu密集型程序</li>
+</ul>
+</li>
+<li>worker connections<ul>
+<li>每个worker总的连接数，还取决于ulimit(单个进程)/file-max(总进程)的配置</li>
+</ul>
+</li>
+<li>sendfile <ul>
+<li>领拷贝技术，获取文件资源的时候，直接利用DMA拷贝到socket缓冲区，不需要拷贝到用户空间</li>
+</ul>
+</li>
+<li>keepalive_timeout<ul>
+<li>tcp长连接保持时间</li>
+</ul>
+</li>
+<li>accept_mutex<ul>
+<li>处理惊群问题<ul>
+<li>惊群问题是多个worker进程监听同一个端口的accept事件，但是每次只能有一个worker获取到这个事件，其他worker也同样被唤醒，这样的唤醒没有意义</li>
+<li>nginx加了一个锁，每次只能有一个worker获取锁成功，等待accept事件，获取不到锁的worker直接返回，不加入到socket的等待队列</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="nginx的特点"><a href="#nginx的特点" class="headerlink" title="nginx的特点"></a>nginx的特点</h2><ul>
+<li>优点<ul>
+<li>跨平台 </li>
+<li>可压缩</li>
+<li>占用资源小</li>
+<li>性能高</li>
+<li>容易使用</li>
+</ul>
+</li>
+<li>缺点<ul>
+<li>只支持端口探测<ul>
+<li>微服务刚刚启动时，很多东西还没初始化完成，这个时候访问，会有超时的可能</li>
+<li>解决方案<ul>
+<li>重启前摘除节点（reload），启动初始化结束后重新挂回</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="nginx的reload操作"><a href="#nginx的reload操作" class="headerlink" title="nginx的reload操作"></a>nginx的reload操作</h2><ul>
+<li>给master 发信号</li>
+<li>Master检查配置文件</li>
+<li>监听新端口（如果有）</li>
+<li>启动新的worker</li>
+<li>杀掉老的worker</li>
+</ul>
+<h2 id="nginx反向代理的常用配置"><a href="#nginx反向代理的常用配置" class="headerlink" title="nginx反向代理的常用配置"></a>nginx反向代理的常用配置</h2><ul>
+<li><p>http</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">http &#123;</span><br><span class="line">    charset utf-8;</span><br><span class="line">    keepalive_timeout 60; # 客户端长连接保持时间</span><br><span class="line">    client_header_timeout  1m; # 读取客户端header超时</span><br><span class="line">    client_body_timeout    1m; # 读取客户端body超时</span><br><span class="line">    send_timeout           1m; # 响应客户端超时</span><br><span class="line">    client_max_body_size 50m; # 客户端最大body</span><br><span class="line">    client_body_buffer_size 50m; # 读取客户端body缓冲区大小</span><br><span class="line">    proxy_connect_timeout 5; # 后端服务器连接超时</span><br><span class="line">    proxy_send_timeout 15; # 发送数据到后端服务器超时</span><br><span class="line">    proxy_read_timeout 15; # 读取后端服务器响应超时</span><br><span class="line">    include ..&#x2F;conf.d&#x2F;*.conf; # include server配置</span><br><span class="line">    include ..&#x2F;upstream.d&#x2F;*.conf; # include upstream配置</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>server</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen 80; # 监听的端口</span><br><span class="line">    server_name 106.12.15.56; # 虚拟主机名称</span><br><span class="line">    charset utf-8;</span><br><span class="line">    access_log logs&#x2F;tmh.log main; # access日志位置</span><br><span class="line">    error_log logs&#x2F;tmh.log error; # error日志位置</span><br><span class="line">    location &#x2F;&#123;</span><br><span class="line">        &#x2F;&#x2F;...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>location</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">location&#x2F;&#123;</span><br><span class="line">    set $host_pass backend_pool; # 后端服务器upstream</span><br><span class="line">    proxy_next_upstream http_502 error timeout; # 请求下一个upstream的条件</span><br><span class="line">    proxy_pass http:&#x2F;&#x2F;$host_pass; # upstream地址</span><br><span class="line">    proxy_set_header Host $host; # 设置host信息为原始的host信息</span><br><span class="line">    proxy_set_header X-Forwarded-For $remote_addr; # 设置X-Forwarded-For信息为客户端IP</span><br><span class="line">    proxy_set_header X-Real-IP $remote_addr; # 设置X-Real-IP信息为客户端IP</span><br><span class="line">    proxy_set_header X-Forwarded-Proto $scheme; # 设置X-Forwarded-Proto为原请求协议</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+</li>
+</ul>
+<h2 id="nginx简单的正向代理实现"><a href="#nginx简单的正向代理实现" class="headerlink" title="nginx简单的正向代理实现"></a>nginx简单的正向代理实现</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">http &#123;</span><br><span class="line">    # 省略http配置信息</span><br><span class="line">    server &#123;</span><br><span class="line">        listen 90;</span><br><span class="line">        resolver 114.114.114.114; # 设置DNS</span><br><span class="line">        server_name localhost; </span><br><span class="line">        charset utf-8;</span><br><span class="line">        access_log logs&#x2F;fwd.access.log main;</span><br><span class="line">        error_log logs&#x2F;fwd.error.log error;</span><br><span class="line">        location &#x2F;&#123;</span><br><span class="line">            proxy_pass http:&#x2F;&#x2F;$host$request_uri; # 客户端将真实的Host写到Header中</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">curl --proxy localhost:90 http:&#x2F;&#x2F;www.baidu.com</span><br></pre></td></tr></table></figure>
       
       <!-- reward -->
       
@@ -164,19 +291,19 @@
   
   <nav class="article-nav">
     
-      <a href="/2020/07/18/58_%E9%97%A8%E9%9D%A2%E6%A8%A1%E5%BC%8F/" class="article-nav-link">
+      <a href="/2019/03/27/67_JDK%E4%B8%AD%E4%BD%BF%E7%94%A8%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" class="article-nav-link">
         <strong class="article-nav-caption">上一篇</strong>
         <div class="article-nav-title">
           
-            门面模式
+            JDK中使用的设计模式
           
         </div>
       </a>
     
     
-      <a href="/2020/07/17/55_%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F/" class="article-nav-link">
+      <a href="/2019/03/22/68_%E4%BB%A3%E7%90%86%E5%92%8CLVS/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">代理模式</div>
+        <div class="article-nav-title">代理和LVS</div>
       </a>
     
   </nav>
