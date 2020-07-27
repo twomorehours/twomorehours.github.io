@@ -77,7 +77,7 @@ nginx采用的是多进程单线程的模型，使用epoll模型实现非阻塞�
 - worker connections
     - 每个worker总的连接数，还取决于ulimit(单个进程)/file-max(总进程)的配置
 - sendfile 
-    - 领拷贝技术，获取文件资源的时候，直接利用DMA拷贝到socket缓冲区，不需要拷贝到用户空间
+    - 零拷贝技术，获取文件资源的时候，直接利用DMA拷贝到socket缓冲区，不需要拷贝到用户空间
 - keepalive_timeout
     - tcp长连接保持时间
 - accept_mutex
