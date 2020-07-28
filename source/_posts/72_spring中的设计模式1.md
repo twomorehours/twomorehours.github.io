@@ -160,3 +160,160 @@ public Cache getCache(String name) {
     return cache;
 }
 ```
+
+## InterceptorChain中的责任链模式
+- 使用demo
+```java
+public class SignCheckInterceptor extends HandlerInterceptorAdapter {
+
+    private SignCheckHolder signCheckHolder;
+    private RequestSignMatcher matcher;
+
+    public SignCheckInterceptor(SignCheckHolder signCheckHolder,
+            RequestSignMatcher matcher) {
+        this.signCheckHolder = signCheckHolder;
+        this.matcher = matcher;
+    }
+
+    // 前置处理
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
+            Object handler) throws Exception {
+        String uri = request.getRequestURI();
+        SignCheck signCheck = signCheckHolder.getSignCheck(uri);
+        if (signCheck == null) {
+            return true;
+        }
+        boolean match ;
+        try {
+            match = matcher.match(request, signCheck);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return true;
+        }
+        if (!match) {
+            throw new RuntimeException("签名失败");
+        }
+        return true;
+    }
+}
+```
+- 具体实现
+```java
+//org.springframework.web.servlet.DispatcherServlet#doDispatch
+protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    HttpServletRequest processedRequest = request;
+    HandlerExecutionChain mappedHandler = null;
+    boolean multipartRequestParsed = false;
+
+    WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(request);
+
+    try {
+        
+            //...
+            // 调用拦截器pre
+            if (!mappedHandler.applyPreHandle(processedRequest, response)) {
+                return;
+            }
+
+            // Actually invoke the handler.
+            mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
+
+            if (asyncManager.isConcurrentHandlingStarted()) {
+                return;
+            }
+
+            applyDefaultViewName(processedRequest, mv);
+            // 调用拦截器post
+            mappedHandler.applyPostHandle(processedRequest, response, mv);
+        }
+        catch (Exception ex) {
+            dispatchException = ex;
+        }
+        catch (Throwable err) {
+            // As of 4.3, we're processing Errors thrown from handler methods as well,
+            // making them available for @ExceptionHandler methods and other scenarios.
+            dispatchException = new NestedServletException("Handler dispatch failed", err);
+        }
+        processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);
+    }
+    catch (Exception ex) {
+        triggerAfterCompletion(processedRequest, response, mappedHandler, ex);
+    }
+    catch (Throwable err) {
+        triggerAfterCompletion(processedRequest, response, mappedHandler,
+                new NestedServletException("Handler processing failed", err));
+    }
+    finally {
+       //...
+    }
+}
+//org.springframework.web.servlet.HandlerExecutionChain#applyPreHandle
+// 逐个调用拦截器
+boolean applyPreHandle(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    HandlerInterceptor[] interceptors = getInterceptors();
+    if (!ObjectUtils.isEmpty(interceptors)) {
+        for (int i = 0; i < interceptors.length; i++) {
+            HandlerInterceptor interceptor = interceptors[i];
+            if (!interceptor.preHandle(request, response, this.handler)) {
+                // 拦截的话 会从执行到的index倒序执行
+                triggerAfterCompletion(request, response, null);
+                return false;
+            }
+            this.interceptorIndex = i;
+        }
+    }
+    return true;
+}
+```
+
+## HandlerAdapter中的适配器模式
+我们自定义的各种的各样的controller接受各种各样的参数，返回各种各样的返回值，甚至没有返回值，springmvc为了统一处理，在调用这写controller的时候会将返回值统一适配成`ModelAndView`
+```java
+//org.springframework.web.servlet.DispatcherServlet#doDispatch
+protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    HttpServletRequest processedRequest = request;
+    HandlerExecutionChain mappedHandler = null;
+    boolean multipartRequestParsed = false;
+
+    WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(request);
+
+    try {
+            //...
+            // Determine handler adapter for the current request.
+            // 根据定义的controller获取adapter
+            HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
+
+            //...
+            // Actually invoke the handler.
+            // 通过HandlerAdapter进行调用并返回ModelAndView
+            mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
+            //...
+        }
+        //...
+    }
+    catch (Exception ex) {
+        triggerAfterCompletion(processedRequest, response, mappedHandler, ex);
+    }
+    catch (Throwable err) {
+        triggerAfterCompletion(processedRequest, response, mappedHandler,
+                new NestedServletException("Handler processing failed", err));
+    }
+    finally {
+        //...
+    }
+}
+//org.springframework.web.servlet.DispatcherServlet#getHandlerAdapter
+protected HandlerAdapter getHandlerAdapter(Object handler) throws ServletException {
+    if (this.handlerAdapters != null) {
+        // 办理所有的Adapter取出能支持的HandlerAdapter
+        for (HandlerAdapter adapter : this.handlerAdapters) {
+            if (adapter.supports(handler)) {
+                return adapter;
+            }
+        }
+    }
+    throw new ServletException("No adapter for handler [" + handler +
+            "]: The DispatcherServlet configuration needs to include a HandlerAdapter that supports this handler");
+}
+```
