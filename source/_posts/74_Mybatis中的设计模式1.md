@@ -1,5 +1,5 @@
 ---
-title: Mybatis中使用的设计模式(一)
+title: Mybatis中使用的设计模式
 date: 2020-07-25 23:30:39
 categories:
 - 程序设计
@@ -147,3 +147,110 @@ public class SqlCostTimeInterceptor implements Interceptor {
     ```
 - 使用场景
   - Mybatis分页插件就是使用的这种方式
+
+## Executor中的模板模式
+Mybatis中的多种Executor都继承于BaseExecutor，主流程都在BaseExecutor中定义
+- 具体实现
+```java
+//org.apache.ibatis.executor.BaseExecutor
+//将几个具体实现下推到子类
+public abstract class BaseExecutor implements Executor {
+
+    //...
+
+    protected abstract int doUpdate(MappedStatement ms, Object parameter)
+      throws SQLException;
+
+    protected abstract List<BatchResult> doFlushStatements(boolean isRollback)
+      throws SQLException;
+
+    protected abstract <E> List<E> doQuery(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql)
+      throws SQLException;
+
+    protected abstract <E> Cursor<E> doQueryCursor(MappedStatement ms, Object parameter, RowBounds rowBounds, BoundSql boundSql)
+      throws SQLException;
+
+}
+//org.apache.ibatis.executor.SimpleExecutor
+// SimpleExecutor的实现
+public class SimpleExecutor extends BaseExecutor {
+
+  public SimpleExecutor(Configuration configuration, Transaction transaction) {
+    super(configuration, transaction);
+  }
+
+  @Override
+  public int doUpdate(MappedStatement ms, Object parameter) throws SQLException {
+    Statement stmt = null;
+    try {
+      Configuration configuration = ms.getConfiguration();
+      StatementHandler handler = configuration.newStatementHandler(this, ms, parameter, RowBounds.DEFAULT, null, null);
+      stmt = prepareStatement(handler, ms.getStatementLog());
+      return handler.update(stmt);
+    } finally {
+      closeStatement(stmt);
+    }
+  }
+
+  @Override
+  public <E> List<E> doQuery(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException {
+    Statement stmt = null;
+    try {
+      Configuration configuration = ms.getConfiguration();
+      StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler, boundSql);
+      stmt = prepareStatement(handler, ms.getStatementLog());
+      return handler.<E>query(stmt, resultHandler);
+    } finally {
+      closeStatement(stmt);
+    }
+  }
+
+  @Override
+  protected <E> Cursor<E> doQueryCursor(MappedStatement ms, Object parameter, RowBounds rowBounds, BoundSql boundSql) throws SQLException {
+    Configuration configuration = ms.getConfiguration();
+    StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, null, boundSql);
+    Statement stmt = prepareStatement(handler, ms.getStatementLog());
+    return handler.<E>queryCursor(stmt);
+  }
+
+  @Override
+  public List<BatchResult> doFlushStatements(boolean isRollback) throws SQLException {
+    return Collections.emptyList();
+  }
+
+  private Statement prepareStatement(StatementHandler handler, Log statementLog) throws SQLException {
+    Statement stmt;
+    Connection connection = getConnection(statementLog);
+    stmt = handler.prepare(connection, transaction.getTimeout());
+    handler.parameterize(stmt);
+    return stmt;
+  }
+}
+//还有BatchExecutor等的实现
+```
+
+## ErrorContext中的单例模式
+这里的单例模式并不是传统意义上的进程级别单例，而是线程级别单例，也就是大家熟知的ThreadLocal
+- 具体实现
+```java
+//org.apache.ibatis.executor.ErrorContext
+public class ErrorContext {
+    //...
+    
+    private static final ThreadLocal<ErrorContext> LOCAL = new ThreadLocal<ErrorContext>();
+
+    private ErrorContext() {
+    }
+
+    public static ErrorContext instance() {
+        // 从线程中取出
+        ErrorContext context = LOCAL.get();
+        if (context == null) {
+            // 为空就新建一个保存
+            context = new ErrorContext();
+            LOCAL.set(context);
+        }
+        return context;
+    }
+}
+```
