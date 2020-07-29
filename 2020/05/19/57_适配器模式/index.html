@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    门面模式 |  向天再借两小时
+    适配器模式 |  向天再借两小时
   </title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   
@@ -43,7 +43,7 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
-  <article id="post-58_门面模式" class="article article-type-post" itemscope
+  <article id="post-57_适配器模式" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -51,7 +51,7 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  门面模式
+  适配器模式
 </h1>
  
 
@@ -60,8 +60,8 @@
 
     
     <div class="article-meta">
-      <a href="/2020/07/18/58_%E9%97%A8%E9%9D%A2%E6%A8%A1%E5%BC%8F/" class="article-date">
-  <time datetime="2020-07-18T21:30:39.000Z" itemprop="datePublished">2020-07-18</time>
+      <a href="/2020/05/19/57_%E9%80%82%E9%85%8D%E5%99%A8%E6%A8%A1%E5%BC%8F/" class="article-date">
+  <time datetime="2020-05-19T21:30:39.000Z" itemprop="datePublished">2020-05-19</time>
 </a>
       
   <div class="article-category">
@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">165</span>
+            <span class="post-count">341</span>
         </span>
     </span>
 
@@ -109,19 +109,31 @@
       
 
       
-      <h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>把几个对外的接口，封装成一个调用入口，易用性更好</p>
+      <h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>把一个接口转换为对另外一个接口的调用</p>
 <h2 id="特点"><a href="#特点" class="headerlink" title="特点"></a>特点</h2><ul>
-<li>对原来接口的封装</li>
-<li>和适配器模式的区别<ul>
-<li>适配器模式侧重的是对接口的转换，门面模式侧重的是最原有接口易用性方面的封装</li>
+<li>适配器实现新接口</li>
+<li>适配器包装老接口<ul>
+<li>如果接口重复很多就继承老接口实现</li>
+<li>如果接口重复很少就组合老接口</li>
+<li>和装饰者模式的区别<ul>
+<li>装饰者和被装饰者实现的是同一个接口，而适配器实现的是新的接口</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
 <h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><ul>
-<li>调用方看起来的一件事要调用多种接口的时候</li>
+<li>需要的接口数据和已有的接口数据不一致</li>
 </ul>
-<h2 id="具体实现"><a href="#具体实现" class="headerlink" title="具体实现"></a>具体实现</h2><p>最典型的就是各种类型的<code>start()</code>和<code>destroy()</code>方法，例如线程池的关闭</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//java.util.concurrent.ThreadPoolExecutor#shutdown</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">shutdown</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> ReentrantLock mainLock = <span class="keyword">this</span>.mainLock;</span><br><span class="line">    mainLock.lock();</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        checkShutdownAccess();</span><br><span class="line">        advanceRunState(SHUTDOWN);</span><br><span class="line">        interruptIdleWorkers();</span><br><span class="line">        onShutdown(); <span class="comment">// hook for ScheduledThreadPoolExecutor</span></span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        mainLock.unlock();</span><br><span class="line">    &#125;</span><br><span class="line">    tryTerminate();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="具体实现"><a href="#具体实现" class="headerlink" title="具体实现"></a>具体实现</h2><p>springmvc响应适配器,我们自己实现的controller（也就是handler）有各种各样的返回值类型，springmvc需要把这些返回值类型通通处理为<code>ModelAndView</code>,用于处理这个过程的就是适配器</p>
+<ul>
+<li><p>接口</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">HandlerAdapter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">boolean</span> <span class="title">supports</span><span class="params">(Object handler)</span></span>;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	<span class="function">ModelAndView <span class="title">handle</span><span class="params">(HttpServletRequest request, HttpServletResponse response, Object handler)</span> <span class="keyword">throws</span> Exception</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">long</span> <span class="title">getLastModified</span><span class="params">(HttpServletRequest request, Object handler)</span></span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>随便找一个实现</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter#handleInternal</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> ModelAndView <span class="title">handleInternal</span><span class="params">(HttpServletRequest request,</span></span></span><br><span class="line"><span class="function"><span class="params">			HttpServletResponse response, HandlerMethod handlerMethod)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line"></span><br><span class="line">    ModelAndView mav;</span><br><span class="line">    checkRequest(request);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Execute invokeHandlerMethod in synchronized block if required.</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.synchronizeOnSession) &#123;</span><br><span class="line">        HttpSession session = request.getSession(<span class="keyword">false</span>);</span><br><span class="line">        <span class="keyword">if</span> (session != <span class="keyword">null</span>) &#123;</span><br><span class="line">            Object mutex = WebUtils.getSessionMutex(session);</span><br><span class="line">            <span class="keyword">synchronized</span> (mutex) &#123;</span><br><span class="line">                mav = invokeHandlerMethod(request, response, handlerMethod);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// No HttpSession available -&gt; no mutex necessary</span></span><br><span class="line">            mav = invokeHandlerMethod(request, response, handlerMethod);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// No synchronization on session demanded at all...</span></span><br><span class="line">        mav = invokeHandlerMethod(request, response, handlerMethod);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!response.containsHeader(HEADER_CACHE_CONTROL)) &#123;</span><br><span class="line">        <span class="keyword">if</span> (getSessionAttributesHandler(handlerMethod).hasSessionAttributes()) &#123;</span><br><span class="line">            applyCacheSeconds(response, <span class="keyword">this</span>.cacheSecondsForSessionAttributeHandlers);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            prepareResponse(response);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> mav;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+
       
       <!-- reward -->
       
@@ -152,19 +164,19 @@
   
   <nav class="article-nav">
     
-      <a href="/2020/07/18/57_%E9%80%82%E9%85%8D%E5%99%A8%E6%A8%A1%E5%BC%8F/" class="article-nav-link">
+      <a href="/2020/05/20/70_%E8%AE%BE%E8%AE%A1%E4%B8%80%E4%B8%AA%E9%80%9A%E7%94%A8%E7%9A%84%E9%99%90%E6%B5%81%E6%A1%86%E6%9E%B6/" class="article-nav-link">
         <strong class="article-nav-caption">上一篇</strong>
         <div class="article-nav-title">
           
-            适配器模式
+            设计一个支持多种限流实现的限流框架
           
         </div>
       </a>
     
     
-      <a href="/2020/07/17/55_%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F/" class="article-nav-link">
+      <a href="/2020/05/15/69_Nginx%E5%85%A5%E9%97%A8/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">代理模式</div>
+        <div class="article-nav-title">nginx入门</div>
       </a>
     
   </nav>
