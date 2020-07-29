@@ -1,6 +1,6 @@
 ---
 title: nginx入门
-date: 2019-03-22 21:30:39
+date: 2020-05-15 21:30:39
 categories:
 - nginx
 ---
