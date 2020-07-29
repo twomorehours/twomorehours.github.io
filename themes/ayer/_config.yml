@@ -26,7 +26,7 @@ favicon: /favicon.ico
 # 封面配置
 # enable-是否启用封面；path-封面背景图；logo-封面logo
 cover:
-  enable: false
+  enable: true
   path: /images/index.jpg # /source/images目录下附送多张美图，可更换
   logo: false #/images/ayer.svg，如果不要直接设置成false
 
@@ -67,7 +67,7 @@ image_viewer: true
 word_count:
   enable: true
   # 只在文章详情显示(不在首页显示)
-  only_article_visit: false
+  only_article_visit: true
 
 # 打赏
 # 打赏type设定：0-关闭打赏； 1-文章对应的md文件里有reward:true属性，才有打赏； 2-所有文章均有打赏
@@ -92,7 +92,7 @@ search: false
 darkmode: true
 
 # 页面点击小红心(开启请设置为true)
-clickLove: false
+clickLove: true
 
 # 页面宽度自定义（不建议修改，可能造成布局混乱），article_width文章宽度，sidebar_width侧边栏宽度
 layout:
