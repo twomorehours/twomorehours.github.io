@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    Archives: 2020/7 |  向天再借两小时
+    重新入门面向对象 |  向天再借两小时
   </title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   
@@ -43,55 +43,245 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
-  <article class="articles">
+  <article id="post-45_重新入门OOP" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
     
-    
-    <h1 class="page-type-title">2020/7</h1>
-    
-    
-  
-  
-  
-  
-  
-  
-  <div class="archives-wrap">
-    <div class="archive-year-wrap">
-      <a href="/archives/2020" class="archive-year">2020</a>
-    </div>
-    <div class="archives">
-      
-      <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2020/07/10/40_%E9%9B%AA%E8%8A%B1%E7%AE%97%E6%B3%95/" class="archive-article-date">
-  <time datetime="2020-07-10T10:30:39.000Z" itemprop="datePublished">07/10</time>
-</a>
+    <header class="article-header">
        
-<h2 itemprop="name">
-  <a class="archive-article-title" href="/2020/07/10/40_%E9%9B%AA%E8%8A%B1%E7%AE%97%E6%B3%95/"
-    >雪花算法</a> 
-</h2>
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  重新入门面向对象
+</h1>
  
 
     </header>
     
+
     
-  </div>
-</article>
+    <div class="article-meta">
+      <a href="/2020/02/07/45_%E9%87%8D%E6%96%B0%E5%85%A5%E9%97%A8OOP/" class="article-date">
+  <time datetime="2020-02-07T21:30:39.000Z" itemprop="datePublished">2020-02-07</time>
+</a>
       
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1/">程序设计</a>
+  </div>
+
+      
+      
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">349</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">1 min</span>
+        </span>
+    </span>
+</div>
+
       
     </div>
+    
+
+    
+    
+    <div class="tocbot"></div>
+
+
+
+
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="什么是面向对象编程"><a href="#什么是面向对象编程" class="headerlink" title="什么是面向对象编程"></a>什么是面向对象编程</h2><p>用<code>类</code>或者<code>对象</code>组织数据或者逻辑的编程方式</p>
+<h2 id="什么是面向过程"><a href="#什么是面向过程" class="headerlink" title="什么是面向过程"></a>什么是面向过程</h2><p><code>数据</code>和<code>行为</code>是分离的，比如C语言中，数据用<code>结构体</code>表示，而行为用<code>函数表示</code>,而在面向对象编程时，两者通常是组织在一起的</p>
+<h2 id="面向对象的四大特征"><a href="#面向对象的四大特征" class="headerlink" title="面向对象的四大特征"></a>面向对象的四大特征</h2><ul>
+<li>封装<ul>
+<li>减少内部暴露，减少错误调用</li>
+</ul>
+</li>
+<li>抽象<ul>
+<li>只暴露接口，无需关心内部实现</li>
+</ul>
+</li>
+<li>继承<ul>
+<li>代码复用</li>
+</ul>
+</li>
+<li>多态<ul>
+<li>代码的扩展性</li>
+</ul>
+</li>
+</ul>
+<h2 id="面向对象的优势"><a href="#面向对象的优势" class="headerlink" title="面向对象的优势"></a>面向对象的优势</h2><ul>
+<li>逻辑清晰，职责明确，适用于大型系统</li>
+</ul>
+<h2 id="接口VS抽象类"><a href="#接口VS抽象类" class="headerlink" title="接口VS抽象类"></a>接口VS抽象类</h2><ul>
+<li><p>接口是一种<code>has a</code>的<code>契约关系</code></p>
+<ul>
+<li>接口用于解决<code>暴露扩展的问题</code></li>
+</ul>
+</li>
+<li><p>抽象类是一种<code>is a</code>的继承关系</p>
+<ul>
+<li>抽象类为了解决<code>代码复用的问题</code></li>
+</ul>
+</li>
+<li><p>如何选择</p>
+<ul>
+<li>如果<code>暴露外部调用</code>,就使用接口<ul>
+<li>例如 Filter</li>
+</ul>
+</li>
+<li>如果<code>代码复用</code>,就是使用抽象类<ul>
+<li>例如 AQS</li>
+</ul>
+</li>
+<li>如果两者都有，那就两者都用<ul>
+<li>例如List</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>如果内部调用，不可能变动的情况，可以不用接口</p>
+</li>
+</ul>
+<h2 id="组合VS继承"><a href="#组合VS继承" class="headerlink" title="组合VS继承"></a>组合VS继承</h2><p>组合与继承都是来实现<code>代码复用的</code></p>
+<ul>
+<li>继承<ul>
+<li>有<code>is a</code>的情况使用继承，但是要控制继承深度(不要超过3层)</li>
+<li>没有<code>is a</code>的情况必须使用组合</li>
+</ul>
+</li>
+</ul>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+        <div class="declare">
+          <ul class="post-copyright">
+            <li>
+              <i class="ri-copyright-line"></i>
+              <strong>Copyright： </strong>
+              Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
+            </li>
+          </ul>
+        </div>
+        
+    <footer class="article-footer">
+      
+      
+
+    </footer>
+
   </div>
+
   
+  
+  <nav class="article-nav">
+    
+      <a href="/2020/02/14/27_Hystrix%E5%AD%98%E5%9C%A8%E7%9A%84%E6%84%8F%E4%B9%89/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            Hystrix存在的意义
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2020/02/01/26_Apollo%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%9A%84%E5%AE%9E%E7%8E%B0/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">Apollo客户端的实现</div>
+      </a>
+    
+  </nav>
+
+
   
 
   
-  <nav class="page-nav">
-    
-    <a class="extend prev" rel="prev" href="/archives/2020/07/">上一页</a><a class="page-number" href="/archives/2020/07/">1</a><span class="page-number current">2</span>
-  </nav>
   
+<!-- valine评论 -->
+<div id="vcomments-box">
+    <div id="vcomments">
+    </div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        app_id: 'j7og6mDnkAIEtuTza7hQ3LNa-gzGzoHsz',
+        app_key: 'MFzzLmRJtNRHg35aF1dvI3M5',
+        path: window.location.pathname,
+        notify: 'false',
+        verify: 'false',
+        avatar: 'monsterid',
+        placeholder: '给我的文章加点评论吧~',
+        recordIP: true
+    });
+    const infoEle = document.querySelector('#vcomments .info');
+    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+        infoEle.childNodes.forEach(function (item) {
+            item.parentNode.removeChild(item);
+        });
+    }
+</script>
+<style>
+    #vcomments-box {
+        padding: 5px 30px;
+    }
+
+    @media screen and (max-width: 800px) {
+        #vcomments-box {
+            padding: 5px 0px;
+        }
+    }
+
+    #vcomments-box #vcomments {
+        background-color: #fff;
+    }
+
+    .v .vlist .vcard .vh {
+        padding-right: 20px;
+    }
+
+    .v .vlist .vcard {
+        padding-left: 10px;
+    }
+</style>
+
+  
+
+  
+  
+  
+  
+  
+
+</article>
 </section>
       <footer class="footer">
   <div class="outer">
@@ -217,6 +407,24 @@
 
 
 
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
 
 
 
