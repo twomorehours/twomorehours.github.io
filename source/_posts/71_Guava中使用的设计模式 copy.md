@@ -3,6 +3,10 @@ title: Guava中使用的设计模式
 date: 2019-06-10 21:30:39
 categories:
 - 程序设计
+tags:
+- 建造者模式
+- 不变模式
+- 装饰者模式
 ---
 
 ## GuavaCache中的建造者模式

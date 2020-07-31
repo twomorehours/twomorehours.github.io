@@ -3,6 +3,11 @@ title: Spring中使用的设计模式(一)
 date: 2020-06-28 21:30:39
 categories:
 - 程序设计
+tags:
+- 观察者模式
+- 组合模式
+- 适配器模式
+- 责任链模式
 ---
 
 ## ApplicationListener中的观察者模式
