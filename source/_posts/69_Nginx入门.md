@@ -3,6 +3,9 @@ title: nginx入门
 date: 2020-05-15 21:30:39
 categories:
 - nginx
+tags:
+- nginx
+- 反向代理
 ---
 
 ## 概念
