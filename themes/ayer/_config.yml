@@ -184,6 +184,6 @@ pageFooter: true
 
 #ICP备案信息尾部显示
 icp:
-  enable: false
-  url: "http://www.beian.miit.gov.cn/" # 备案链接
-  text: "京ICP备666666" # 备案信息
+  enable: true
+  url: "http://www.yuhao.pro/" # 备案链接
+  text: "辽ICP备20010154" # 备案信息
