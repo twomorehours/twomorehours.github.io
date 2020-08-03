@@ -7,7 +7,7 @@ categories:
 ---
 
 ## Apollo客户端分析
-参考 [Apollo客户端原理分析](https://twomorehours.github.io/2020/02/01/26_Apollo%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%9A%84%E5%AE%9E%E7%8E%B0/ "Apollo客户端原理分析")
+参考 [Apollo客户端原理分析](https://www.yuhao.pro/2020/02/01/26_Apollo%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%9A%84%E5%AE%9E%E7%8E%B0/ "Apollo客户端原理分析")
 
 ## 初始化
 - 启动注解`@EnableApolloConfig`

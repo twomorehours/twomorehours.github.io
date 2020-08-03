@@ -41,6 +41,6 @@ IO其实大体上可以分为两步
 - AIO还不成熟，使用的不多
 
 ## 为什么要使用Netty
-- 传统NIO不能很好的解决[粘包拆包](https://twomorehours.github.io/2019/09/07/02_%E6%8B%86%E5%8C%85%E7%B2%98%E5%8C%85/)的问题，而Netty提供了一系列的Encoder和Decoder，可以很好的解决这种问题
+- 传统NIO不能很好的解决[粘包拆包](https://www.yuhao.pro/2019/09/07/02_%E6%8B%86%E5%8C%85%E7%B2%98%E5%8C%85/)的问题，而Netty提供了一系列的Encoder和Decoder，可以很好的解决这种问题
 - 传统NIO编码复杂，而Netty提供了一种pipeline模式，也就是责任链，可以简化编码，事使用方更关注业务
 - Netty中做了大量的性能优化，如`对象池`、`内存分配`等，可以有效的提升性能

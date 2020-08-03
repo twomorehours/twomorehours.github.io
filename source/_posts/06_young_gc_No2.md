@@ -6,7 +6,7 @@ categories:
 - Java
 ---
 
-## [上节回顾](https://twomorehours.github.io/2020/04/23/03_young_gc_No1/)
+## [上节回顾](https://www.yuhao.pro/2020/04/23/03_young_gc_No1/)
 
 1. 上一章我们学习jvm常用参数,对象的分配流程,新生代对象进入老年代的时机三部分内容
 2. 案例分析学习了young gc存活的对象大于s0进入老年代,这一章节我们学习另外两种情况
