@@ -180,10 +180,10 @@ katex:
 since: 2019
 
 # 是否显示页脚信息(建议保留，有助于本主题的推广)
-pageFooter: true
+pageFooter: false
 
 #ICP备案信息尾部显示
 icp:
   enable: true
-  url: "http://www.yuhao.pro/" # 备案链接
+  url: "#" # 备案链接
   text: "辽ICP备20010154" # 备案信息
