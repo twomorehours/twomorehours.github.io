@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+
+
+<html lang="chinese">
+
+
+<head>
+  <meta charset="utf-8" />
+    
+  <meta name="description" content="two more hours company" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+    netty的EpollEventLoop详解 |  向天再借两小时
+  </title>
+  <meta name="generator" content="hexo-theme-yilia-plus">
+  
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
+  
+<link rel="stylesheet" href="/dist/main.css">
+
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/css/remixicon.min.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+  
+<script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+
+  
+  
+
+  
+
+</head>
+
+</html>
+
+<body>
+  <div id="app">
+    <main class="content on">
+      <section class="outer">
+  <article id="post-80_Netty的EpollEventLoop详解" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  netty的EpollEventLoop详解
+</h1>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/04/10/80_Netty%E7%9A%84EpollEventLoop%E8%AF%A6%E8%A7%A3/" class="article-date">
+  <time datetime="2020-04-10T23:30:39.000Z" itemprop="datePublished">2020-04-10</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/netty/">netty</a>
+  </div>
+
+      
+      
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">2k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">10 min</span>
+        </span>
+    </span>
+</div>
+
+      
+    </div>
+    
+
+    
+    
+    <div class="tocbot"></div>
+
+
+
+
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="服务端启动的Demo"><a href="#服务端启动的Demo" class="headerlink" title="服务端启动的Demo"></a>服务端启动的Demo</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 判断是不是linux平台 &amp;&amp; 安装了netty提供的c语言 native实现（transport-native-epoll）</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">useEpoll</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> RemotingUtil.isLinuxPlatform()</span><br><span class="line">        &amp;&amp; Epoll.isAvailable();</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 创建引导类 实际上就是建造者模式</span></span><br><span class="line">ServerBootstrap bootstrap = <span class="keyword">new</span> ServerBootstrap();</span><br><span class="line"><span class="comment">// 创建两种事件循环 一个处理accept 一个处理read</span></span><br><span class="line">EventLoopGroup bossGroup = useEpoll()? <span class="keyword">new</span> EpollEventLoopGroup(<span class="number">1</span>) : <span class="keyword">new</span> NioEventLoopGroup(<span class="number">1</span>);</span><br><span class="line">EventLoopGroup workerGroup = useEpoll()? <span class="keyword">new</span> EpollEventLoopGroup(<span class="number">2</span>) :<span class="keyword">new</span> NioEventLoopGroup(<span class="number">2</span>);</span><br><span class="line"><span class="comment">// 真正的业务处理类</span></span><br><span class="line">NettyServerHandler serverHandler = <span class="keyword">new</span> NettyServerHandler();</span><br><span class="line"> <span class="keyword">this</span>.bootstrap.group(<span class="keyword">this</span>.bossGroup, <span class="keyword">this</span>.workerGroup)</span><br><span class="line">    <span class="comment">// 服务端Channel的类型</span></span><br><span class="line">    .channel(useEpoll() ? EpollServerSocketChannel.class : NioServerSocketChannel.class)</span><br><span class="line">    <span class="comment">// accept队列长度</span></span><br><span class="line">    .option(ChannelOption.SO_BACKLOG, <span class="number">1024</span>)</span><br><span class="line">    <span class="comment">// 重用time_wait 情况下的端口</span></span><br><span class="line">    .option(ChannelOption.SO_REUSEADDR, <span class="keyword">true</span>)</span><br><span class="line">    <span class="comment">// 长连接</span></span><br><span class="line">    .option(ChannelOption.SO_KEEPALIVE, <span class="keyword">false</span>)</span><br><span class="line">    <span class="comment">// 接入的socket关闭nagle算法</span></span><br><span class="line">    .childOption(ChannelOption.TCP_NODELAY, <span class="keyword">true</span>)</span><br><span class="line">    <span class="comment">// 客户端socket接入之后回调</span></span><br><span class="line">    .childHandler(<span class="keyword">new</span> ChannelInitializer&lt;SocketChannel&gt;() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(SocketChannel ch)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">            ch.pipeline()</span><br><span class="line">                    .addLast(</span><br><span class="line">                            <span class="comment">// 添加一个自定义编码器</span></span><br><span class="line">                            <span class="keyword">new</span> NettyEncoder(),</span><br><span class="line">                            <span class="comment">// 自定义解码器</span></span><br><span class="line">                            <span class="keyword">new</span> NettyDecoder(),</span><br><span class="line">                            <span class="comment">// 实际业务处理</span></span><br><span class="line">                            serverHandler</span><br><span class="line">                    );</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 同步等待端口绑定成功</span></span><br><span class="line">        <span class="keyword">this</span>.bootstrap.bind(<span class="keyword">new</span> InetSocketAddress(host, port)).sync();</span><br><span class="line">        <span class="comment">// 等待关闭</span></span><br><span class="line">        channelFuture.channel().closeFuture().sync();</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="comment">// 关闭两种事件循环</span></span><br><span class="line">        <span class="keyword">this</span>.bossGroup.shutdownGracefully();</span><br><span class="line">        <span class="keyword">this</span>.workerGroup.shutdownGracefully();</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="和NioEventLoop的关系"><a href="#和NioEventLoop的关系" class="headerlink" title="和NioEventLoop的关系"></a>和NioEventLoop的关系</h2><ul>
+<li><p>相同点</p>
+<ul>
+<li>都是单线程EventLoop，执行入口都是run方法</li>
+<li>执行流程都是获取事件，处理事件，处理task</li>
+</ul>
+</li>
+<li><p>不同点</p>
+<ul>
+<li>NioEventLoop是基于JDK提供的NIO组件实现的，由JVM决定底层的具体实现(基于linux平台 也是epoll)</li>
+<li>EpollEventLoop是netty自己实现的一个native库，不通过JDK网络库进行监听，读写</li>
+</ul>
+</li>
+<li><p>特点</p>
+<ul>
+<li>在linux平台上EpollEventLoop性能要略高于NioEventLoop的实现</li>
+</ul>
+</li>
+</ul>
+<h2 id="EpollEventLoopGroup的创建"><a href="#EpollEventLoopGroup的创建" class="headerlink" title="EpollEventLoopGroup的创建"></a>EpollEventLoopGroup的创建</h2><ul>
+<li><p>创建group<br>步骤和<a href="https://www.yuhao.pro/2020/04/01/79_Netty%E7%9A%84NioEventLoop%E8%AF%A6%E8%A7%A3/#NioEventLoopGroup%E7%9A%84%E5%88%9B%E5%BB%BA" target="_blank" rel="noopener">NioEventLoopGroup的创建</a>一致</p>
+</li>
+<li><p>创建EpollEventLoop</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//io.netty.channel.epoll.EpollEventLoop#EpollEventLoop</span></span><br><span class="line">EpollEventLoop(EventLoopGroup parent, Executor executor, <span class="keyword">int</span> maxEvents,</span><br><span class="line">                   SelectStrategy strategy, RejectedExecutionHandler rejectedExecutionHandler,</span><br><span class="line">                   EventLoopTaskQueueFactory queueFactory) &#123;</span><br><span class="line">    <span class="comment">// 调用父类保存任务队列等</span></span><br><span class="line">    <span class="keyword">super</span>(parent, executor, <span class="keyword">false</span>, newTaskQueue(queueFactory), newTaskQueue(queueFactory),</span><br><span class="line">            rejectedExecutionHandler);</span><br><span class="line">    selectStrategy = ObjectUtil.checkNotNull(strategy, <span class="string">"strategy"</span>);</span><br><span class="line">    <span class="keyword">if</span> (maxEvents == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// 事件数组自动扩展</span></span><br><span class="line">        allowGrowing = <span class="keyword">true</span>;</span><br><span class="line">        events = <span class="keyword">new</span> EpollEventArray(<span class="number">4096</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 事件数组直接最大</span></span><br><span class="line">        allowGrowing = <span class="keyword">false</span>;</span><br><span class="line">        events = <span class="keyword">new</span> EpollEventArray(maxEvents);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">boolean</span> success = <span class="keyword">false</span>;</span><br><span class="line">    <span class="comment">// epoll对象fd</span></span><br><span class="line">    FileDescriptor epollFd = <span class="keyword">null</span>;</span><br><span class="line">    <span class="comment">// 一个句柄 用于线程间通信 用于外部线程唤醒EventLoop线程</span></span><br><span class="line">    FileDescriptor eventFd = <span class="keyword">null</span>;</span><br><span class="line">    <span class="comment">// 一个定时器事件 到时候了就有事件通知 可能是用于超时控制吧 我也不太懂</span></span><br><span class="line">    FileDescriptor timerFd = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 创建epoll对象</span></span><br><span class="line">        <span class="keyword">this</span>.epollFd = epollFd = Native.newEpollCreate();</span><br><span class="line">        <span class="comment">// 创建一个内存句柄</span></span><br><span class="line">        <span class="keyword">this</span>.eventFd = eventFd = Native.newEventFd();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// It is important to use EPOLLET here as we only want to get the notification once per</span></span><br><span class="line">            <span class="comment">// wakeup and don't call eventfd_read(...).</span></span><br><span class="line">            <span class="comment">// 监听内存句柄事件</span></span><br><span class="line">            <span class="comment">// EPOLLET: 边缘触发（从不可读变为可读通知）</span></span><br><span class="line">            Native.epollCtlAdd(epollFd.intValue(), eventFd.intValue(), Native.EPOLLIN | Native.EPOLLET);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Unable to add eventFd filedescriptor to epoll"</span>, e);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">this</span>.timerFd = timerFd = Native.newTimerFd();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// It is important to use EPOLLET here as we only want to get the notification once per</span></span><br><span class="line">            <span class="comment">// wakeup and don't call read(...).</span></span><br><span class="line">            <span class="comment">// 监听一个定时器事件</span></span><br><span class="line">            Native.epollCtlAdd(epollFd.intValue(), timerFd.intValue(), Native.EPOLLIN | Native.EPOLLET);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Unable to add timerFd filedescriptor to epoll"</span>, e);</span><br><span class="line">        &#125;</span><br><span class="line">        success = <span class="keyword">true</span>;</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>EpollEventLoop的事件注册<br>NioEventLoop的事件注册是依靠JDK底层的channel和selector来实现的，EpollEventLoop是靠直接操作<code>Linux socket fd</code>来实现的</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 添加</span></span><br><span class="line"><span class="comment">//io.netty.channel.epoll.EpollEventLoop#add</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">add</span><span class="params">(AbstractEpollChannel ch)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">assert</span> <span class="title">inEventLoop</span><span class="params">()</span></span>;</span><br><span class="line">    <span class="comment">// 取出channel关联的fd</span></span><br><span class="line">    <span class="keyword">int</span> fd = ch.socket.intValue();</span><br><span class="line">    <span class="comment">// 将关注的事件添加到epoll对象上</span></span><br><span class="line">    Native.epollCtlAdd(epollFd.intValue(), fd, ch.flags);</span><br><span class="line">    AbstractEpollChannel old = channels.put(fd, ch);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// We either expect to have no Channel in the map with the same FD or that the FD of the old Channel is already</span></span><br><span class="line">    <span class="comment">// closed.</span></span><br><span class="line">    <span class="keyword">assert</span> old == <span class="keyword">null</span> || !old.isOpen();</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">native</span> <span class="keyword">int</span> <span class="title">epollCtlAdd0</span><span class="params">(<span class="keyword">int</span> efd, <span class="keyword">int</span> fd, <span class="keyword">int</span> flags)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 修改</span></span><br><span class="line"><span class="comment">//io.netty.channel.epoll.EpollEventLoop#modify</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">modify</span><span class="params">(AbstractEpollChannel ch)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">assert</span> <span class="title">inEventLoop</span><span class="params">()</span></span>;</span><br><span class="line">    <span class="comment">// 修改fd关注的事件</span></span><br><span class="line">    Native.epollCtlMod(epollFd.intValue(), ch.socket.intValue(), ch.flags);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">native</span> <span class="keyword">int</span> <span class="title">epollCtlMod0</span><span class="params">(<span class="keyword">int</span> efd, <span class="keyword">int</span> fd, <span class="keyword">int</span> flags)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 删除</span></span><br><span class="line"><span class="comment">//io.netty.channel.epoll.EpollEventLoop#remove</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">remove</span><span class="params">(AbstractEpollChannel ch)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">assert</span> <span class="title">inEventLoop</span><span class="params">()</span></span>;</span><br><span class="line">    <span class="keyword">int</span> fd = ch.socket.intValue();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 取出保存的channel</span></span><br><span class="line">    AbstractEpollChannel old = channels.remove(fd);</span><br><span class="line">    <span class="keyword">if</span> (old != <span class="keyword">null</span> &amp;&amp; old != ch) &#123;</span><br><span class="line">        <span class="comment">// The Channel mapping was already replaced due FD reuse, put back the stored Channel.</span></span><br><span class="line">        channels.put(fd, old);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// If we found another Channel in the map that is mapped to the same FD the given Channel MUST be closed.</span></span><br><span class="line">        <span class="keyword">assert</span> !ch.isOpen();</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (ch.isOpen()) &#123;</span><br><span class="line">        <span class="comment">// Remove the epoll. This is only needed if it's still open as otherwise it will be automatically</span></span><br><span class="line">        <span class="comment">// removed once the file-descriptor is closed.</span></span><br><span class="line">        <span class="comment">// 不在关注fd的事件</span></span><br><span class="line">        Native.epollCtlDel(epollFd.intValue(), fd);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">native</span> <span class="keyword">int</span> <span class="title">epollCtlDel0</span><span class="params">(<span class="keyword">int</span> efd, <span class="keyword">int</span> fd)</span></span>;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>EpollEventLoop的run方法<br>这个run方法文章后面会分析，至此我们能知道EventLoop启动之后就是执行的这个run方法，但是此时EventLoop只是构建完成了，并没有启动</p>
+</li>
+</ul>
+<h2 id="EpollEventLoop的启动"><a href="#EpollEventLoop的启动" class="headerlink" title="EpollEventLoop的启动"></a>EpollEventLoop的启动</h2><p>步骤和<a href="https://www.yuhao.pro/2020/04/01/79_Netty%E7%9A%84NioEventLoop%E8%AF%A6%E8%A7%A3/#NioEventLoop%E7%9A%84%E5%90%AF%E5%8A%A8" target="_blank" rel="noopener">NioEventLoop的启动</a>一致</p>
+<h2 id="EpollEventLoop的执行逻辑"><a href="#EpollEventLoop的执行逻辑" class="headerlink" title="EpollEventLoop的执行逻辑"></a>EpollEventLoop的执行逻辑</h2><ul>
+<li><p>select IO事件</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//io.netty.channel.epoll.EpollEventLoop#run</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">long</span> prevDeadlineNanos = NONE;</span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">int</span> strategy = selectStrategy.calculateStrategy(selectNowSupplier, hasTasks());</span><br><span class="line">            <span class="keyword">switch</span> (strategy) &#123;</span><br><span class="line">                <span class="keyword">case</span> SelectStrategy.CONTINUE:</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">case</span> SelectStrategy.BUSY_WAIT:</span><br><span class="line">                    <span class="comment">// 非阻塞 epoll_wait事件</span></span><br><span class="line">                    strategy = epollBusyWait();</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">case</span> SelectStrategy.SELECT:</span><br><span class="line">                    <span class="keyword">if</span> (pendingWakeup) &#123;</span><br><span class="line">                        <span class="comment">// We are going to be immediately woken so no need to reset wakenUp</span></span><br><span class="line">                        <span class="comment">// or check for timerfd adjustment.</span></span><br><span class="line">                        <span class="comment">// 阻塞1s epoll_wait事件</span></span><br><span class="line">                        strategy = epollWaitTimeboxed();</span><br><span class="line">                        <span class="keyword">if</span> (strategy != <span class="number">0</span>) &#123;</span><br><span class="line">                            <span class="keyword">break</span>;</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="comment">// We timed out so assume that we missed the write event due to an</span></span><br><span class="line">                        <span class="comment">// abnormally failed syscall (the write itself or a prior epoll_wait)</span></span><br><span class="line">                        logger.warn(<span class="string">"Missed eventfd write (not seen after &gt; 1 second)"</span>);</span><br><span class="line">                        pendingWakeup = <span class="keyword">false</span>;</span><br><span class="line">                        <span class="keyword">if</span> (hasTasks()) &#123;</span><br><span class="line">                            <span class="keyword">break</span>;</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="comment">// fall-through</span></span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="comment">// 定时任务的最近执行时间</span></span><br><span class="line">                    <span class="keyword">long</span> curDeadlineNanos = nextScheduledTaskDeadlineNanos();</span><br><span class="line">                    <span class="keyword">if</span> (curDeadlineNanos == -<span class="number">1L</span>) &#123;</span><br><span class="line">                        curDeadlineNanos = NONE; <span class="comment">// nothing on the calendar</span></span><br><span class="line">                    &#125;</span><br><span class="line">                    nextWakeupNanos.set(curDeadlineNanos);</span><br><span class="line">                    <span class="keyword">try</span> &#123;</span><br><span class="line">                        <span class="comment">// 没有任务</span></span><br><span class="line">                        <span class="keyword">if</span> (!hasTasks()) &#123;</span><br><span class="line">                            <span class="keyword">if</span> (curDeadlineNanos == prevDeadlineNanos) &#123;</span><br><span class="line">                                <span class="comment">// No timer activity needed</span></span><br><span class="line">                                <span class="comment">// 阻塞epoll_wait</span></span><br><span class="line">                                strategy = epollWaitNoTimerChange();</span><br><span class="line">                            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                                <span class="comment">// Timerfd needs to be re-armed or disarmed</span></span><br><span class="line">                                prevDeadlineNanos = curDeadlineNanos;</span><br><span class="line">                                <span class="comment">// 定时阻塞epoll_wait</span></span><br><span class="line">                                strategy = epollWait(curDeadlineNanos);</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                        <span class="comment">// Try get() first to avoid much more expensive CAS in the case we</span></span><br><span class="line">                        <span class="comment">// were woken via the wakeup() method (submitted task)</span></span><br><span class="line">                        <span class="keyword">if</span> (nextWakeupNanos.get() == AWAKE || nextWakeupNanos.getAndSet(AWAKE) == AWAKE) &#123;</span><br><span class="line">                            pendingWakeup = <span class="keyword">true</span>;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="comment">// fallthrough</span></span><br><span class="line">                <span class="keyword">default</span>:</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 处理事件和任务</span></span><br><span class="line">            <span class="comment">//...</span></span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">            handleLoopException(t);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// Always handle shutdown even if the loop processing threw an exception.</span></span><br><span class="line">        <span class="comment">//...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>处理IO事件</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// io.netty.channel.epoll.EpollEventLoop#processReady</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">processReady</span><span class="params">(EpollEventArray events, <span class="keyword">int</span> ready)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">boolean</span> timerFired = <span class="keyword">false</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; ready; i ++) &#123;</span><br><span class="line">        <span class="comment">// 取出fd</span></span><br><span class="line">        <span class="keyword">final</span> <span class="keyword">int</span> fd = events.fd(i);</span><br><span class="line">        <span class="keyword">if</span> (fd == eventFd.intValue()) &#123;</span><br><span class="line">            pendingWakeup = <span class="keyword">false</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (fd == timerFd.intValue()) &#123;</span><br><span class="line">            timerFired = <span class="keyword">true</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">final</span> <span class="keyword">long</span> ev = events.events(i);</span><br><span class="line"></span><br><span class="line">            AbstractEpollChannel ch = channels.get(fd);</span><br><span class="line">            <span class="keyword">if</span> (ch != <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="comment">// Don't change the ordering of processing EPOLLOUT | EPOLLRDHUP / EPOLLIN if you're not 100%</span></span><br><span class="line">                <span class="comment">// sure about it!</span></span><br><span class="line">                <span class="comment">// Re-ordering can easily introduce bugs and bad side-effects, as we found out painfully in the</span></span><br><span class="line">                <span class="comment">// past.</span></span><br><span class="line">                <span class="comment">// 取出真实处理数据读写的unsafe</span></span><br><span class="line">                AbstractEpollUnsafe unsafe = (AbstractEpollUnsafe) ch.unsafe();</span><br><span class="line"></span><br><span class="line">                <span class="comment">// First check for EPOLLOUT as we may need to fail the connect ChannelPromise before try</span></span><br><span class="line">                <span class="comment">// to read from the file descriptor.</span></span><br><span class="line">                <span class="comment">// See https://github.com/netty/netty/issues/3785</span></span><br><span class="line">                <span class="comment">//</span></span><br><span class="line">                <span class="comment">// It is possible for an EPOLLOUT or EPOLLERR to be generated when a connection is refused.</span></span><br><span class="line">                <span class="comment">// In either case epollOutReady() will do the correct thing (finish connecting, or fail</span></span><br><span class="line">                <span class="comment">// the connection).</span></span><br><span class="line">                <span class="comment">// See https://github.com/netty/netty/issues/3848</span></span><br><span class="line">                <span class="comment">// 如果可写了 就flush数据</span></span><br><span class="line">                <span class="keyword">if</span> ((ev &amp; (Native.EPOLLERR | Native.EPOLLOUT)) != <span class="number">0</span>) &#123;</span><br><span class="line">                    <span class="comment">// Force flush of data as the epoll is writable again</span></span><br><span class="line">                    unsafe.epollOutReady();</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="comment">// Check EPOLLIN before EPOLLRDHUP to ensure all data is read before shutting down the input.</span></span><br><span class="line">                <span class="comment">// See https://github.com/netty/netty/issues/4317.</span></span><br><span class="line">                <span class="comment">//</span></span><br><span class="line">                <span class="comment">// If EPOLLIN or EPOLLERR was received and the channel is still open call epollInReady(). This will</span></span><br><span class="line">                <span class="comment">// try to read from the underlying file descriptor and so notify the user about the error.</span></span><br><span class="line">                <span class="comment">// 数据可读 读取数据</span></span><br><span class="line">                <span class="comment">// 具体怎么读 在下节 新连接接入分析</span></span><br><span class="line">                <span class="keyword">if</span> ((ev &amp; (Native.EPOLLERR | Native.EPOLLIN)) != <span class="number">0</span>) &#123;</span><br><span class="line">                    <span class="comment">// The Channel is still open and there is something to read. Do it now.</span></span><br><span class="line">                    unsafe.epollInReady();</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="comment">// Check if EPOLLRDHUP was set, this will notify us for connection-reset in which case</span></span><br><span class="line">                <span class="comment">// we may close the channel directly or try to read more data depending on the state of the</span></span><br><span class="line">                <span class="comment">// Channel and als depending on the AbstractEpollChannel subtype.</span></span><br><span class="line">                <span class="keyword">if</span> ((ev &amp; Native.EPOLLRDHUP) != <span class="number">0</span>) &#123;</span><br><span class="line">                    unsafe.epollRdHupReady();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">// We received an event for an fd which we not use anymore. Remove it from the epoll_event set.</span></span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="comment">// 已经移除了</span></span><br><span class="line">                    Native.epollCtlDel(epollFd.intValue(), fd);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (IOException ignore) &#123;</span><br><span class="line">                    <span class="comment">// This can happen but is nothing we need to worry about as we only try to delete</span></span><br><span class="line">                    <span class="comment">// the fd from the epoll set as we not found it in our mappings. So this call to</span></span><br><span class="line">                    <span class="comment">// epollCtlDel(...) is just to ensure we cleanup stuff and so may fail if it was</span></span><br><span class="line">                    <span class="comment">// deleted before or the file descriptor was closed before.</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> timerFired;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>处理Task<br>步骤和<a href="https://www.yuhao.pro/2020/04/01/79_Netty%E7%9A%84NioEventLoop%E8%AF%A6%E8%A7%A3/#NioEventLoop%E7%9A%84%E6%89%A7%E8%A1%8C%E9%80%BB%E8%BE%91" target="_blank" rel="noopener">NioEventLoop处理Task</a>一致</p>
+</li>
+</ul>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li>EpollEventLoopGroup的创建<ul>
+<li>没指定线程个数 默认是2倍cpu核数</li>
+<li>EpollEventLoop依赖的是linux系统的epoll函数，并直接读写netty实现的unix socket抽象,不通过JDK socket</li>
+<li>EventLoop最终执行的子类的run</li>
+</ul>
+</li>
+<li>EpollEventLoopGroup的启动<ul>
+<li>第一次执行execute方法的时候判断是否启动，如果没启动，则启动之</li>
+</ul>
+</li>
+<li>EpollEventLoopGroup的执行过程<ul>
+<li>循环epoll_wait事件</li>
+<li>处理IO事件</li>
+<li>拉取定时任务到普通任务队列</li>
+<li>遍历普通任务队列处理任务</li>
+</ul>
+</li>
+</ul>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+        <div class="declare">
+          <ul class="post-copyright">
+            <li>
+              <i class="ri-copyright-line"></i>
+              <strong>Copyright： </strong>
+              Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
+            </li>
+          </ul>
+        </div>
+        
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/EventLoop/" rel="tag">EventLoop</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/epoll/" rel="tag">epoll</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%8F%A5%E6%9F%84/" rel="tag">句柄</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+  
+  <nav class="article-nav">
+    
+      <a href="/2020/04/12/33_spring%20cloud%20gateway%E7%9A%84%E8%AF%B7%E6%B1%82%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            spring cloud gateway的请求执行流程
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2020/04/07/64_%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%8A%80%E6%9C%AF%E7%82%B9/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">分布式系统技术点</div>
+      </a>
+    
+  </nav>
+
+
+  
+
+  
+  
+<!-- valine评论 -->
+<div id="vcomments-box">
+    <div id="vcomments">
+    </div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        app_id: 'j7og6mDnkAIEtuTza7hQ3LNa-gzGzoHsz',
+        app_key: 'MFzzLmRJtNRHg35aF1dvI3M5',
+        path: window.location.pathname,
+        notify: 'false',
+        verify: 'false',
+        avatar: 'monsterid',
+        placeholder: '给我的文章加点评论吧~',
+        recordIP: true
+    });
+    const infoEle = document.querySelector('#vcomments .info');
+    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+        infoEle.childNodes.forEach(function (item) {
+            item.parentNode.removeChild(item);
+        });
+    }
+</script>
+<style>
+    #vcomments-box {
+        padding: 5px 30px;
+    }
+
+    @media screen and (max-width: 800px) {
+        #vcomments-box {
+            padding: 5px 0px;
+        }
+    }
+
+    #vcomments-box #vcomments {
+        background-color: #fff;
+    }
+
+    .v .vlist .vcard .vh {
+        padding-right: 20px;
+    }
+
+    .v .vlist .vcard {
+        padding-left: 10px;
+    }
+</style>
+
+  
+
+  
+  
+  
+  
+  
+
+</article>
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2019-2020
+        <i class="ri-heart-fill heart_icon"></i> 向天再借两小时
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>Visitors:<span id="busuanzi_value_site_uv"></span></s>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>Views:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+        <li>
+          <a href="javascript:void(0)" target="_black">辽ICP备20010154</a>
+        </li>
+        
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+      <div class="float_btns">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+      </div>
+    </main>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <script>
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        document.querySelector('.content').classList.remove('on');
+        document.querySelector('.sidebar').classList.remove('on');
+      }
+    </script>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+
+
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script>
+
+
+
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+
+<script type="text/javascript" src="https://js.users.51.la/20544303.js"></script>
+
+  
+<script src="/js/clickLove.js"></script>
+
+
+
+<!-- 复制 -->
+
+  
+<link rel="stylesheet" href="/css/clipboard.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+
+
+    
+    <div id="music">
+    
+    
+    
+    <iframe frameborder="no" border="1" marginwidth="0" marginheight="0" width="200" height="52"
+        src="//music.163.com/outchain/player?type=2&id=430114655&auto=0&height=32"></iframe>
+</div>
+
+<style>
+    #music {
+        position: fixed;
+        right: 15px;
+        bottom: 0;
+        z-index: 998;
+    }
+</style>
+    
+  </div>
+</body>
+
+</html>
