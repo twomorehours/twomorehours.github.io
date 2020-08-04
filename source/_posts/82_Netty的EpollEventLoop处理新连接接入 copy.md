@@ -326,3 +326,4 @@ protected void doBeginRead() throws Exception {
   - TailContext收到active事件之后，会传播一个read事件
   - HeadContext收到read事件之后，将客户端channel的读事件注册上
 
+
