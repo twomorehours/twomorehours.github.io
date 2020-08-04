@@ -1,0 +1,33 @@
+servelet容器   
+    处理TCP连接
+    解析HTTP请求
+    实现了Servlet规范
+
+tomcat架构
+    server tomcat本身
+    service 每个服务
+    connector（多个 处理各种协议的）
+        Endpoint 负责网络通信
+        Processor 解析Http报文 (内部Request)
+        Adapter  适配servlet （适配为servletReuqest）
+    container servlet实现（springmvc）
+        Engine 管理多个站点
+        Host    某个具体站点
+        Context 一个应用程序
+        Wrapper servlet的封装
+        每个组件内部实现是用链表实现
+
+Endpoint
+    BIO  HTTP11Protocol 一个acceptor + 一个线程池 
+    NIO  HTTP11NioProtocol 多路复用 
+    APR  HTTP11AprProtocol 多路复用
+
+
+内存空间
+虚拟内存用户空间内存空间
+    用户空间
+        用户态
+    内核空间
+        系统调用
+        内核态
+        操作系统和硬件交互的内存
