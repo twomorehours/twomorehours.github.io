@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">478</span>
+            <span class="post-count">572</span>
         </span>
     </span>
 
@@ -116,7 +116,23 @@
 </ul>
 </li>
 <li>读取数据<ul>
-<li>这种就是从socket缓冲区里面读取数据</li>
+<li>这种就是从socket缓冲区里面读取数据<h2 id="名词定义"><a href="#名词定义" class="headerlink" title="名词定义"></a>名词定义</h2></li>
+</ul>
+</li>
+<li>阻塞<ul>
+<li>IO过程中由IO导致线程挂起等待就是阻塞</li>
+</ul>
+</li>
+<li>非阻塞<ul>
+<li>IO过程中线程一直没有因为IO挂起就是非阻塞</li>
+</ul>
+</li>
+<li>同步<ul>
+<li>整个IO过程中有阻塞就是同步（数据是自己读回来的）</li>
+</ul>
+</li>
+<li>异步<ul>
+<li>整个IO过程中完全非阻塞就是异步（数据是回调回来的）</li>
 </ul>
 </li>
 </ul>
