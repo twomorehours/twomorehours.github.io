@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">452</span>
+            <span class="post-count">478</span>
         </span>
     </span>
 
@@ -122,22 +122,22 @@
 </ul>
 <h2 id="IO模型"><a href="#IO模型" class="headerlink" title="IO模型"></a>IO模型</h2><ul>
 <li>同步<ul>
-<li>阻塞<ul>
+<li>阻塞（可读？） + 阻塞（读）<ul>
 <li>用户线程一直去阻塞等待某个socket可读，直到所有数据读取完成之后才返回</li>
 </ul>
 </li>
-<li>非阻塞（NIO）<ul>
+<li>非阻塞（可读？） + 阻塞（读）<ul>
 <li>用户线程不断轮询去判断某些socket是否可读，直到可读，阻塞等待某个socket读取完成，继续循环</li>
 </ul>
 </li>
-<li>IO多路复用（NIO + Selector）<ul>
+<li>IO多路复用（NIO + Selector） （阻塞（可读？） + 非阻塞（读））<ul>
 <li>用户线程驱动selector同时判断某些socket是否可读，直到可读，阻塞等待某个socket读取完成，继续循环</li>
 </ul>
 </li>
 </ul>
 </li>
 <li>异步（AIO）<ul>
-<li>非阻塞<ul>
+<li>非阻塞（注册） + 非阻塞（数据回调）<ul>
 <li>用户线程将读某个socket的注册到内核，有数据时内核会将数据回调给用户</li>
 </ul>
 </li>
