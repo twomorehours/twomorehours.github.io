@@ -413,3 +413,107 @@ final Node<K,V>[] resize() {
     return newTab;
 }
 ```
+
+## 元素的迭代
+```java
+//java.util.HashMap#entrySet
+public Set<Map.Entry<K,V>> entrySet() {
+    Set<Map.Entry<K,V>> es;
+    // 创建并且保存起来
+    return (es = entrySet) == null ? (entrySet = new EntrySet()) : es;
+}
+final class EntrySet extends AbstractSet<Map.Entry<K,V>> {
+    //...
+    public final Iterator<Map.Entry<K,V>> iterator() {
+        return new EntryIterator();
+    }
+    //...
+}
+final class EntryIterator extends HashIterator
+    implements Iterator<Map.Entry<K,V>> {
+    public final Map.Entry<K,V> next() { return nextNode(); }
+}
+//java.util.HashMap.HashIterator#nextNode
+final Node<K,V> nextNode() {
+    Node<K,V>[] t;
+    Node<K,V> e = next;
+    if (modCount != expectedModCount)
+        throw new ConcurrentModificationException();
+    if (e == null)
+        throw new NoSuchElementException();
+    // 先取后面节点 取不到遍历index直到取到
+    // 整体的顺序就是一个一个的bucket遍历
+    if ((next = (current = e).next) == null && (t = table) != null) {
+        do {} while (index < t.length && (next = t[index++]) == null);
+    }
+    return e;
+}
+//java.util.HashMap.HashIterator#remove
+public final void remove() {
+    Node<K,V> p = current;
+    if (p == null)
+        throw new IllegalStateException();
+    if (modCount != expectedModCount)
+        throw new ConcurrentModificationException();
+    current = null;
+    K key = p.key;
+    // 调用hashMap api删除
+    removeNode(hash(key), key, null, false, false);
+    expectedModCount = modCount;
+}
+```
+
+## HashSet是什么
+Hashset是对HashMap的一个包装，只使用了HashMap的key，全部操作委托到map
+```java
+public class HashSet<E>
+    extends AbstractSet<E>
+    implements Set<E>, Cloneable, java.io.Serializable
+{
+    static final long serialVersionUID = -5024744406713321676L;
+
+    private transient HashMap<E,Object> map;
+
+    // Dummy value to associate with an Object in the backing Map
+    private static final Object PRESENT = new Object();
+
+   
+    public HashSet() {
+        map = new HashMap<>();
+    }
+ 
+    public Iterator<E> iterator() {
+        return map.keySet().iterator();
+    }
+
+   
+    public int size() {
+        return map.size();
+    }
+
+
+    public boolean isEmpty() {
+        return map.isEmpty();
+    }
+
+  
+    public boolean contains(Object o) {
+        return map.containsKey(o);
+    }
+
+    
+    public boolean add(E e) {
+        return map.put(e, PRESENT)==null;
+    }
+
+    public boolean remove(Object o) {
+        return map.remove(o)==PRESENT;
+    }
+
+
+    public void clear() {
+        map.clear();
+    }
+
+}
+```
