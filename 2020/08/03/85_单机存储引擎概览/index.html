@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+
+
+<html lang="chinese">
+
+
+<head>
+  <meta charset="utf-8" />
+    
+  <meta name="description" content="two more hours company" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+    单机存储引擎设计 |  向天再借两小时
+  </title>
+  <meta name="generator" content="hexo-theme-yilia-plus">
+  
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
+  
+<link rel="stylesheet" href="/dist/main.css">
+
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/css/remixicon.min.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+  
+<script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+
+  
+  
+
+  
+
+</head>
+
+</html>
+
+<body>
+  <div id="app">
+    <main class="content on">
+      <section class="outer">
+  <article id="post-85_单机存储引擎概览" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  单机存储引擎设计
+</h1>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/08/03/85_%E5%8D%95%E6%9C%BA%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%A6%82%E8%A7%88/" class="article-date">
+  <time datetime="2020-08-03T23:30:39.000Z" itemprop="datePublished">2020-08-03</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E5%AD%98%E5%82%A8/">存储</a>
+  </div>
+
+      
+      
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">1.5k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">5 min</span>
+        </span>
+    </span>
+</div>
+
+      
+    </div>
+    
+
+    
+    
+    <div class="tocbot"></div>
+
+
+
+
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="什么是存储引擎"><a href="#什么是存储引擎" class="headerlink" title="什么是存储引擎"></a>什么是存储引擎</h2><p>提供存储系统的CRUD的能力，决定存储性能的功能和性能</p>
+<h2 id="影响存储引擎性能的因素"><a href="#影响存储引擎性能的因素" class="headerlink" title="影响存储引擎性能的因素"></a>影响存储引擎性能的因素</h2><p>一般来说大多数都采用<code>顺序写 + 随机读 + 读缓存</code>的方式</p>
+<ul>
+<li>写入方式<ul>
+<li>随机写</li>
+<li>顺序写</li>
+</ul>
+</li>
+<li>读取方式<ul>
+<li>随机读</li>
+<li>顺序扫描</li>
+</ul>
+</li>
+</ul>
+<h2 id="物理存储引擎分类"><a href="#物理存储引擎分类" class="headerlink" title="物理存储引擎分类"></a>物理存储引擎分类</h2><ul>
+<li><p>Hash引擎</p>
+<ul>
+<li><p>原理</p>
+<ul>
+<li>用key做hash计算，取出存储真实数据的位置(file:文件 pos:偏移量 size:数据大小)</li>
+</ul>
+</li>
+<li><p>使用场景</p>
+<ul>
+<li>点查O(1)</li>
+</ul>
+</li>
+<li><p>特点</p>
+<ul>
+<li>点查O(1)，KV使用时间复杂度低</li>
+<li></li>
+<li>数据无序(key和实际数据均无序)，所以支持索引排序，也不支持索引范围查询</li>
+</ul>
+</li>
+<li><p>产品</p>
+<ul>
+<li><p>Redis</p>
+</li>
+<li><p>Memcached</p>
+<p>Btree引擎</p>
+<pre><code>原理：用B+树存储
+场景：点查 范围
+特点
+    根节点常驻内存，最多h-1次磁盘IO
+    非叶子节点容纳更多的元素，降低树的高度，减少磁盘IO次数（拆会增加高度 从下到上）
+    本身有序，擅长范围查询
+    随机写，页分裂问题
+产品
+    mysql innodb</code></pre><p>LSM引擎</p>
+<pre><code>原理：内存 + 多层文件 + 追加写
+场景：写入
+特点
+    随机写编程顺序写
+    牺牲读性能
+    增加后台开销
+对读性能优化
+    布隆过滤器判断key是否存在
+    文件内数据有序
+    对SSTFile做缓存
+产品
+    RocksDB
+    levelDB</code></pre></li>
+</ul>
+<p>数据模型分类<br>  关系型(实体字段)</p>
+<pre><code>MySQL</code></pre><p>  键值对（KV）</p>
+<pre><code>Redis</code></pre><p>  时序性（发生时间）</p>
+<pre><code>InfluxDB</code></pre><p>  图（数据关系）</p>
+<pre><code>Neo4j</code></pre><p>Redis<br>概念<br>  C语言开发的开源的高性能的KV型内存数据库<br>总体存储原理<br>  每个DB分别保存着一个元素dict和过期时间dict<br>  dict中的key是RedisObject，最终指向一个SDS（可变长度字符串）<br>  dict中的val是各种各样的数据类型，比如sds ziplist skiplist dict list等<br>一个key占用内存大小分析<br>  dicEntry 16b<br>  RedisObject 12b<br>  sds 9b<br>  （16 + 12 + 9 + key）*2 + val<br>  总结 key要小<br>内存清理<br>  惰性删除</p>
+<pre><code>查询时候发现过期了，直接删除</code></pre><p>  定期删除</p>
+<pre><code>如果能删除很多过期，就持续删除
+清理比例 = 0
+while 清理比例 &gt; 0.25{
+    清理数量 = 0
+    for(i =0; i&lt;20; i++){
+        key = 随机选择
+        if(key is 过期){
+            清理数量 ++
+        }
+    }
+    清理比例 = 清理数量 / 20
+}</code></pre><p>  LRU</p>
+<pre><code>allkeys
+volatile（推荐）
+    RedisObject 里面保存着LRU时间
+    速记选取几个进行排序，然后进行删除</code></pre><p>  LRU</p>
+<pre><code>allkeys
+volatile（推荐）
+    RedisObject 里面保</code></pre></li>
+</ul>
+</li>
+</ul>
+<pre><code>LRU
+        allkeys
+        volatile（推荐）
+            RedisObject 里面保存着LRU时间
+            速记选取几个进行排序，然后进行删除
+    LRU
+        allkeys
+        volatile（推荐）
+            RedisObject 里面保存着LRU时间和频率（8bit，有增有减）
+            速记选取几个进行排序（频率优先），然后进行删除
+内存固化
+    RDB 
+        fork子进程dump内存数据 m秒n次
+        优点
+            文件小
+            恢复快
+        缺点
+            丢数据（耗费cpu 所以频率不能过高）
+    AOF
+        将命令追加到文件中
+        优点
+            丢数据少
+        缺点
+            占用空间大
+            恢复慢
+        重写
+            去掉过期/删除数据 多次更新合一
+            阈值判断（最小大小 + 比上次增加的比例超过阈值）
+            fork子进程重写 新数据写入aof_rewrite_buf 重新完成后将数据写入新aof文件
+数据恢复
+    默认是RDB， AOF优先，没必要同时开启，AOF有覆盖RDB的可能性 如果要固化 推荐AOF
+可用性（优缺点对比）
+    主从模式
+        全量快照同步
+        增量命令同步
+        偏移量
+            如果在buffer之内就是增量 否则就是全量
+        运行ID 
+            Master启动时生成，同步给slave
+    哨兵模式
+        监控
+            监控主从运行状态
+        故障转移
+            主从 自动切换 更新配置
+            使用VIP
+    集群模式
+        支持水平扩容
+        支持16383个slot
+        每组主从redis负责一些slot
+        连接到任何master节点都能做重定向（二次访问 性能问题）
+        不能批量操作
+    codis
+        CodisSever（Redis主从），支持扩展，数据分片逻辑，注册到zk
+        CodisProxy（Redis协议代理），无状态，无限扩展，代理请求
+        Client -&gt; Haproxy -&gt; CodisProxy -&gt;  CodisSever
+        缺点 部署复杂
+Mysql innodb
+    存储结构
+        Mysql的存储以页为单位
+            页头
+                记录控制信息 包含左右页面的指针 页使用情况等
+            虚记录
+                最大虚记录
+                    比页内最大主键大
+                最小虚记录
+                    比页内最小虚记录还小
+            记录堆
+                行记录存储区 有效数据 被标记删除的无效数据（满足范围才能复用）
+            自由空间链表
+                已删除记录组成的链表
+            未分配的空间
+                没有使用的空间
+            页尾
+                存储页内数据的校验信息
+            索引只能指到页
+
+    页内记录维护
+        顺序保证
+            页内逻辑连续 
+        插入逻辑
+            优先复用已经删除链表的空间 然后再使用未分配的
+
+
+
+    已删除记录组成的链表
+            未分配的空间
+                没有使用的空间
+            页尾
+                存储页内数据的校验信息
+            索引只能指到页
+
+    页内记录维护
+        顺序保证
+            页内逻辑连续 
+        插入逻辑
+            优先复用已经删除链表的空间 然后再使用未分配的空间
+        页内查找
+            使用slot先找到一个sublist
+
+    索引
+        聚簇索引
+            数据是存在主键中的
+            数据按主键顺序存储
+            要尽量使用递增的主键 防止页分裂
+        二级索引
+            存储的数据是主键值 
+            要用主键回表
+            主键大小会影响全局索引大小
+        联合索引
+            BTree由第一列构建
+            页里面按照各列有序，越靠前的优先级越高
+            要使用左前缀原则
+                不能跳过中间列
+                前面的使用范围 后面不能使用
+        优化分析
+            存储空间
+                取决于字段大小和字段数量
+            主键选择
+                有业务意义 使用业务自增主键
+                没有业务意义，使用数据库自增主键
+            联合索引
+                区分度排序
+                索引覆盖
+            字符串索引
+                合理设置长度</code></pre>
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+        <div class="declare">
+          <ul class="post-copyright">
+            <li>
+              <i class="ri-copyright-line"></i>
+              <strong>Copyright： </strong>
+              Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
+            </li>
+          </ul>
+        </div>
+        
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/BTree/" rel="tag">BTree</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LFU/" rel="tag">LFU</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LRU/" rel="tag">LRU</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LSM-TRee/" rel="tag">LSM-TRee</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E4%BA%8C%E7%BA%A7%E7%B4%A2%E5%BC%95/" rel="tag">二级索引</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%93%88%E5%B8%8C%E8%A1%A8/" rel="tag">哈希表</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%B7%A6%E5%89%8D%E7%BC%80%E6%B3%95%E5%88%99/" rel="tag">左前缀法则</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E8%81%94%E5%90%88%E7%B4%A2%E5%BC%95/" rel="tag">联合索引</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E8%81%9A%E9%9B%86%E7%B4%A2%E5%BC%95/" rel="tag">聚集索引</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+  
+  <nav class="article-nav">
+    
+    
+      <a href="/2020/07/30/76_%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84%E7%81%B0%E5%BA%A6%E5%8F%91%E5%B8%83%E7%BB%84%E4%BB%B6/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">实现一个简单的灰度发布组件</div>
+      </a>
+    
+  </nav>
+
+
+  
+
+  
+  
+<!-- valine评论 -->
+<div id="vcomments-box">
+    <div id="vcomments">
+    </div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        app_id: 'j7og6mDnkAIEtuTza7hQ3LNa-gzGzoHsz',
+        app_key: 'MFzzLmRJtNRHg35aF1dvI3M5',
+        path: window.location.pathname,
+        notify: 'false',
+        verify: 'false',
+        avatar: 'monsterid',
+        placeholder: '给我的文章加点评论吧~',
+        recordIP: true
+    });
+    const infoEle = document.querySelector('#vcomments .info');
+    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+        infoEle.childNodes.forEach(function (item) {
+            item.parentNode.removeChild(item);
+        });
+    }
+</script>
+<style>
+    #vcomments-box {
+        padding: 5px 30px;
+    }
+
+    @media screen and (max-width: 800px) {
+        #vcomments-box {
+            padding: 5px 0px;
+        }
+    }
+
+    #vcomments-box #vcomments {
+        background-color: #fff;
+    }
+
+    .v .vlist .vcard .vh {
+        padding-right: 20px;
+    }
+
+    .v .vlist .vcard {
+        padding-left: 10px;
+    }
+</style>
+
+  
+
+  
+  
+  
+  
+  
+
+</article>
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2019-2020
+        <i class="ri-heart-fill heart_icon"></i> 向天再借两小时
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>Visitors:<span id="busuanzi_value_site_uv"></span></s>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>Views:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+        <li>
+          <a href="javascript:void(0)" target="_black">辽ICP备20010154</a>
+        </li>
+        
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+      <div class="float_btns">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+      </div>
+    </main>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <script>
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        document.querySelector('.content').classList.remove('on');
+        document.querySelector('.sidebar').classList.remove('on');
+      }
+    </script>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+
+
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script>
+
+
+
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+
+<script type="text/javascript" src="https://js.users.51.la/20544303.js"></script>
+
+  
+<script src="/js/clickLove.js"></script>
+
+
+
+<!-- 复制 -->
+
+  
+<link rel="stylesheet" href="/css/clipboard.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+
+
+    
+    <div id="music">
+    
+    
+    
+    <iframe frameborder="no" border="1" marginwidth="0" marginheight="0" width="200" height="52"
+        src="//music.163.com/outchain/player?type=2&id=430114655&auto=0&height=32"></iframe>
+</div>
+
+<style>
+    #music {
+        position: fixed;
+        right: 15px;
+        bottom: 0;
+        z-index: 998;
+    }
+</style>
+    
+  </div>
+</body>
+
+</html>
