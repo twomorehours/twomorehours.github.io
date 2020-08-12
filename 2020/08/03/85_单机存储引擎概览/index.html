@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">1.5k</span>
+            <span class="post-count">2.4k</span>
         </span>
     </span>
 
@@ -84,7 +84,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">5 min</span>
+            <span class="post-count">8 min</span>
         </span>
     </span>
 </div>
@@ -126,51 +126,55 @@
 <h2 id="物理存储引擎分类"><a href="#物理存储引擎分类" class="headerlink" title="物理存储引擎分类"></a>物理存储引擎分类</h2><ul>
 <li><p>Hash引擎</p>
 <ul>
-<li><p>原理</p>
-<ul>
+<li>原理<ul>
 <li>用key做hash计算，取出存储真实数据的位置(file:文件 pos:偏移量 size:数据大小)</li>
 </ul>
 </li>
-<li><p>使用场景</p>
-<ul>
+<li>使用场景<ul>
 <li>点查O(1)</li>
 </ul>
 </li>
-<li><p>特点</p>
-<ul>
+<li>特点<ul>
 <li>点查O(1)，KV使用时间复杂度低</li>
 <li></li>
 <li>数据无序(key和实际数据均无序)，所以支持索引排序，也不支持索引范围查询</li>
 </ul>
 </li>
-<li><p>产品</p>
-<ul>
-<li><p>Redis</p>
+<li>产品<ul>
+<li>Redis</li>
+<li>Memcached</li>
+</ul>
 </li>
-<li><p>Memcached</p>
-<p>Btree引擎</p>
-<pre><code>原理：用B+树存储
-场景：点查 范围
-特点
-    根节点常驻内存，最多h-1次磁盘IO
-    非叶子节点容纳更多的元素，降低树的高度，减少磁盘IO次数（拆会增加高度 从下到上）
-    本身有序，擅长范围查询
-    随机写，页分裂问题
-产品
-    mysql innodb</code></pre><p>LSM引擎</p>
-<pre><code>原理：内存 + 多层文件 + 追加写
-场景：写入
-特点
-    随机写编程顺序写
-    牺牲读性能
-    增加后台开销
-对读性能优化
-    布隆过滤器判断key是否存在
-    文件内数据有序
-    对SSTFile做缓存
-产品
-    RocksDB
-    levelDB</code></pre></li>
+</ul>
+</li>
+<li><p>Btree引擎</p>
+<ul>
+<li><p>原理</p>
+<ul>
+<li>用B+树存储，数据物理有序</li>
+</ul>
+</li>
+<li><p>使用场景</p>
+<ul>
+<li>点查O(logN)</li>
+<li>范围O(logN)</li>
+</ul>
+</li>
+<li><p>特点</p>
+<ul>
+<li><p>根节点常驻内存，最多h-1次磁盘IO</p>
+<pre><code>非叶子节点容纳更多的元素，降低树的高度，减少磁盘IO次数（拆会增加高度 从下到上）
+本身有序，擅长范围查询
+随机写，页分裂问题</code></pre><p>  产品</p>
+<pre><code>mysql innodb</code></pre><p>LSM引擎<br>  原理：内存 + 多层文件 + 追加写<br>  场景：写入<br>  特点</p>
+<pre><code>随机写编程顺序写
+牺牲读性能
+增加后台开销</code></pre><p>  对读性能优化</p>
+<pre><code>布隆过滤器判断key是否存在
+文件内数据有序
+对SSTFile做缓存</code></pre><p>  产品</p>
+<pre><code>RocksDB
+levelDB</code></pre></li>
 </ul>
 <p>数据模型分类<br>  关系型(实体字段)</p>
 <pre><code>MySQL</code></pre><p>  键值对（KV）</p>
@@ -324,7 +328,105 @@ Mysql innodb
                 区分度排序
                 索引覆盖
             字符串索引
-                合理设置长度</code></pre>
+                合理设置长度
+
+    内存管理
+        预分配磁盘空间
+            分配内存池
+                BufferPool 内存池
+                Page Hash 页映射
+                Free List 空闲页
+                Flush List 脏页
+                Clean List 数据页
+                LRU List LRU链表
+            内存页面管理
+                内存页面的映射
+                页面数据的管理
+                    加载和更新
+                淘汰
+                    内存分类淘汰
+                        数据页  直接淘汰
+                        脏页    刷盘淘汰
+                    淘汰机制
+                        普通LRU
+                            不兼容全表扫描的情况 大量非热点数据占用内存 挤出热点数据 需要重新加载
+                        分段LRU
+                            new区 old区
+                            页面装载
+                                从Free List中寻找，如果有空间，放入，放到old取里面最新
+                                如果没有空间，从old区淘汰能淘汰的最老的一个，然后放到old里面最新
+                                如果还没有找到 取脏页刷盘淘汰 加到FreeList 然后取出 然后放到old里面最新
+                            读取
+                                读取数据时，如果是在old区，并且超过old存活时间就new区最新
+                                如果此时new已经满了，就把new最新的放到old最新
+
+
+
+        数据以Page为单位加载
+        数据内外存交换
+
+    事务管理
+        事务概念
+            A 全部成功或者失败
+            C 数据操作前后一致（整体一致）
+            I 事务之间互不干扰
+            D 提交的数据不丢失
+
+        并发问题
+            脏读
+                一个事务读到其他事务未提交的数据
+            不可重复读
+                一个事务读到其他事务在本事务未完成时提交了的数据
+            幻读
+                更新（当前读）了其他事务已经提交的数据
+
+        隔离级别
+            RU 
+            RC
+            RR
+            Serial
+
+        MVCC
+            解决读写并发的问题（多版本），最终解决策略是我只读到我开启事务时的版本
+            当前读 
+                永远读最新的 一般用于update
+            快照读
+                根据事务id 决定读到哪个版本
+            可见性判断
+                创建快照时刻的活跃的事务Id记录下来，查询时候不查询这些事务提交的数据的
+                从最新的查找，如果比最小的活跃还小，就是在我之前提交的，是能查到的
+            undolog
+                记录多版本，支持mvcc
+                回滚日志
+                何时清理undolog
+                    回滚 直接删除
+                    清理比最小的活跃事务还老的undolog
+            redolog
+                意义：顺序写，速度很快 刷盘量小，没有整个页刷盘那么大
+                数据恢复
+                顺序写文件（循环写）
+                    定时刷盘
+                    写满刷盘
+    写数据流程
+        写undolog
+        写内存
+        写redolog
+        提交
+        生效redolog
+        生效内存
+    redolog刷盘时机
+        写内存 每秒写文件+刷盘
+        写到OS BUFFER 每秒刷盘
+        写OS BUFFER 每次刷盘
+
+    使用经验
+        联合索引
+            区分度高的放前面
+            索引覆盖
+            既要满足查询也要满足排序 左前缀</code></pre><p>分布式数据库<br>    意义<br>        分库分表来水平扩展<br>            业务侵入大<br>        存储量可以无限水平扩展<br>        计算能力可以无限水平扩展<br>        数据可靠性高（多副本）<br>    实现<br>        多副本<br>            保证数据一致性<br>            一般是KV<br>            实时调整块的位置 将读写频繁的块 均匀的分布到各个节点上<br>        主从<br>            多个主从节点 + 路由节点</p>
+<pre><code>选型
+    AP
+    CP：一般都是</code></pre>
       
       <!-- reward -->
       

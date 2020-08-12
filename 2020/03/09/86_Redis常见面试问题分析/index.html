@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    Tag: LRU |  向天再借两小时
+    Redis常见面试问题分析 |  向天再借两小时
   </title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   
@@ -43,104 +43,360 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
-  <article class="articles">
+  <article id="post-86_Redis常见面试问题分析" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
     
-    
-    <h1 class="page-type-title">#&nbspLRU</h1>
-    
-    
-  
-  
-  
-  
-  
-  
-  <div class="archives-wrap">
-    <div class="archive-year-wrap">
-      <a href="/archives/2020" class="archive-year">2020</a>
-    </div>
-    <div class="archives">
-      
-      <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2020/08/03/85_%E5%8D%95%E6%9C%BA%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%A6%82%E8%A7%88/" class="archive-article-date">
-  <time datetime="2020-08-03T23:30:39.000Z" itemprop="datePublished">08/03</time>
-</a>
+    <header class="article-header">
        
-<h2 itemprop="name">
-  <a class="archive-article-title" href="/2020/08/03/85_%E5%8D%95%E6%9C%BA%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E6%A6%82%E8%A7%88/"
-    >单机存储引擎设计</a> 
-</h2>
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  Redis常见面试问题分析
+</h1>
  
 
     </header>
     
-    
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/BTree/" rel="tag">BTree</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LFU/" rel="tag">LFU</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LRU/" rel="tag">LRU</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LSM-TRee/" rel="tag">LSM-TRee</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E4%BA%8C%E7%BA%A7%E7%B4%A2%E5%BC%95/" rel="tag">二级索引</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%93%88%E5%B8%8C%E8%A1%A8/" rel="tag">哈希表</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%B7%A6%E5%89%8D%E7%BC%80%E6%B3%95%E5%88%99/" rel="tag">左前缀法则</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E8%81%94%E5%90%88%E7%B4%A2%E5%BC%95/" rel="tag">联合索引</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E8%81%9A%E9%9B%86%E7%B4%A2%E5%BC%95/" rel="tag">聚集索引</a></li></ul>
 
     
+    <div class="article-meta">
+      <a href="/2020/03/09/86_Redis%E5%B8%B8%E8%A7%81%E9%9D%A2%E8%AF%95%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/" class="article-date">
+  <time datetime="2020-03-09T23:30:39.000Z" itemprop="datePublished">2020-03-09</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/redis/">redis</a>
   </div>
-</article>
-      
-  
-  
-      <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2020/03/09/86_Redis%E5%B8%B8%E8%A7%81%E9%9D%A2%E8%AF%95%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/" class="archive-article-date">
-  <time datetime="2020-03-09T23:30:39.000Z" itemprop="datePublished">03/09</time>
-</a>
-       
-<h2 itemprop="name">
-  <a class="archive-article-title" href="/2020/03/09/86_Redis%E5%B8%B8%E8%A7%81%E9%9D%A2%E8%AF%95%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/"
-    >Redis常见面试问题分析</a> 
-</h2>
- 
 
-    </header>
+      
+      
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">904</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">3 min</span>
+        </span>
+    </span>
+</div>
+
+      
+    </div>
+    
+
     
     
+    <div class="tocbot"></div>
+
+
+
+
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="总体存储原理"><a href="#总体存储原理" class="headerlink" title="总体存储原理"></a>总体存储原理</h2><ul>
+<li>每个DB分别保存着一个元素dict和过期时间dict,言外之意就是一个key会保存两次</li>
+<li>dict中的key是RedisObject，最终指向一个SDS（可变长度字符串）</li>
+<li>dict中的val也是RedisObject，最终指向各种各样的数据类型，比如sds ziplist skiplist dict hash list等</li>
+</ul>
+<h2 id="一个key占多大"><a href="#一个key占多大" class="headerlink" title="一个key占多大"></a>一个key占多大</h2><ul>
+<li>dicEntry 16b</li>
+<li>RedisObject 12b</li>
+<li>sds（长度+结束标记） 9b</li>
+<li>最终大小<ul>
+<li>(16 + 12 + 9 + key)*2 *2是因为这个key在元素dict和过期dict中同时存在</li>
+<li>key会存储2份，所以key不能过长 </li>
+</ul>
+</li>
+</ul>
+<h2 id="内存如何清理"><a href="#内存如何清理" class="headerlink" title="内存如何清理"></a>内存如何清理</h2><ul>
+<li><p>惰性删除</p>
+<ul>
+<li>查询时候发现过期了，直接删除</li>
+</ul>
+</li>
+<li><p>定期删除</p>
+<ul>
+<li>Redis的事件循环中有定时任务专门处理删除过期key，但是不是全部扫描，而是随机选择删除</li>
+<li>从过期时间dict中随机选取数据，每轮选取20个数据，如果超过25%都是过期数据，则再进行一轮，如此循环，直到不达标或者超出限定时间</li>
+</ul>
+</li>
+<li><p>淘汰策略</p>
+<ul>
+<li><p>写入数据内存不足时触发淘汰策略</p>
+<ul>
+<li><p>LRU<br>RedisObject，里面保存着LRU时间，随机选取几个进行排序，然后进行删除时间最小的</p>
+<ul>
+<li>allkeys<ul>
+<li>所有key都参与淘汰</li>
+</ul>
+</li>
+<li>volatile（推荐）<ul>
+<li>只有设置了过期时间的key会参与淘汰</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>LFU<br>RedisObject，里面保存着LRU时间和使用频率（在一个字段中，24bit+8bit），随机选取几个进行排序（频率优先，时间其次），然后进行删除频率和时间最小的</p>
+<ul>
+<li>allkeys<ul>
+<li>所有key都参与淘汰</li>
+</ul>
+</li>
+<li>volatile（推荐）<ul>
+<li>只有设置了过期时间的key会参与淘汰</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="内存持久化"><a href="#内存持久化" class="headerlink" title="内存持久化"></a>内存持久化</h2><ul>
+<li>RDB <ul>
+<li>fork子进程dump内存数据 m秒n次</li>
+<li>优点<ul>
+<li>文件小</li>
+<li>恢复快</li>
+</ul>
+</li>
+<li>缺点<ul>
+<li>cpu使用过高</li>
+<li>丢数据（耗费cpu 所以频率不能过高）</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>AOF<ul>
+<li>将命令追加到文件中</li>
+<li>优点<ul>
+<li>丢数据少</li>
+</ul>
+</li>
+<li>缺点<ul>
+<li>占用空间大</li>
+<li>恢复慢</li>
+</ul>
+</li>
+<li>重写<ul>
+<li>去掉过期/删除数据 多次更新合一</li>
+<li>阈值判断<ul>
+<li>日志文件体积满足最小重写大小</li>
+<li>日志文件体积比上次重写完成后增加的比例超过阈值</li>
+</ul>
+</li>
+<li>fork子进程重写，线上数据新数据写入aof_rewrite_buf 重新完成后将数据写入新aof文件</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>数据恢复<ul>
+<li>默认是RDB， 但是AOF优先，没必要同时开启，AOF有覆盖RDB的可能性 如果要固化 推荐AOF（每秒1次刷盘）</li>
+</ul>
+</li>
+</ul>
+<h2 id="高可用和扩展"><a href="#高可用和扩展" class="headerlink" title="高可用和扩展"></a>高可用和扩展</h2><ul>
+<li><p>主从模式</p>
+<ul>
+<li>实现原理<ul>
+<li>全量快照同步，增量命令同步，根据从传给主的偏移量是否超过主内部的buffer来确定</li>
+</ul>
+</li>
+<li>优点<ul>
+<li>部署简单，能做数据备份</li>
+</ul>
+</li>
+<li>缺点<ul>
+<li>不能实现故障切换</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>哨兵模式（小数据量推荐）</p>
+<ul>
+<li>实现原理<ul>
+<li>在主从的基础上增加了外部sentintel集群（也是redis）,监控主从运行状态，实现准备切换       </li>
+</ul>
+</li>
+<li>优点<ul>
+<li>可以实现自动切换</li>
+</ul>
+</li>
+<li>缺点<ul>
+<li>不支持水平扩展</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>集群模式</p>
+<ul>
+<li>实现原理<ul>
+<li>每个节点（Master + Slave）维护一部分slot，每个节点知道其他节点维护的slot，可以进行重定向</li>
+</ul>
+</li>
+<li>优点        <ul>
+<li>支持水平扩容</li>
+</ul>
+</li>
+<li>缺点<ul>
+<li>有二次访问性能问题</li>
+<li>不能进行批量操作</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Codis（大数据量推荐）</p>
+<ul>
+<li>实现原理<ul>
+<li>多个CodisSeverGroup（Redis主从），支持扩展，数据分片逻辑，注册到zk</li>
+<li>CodisProxy（Redis协议代理），无状态，无限扩展，代理请求</li>
+<li>Client -&gt; [Haproxy 可有可无] -&gt; CodisProxy -&gt;  CodisSeverGroups</li>
+</ul>
+</li>
+<li>优点<ul>
+<li>支持水平扩展</li>
+<li>没有二次访问</li>
+<li>可以批量操作</li>
+</ul>
+</li>
+<li>缺点<ul>
+<li>部署复杂</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+        <div class="declare">
+          <ul class="post-copyright">
+            <li>
+              <i class="ri-copyright-line"></i>
+              <strong>Copyright： </strong>
+              Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
+            </li>
+          </ul>
+        </div>
+        
+    <footer class="article-footer">
+      
       
   <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AOF/" rel="tag">AOF</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Codis/" rel="tag">Codis</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LFU/" rel="tag">LFU</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LRU/" rel="tag">LRU</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RDB/" rel="tag">RDB</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%93%A8%E5%85%B5/" rel="tag">哨兵</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E9%9B%86%E7%BE%A4/" rel="tag">集群</a></li></ul>
 
-    
+
+    </footer>
+
   </div>
-</article>
-      
+
   
   
-      <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2020/01/19/84_LRU%E5%88%A9%E5%99%A8LinkedHashMap/" class="archive-article-date">
-  <time datetime="2020-01-19T23:30:39.000Z" itemprop="datePublished">01/19</time>
-</a>
-       
-<h2 itemprop="name">
-  <a class="archive-article-title" href="/2020/01/19/84_LRU%E5%88%A9%E5%99%A8LinkedHashMap/"
-    >LRU利器LinkedHashMap</a> 
-</h2>
- 
+  <nav class="article-nav">
+    
+      <a href="/2020/03/10/30_%E8%87%AA%E5%B7%B1%E6%92%B8%E4%B8%80%E4%B8%AA%E7%86%94%E6%96%AD%E5%99%A8/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            自己撸一个熔断器
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2020/03/05/77_%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E4%BD%BF%E7%94%A8Netty/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">为什么用使用netty</div>
+      </a>
+    
+  </nav>
 
-    </header>
-    
-    
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/HashMap/" rel="tag">HashMap</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LRU/" rel="tag">LRU</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%93%88%E5%B8%8C%E8%A1%A8/" rel="tag">哈希表</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E9%93%BE%E8%A1%A8/" rel="tag">链表</a></li></ul>
 
-    
-  </div>
-</article>
-      
-      
+  
+
+  
+  
+<!-- valine评论 -->
+<div id="vcomments-box">
+    <div id="vcomments">
     </div>
-  </div>
-  
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        app_id: 'j7og6mDnkAIEtuTza7hQ3LNa-gzGzoHsz',
+        app_key: 'MFzzLmRJtNRHg35aF1dvI3M5',
+        path: window.location.pathname,
+        notify: 'false',
+        verify: 'false',
+        avatar: 'monsterid',
+        placeholder: '给我的文章加点评论吧~',
+        recordIP: true
+    });
+    const infoEle = document.querySelector('#vcomments .info');
+    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+        infoEle.childNodes.forEach(function (item) {
+            item.parentNode.removeChild(item);
+        });
+    }
+</script>
+<style>
+    #vcomments-box {
+        padding: 5px 30px;
+    }
+
+    @media screen and (max-width: 800px) {
+        #vcomments-box {
+            padding: 5px 0px;
+        }
+    }
+
+    #vcomments-box #vcomments {
+        background-color: #fff;
+    }
+
+    .v .vlist .vcard .vh {
+        padding-right: 20px;
+    }
+
+    .v .vlist .vcard {
+        padding-left: 10px;
+    }
+</style>
+
   
 
   
+  
+  
+  
+  
+
+</article>
 </section>
       <footer class="footer">
   <div class="outer">
@@ -268,6 +524,24 @@
 
 
 
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
 
 
 
