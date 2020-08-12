@@ -2,7 +2,7 @@
 title: netty的EpollEventLoop详解
 date: 2020-04-10 23:30:39
 categories:
-- netty
+- Netty
 tags:
 - EventLoop
 - 句柄

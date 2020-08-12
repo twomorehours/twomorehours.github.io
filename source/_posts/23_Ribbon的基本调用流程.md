@@ -3,7 +3,7 @@ title: Ribbon的基本调用流程
 date: 2020-01-10 18:21:39
 tags:
 categories:
-- springcloud
+- SpringCloud
 ---
 
 ## Ribbon是什么

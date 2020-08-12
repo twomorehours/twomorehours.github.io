@@ -2,7 +2,7 @@
 title: netty服务端channel的创建
 date: 2020-03-15 23:30:39
 categories:
-- netty
+- Netty
 tags:
 - pipeline
 - EventLoop

@@ -2,7 +2,7 @@
 title: Redis常见面试问题分析
 date: 2020-03-09 23:30:39
 categories:
-- redis
+- Redis
 tags:
 - RDB
 - AOF

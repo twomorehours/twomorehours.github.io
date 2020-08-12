@@ -3,7 +3,7 @@ title: idea开启spring-boot-devtools
 date: 2019-11-23 10:30:39
 tags:
 categories:
-- springboot
+- SpringBoot
 ---
 
 

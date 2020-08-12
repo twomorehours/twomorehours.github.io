@@ -3,7 +3,7 @@ title: Redis+Lua实现令牌桶限流
 date: 2020-03-17 22:30:39
 tags:
 categories:
-- redis
+- Redis
 ---
 
 ## 令牌桶的实现

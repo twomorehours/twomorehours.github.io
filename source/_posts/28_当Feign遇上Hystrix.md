@@ -3,7 +3,7 @@ title: 当Feign遇上Hystrix-初始化篇
 date: 2020-02-20 21:01:39
 tags:
 categories:
-- springcloud
+- SpringCloud
 ---
 
 ## Feign整合Hystrix的常见用法

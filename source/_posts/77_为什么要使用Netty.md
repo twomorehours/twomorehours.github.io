@@ -2,7 +2,7 @@
 title: 为什么用使用netty
 date: 2020-03-05 23:30:39
 categories:
-- netty
+- Netty
 tags:
 - 阻塞
 - 同步

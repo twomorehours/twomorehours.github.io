@@ -2,7 +2,7 @@
 title: netty的NioEventLoop处理新连接接入
 date: 2020-05-05 23:30:39
 categories:
-- netty
+- Netty
 tags:
 - EventLoop
 - 句柄

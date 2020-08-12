@@ -2,7 +2,7 @@
 title: 使用DeferredResult实现http长轮询
 date: 2019-04-13 21:30:39
 categories:
-- springboot
+- SpringBoot
 ---
 
 ## 客户端如何及时感知服务端的变化

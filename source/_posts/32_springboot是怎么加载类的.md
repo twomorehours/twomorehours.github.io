@@ -3,7 +3,7 @@ title: springboot是怎么加载类的
 date: 2020-03-30 13:30:39
 tags:
 categories:
-- springboot
+- SpringBoot
 ---
 
 ## 基础知识

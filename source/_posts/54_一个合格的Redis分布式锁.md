@@ -2,7 +2,7 @@
 title: 一个合格的Redis分布式锁
 date: 2020-07-15 21:30:39
 categories:
-- redis
+- Redis
 ---
 
 ## 概念

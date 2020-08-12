@@ -2,7 +2,7 @@
 title: netty的NioEventLoop详解
 date: 2020-04-01 23:30:39
 categories:
-- netty
+- Netty
 tags:
 - EventLoop
 - 事件

@@ -3,7 +3,7 @@ title: Feign的基本调用流程
 date: 2020-01-22 10:21:39
 tags:
 categories:
-- springcloud
+- SpringCloud
 ---
 
 ## 什么是`Feign`

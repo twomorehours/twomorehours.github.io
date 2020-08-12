@@ -2,7 +2,7 @@
 title: netty的EpollEventLoop处理新连接接入
 date: 2020-06-19 23:30:39
 categories:
-- netty
+- Netty
 tags:
 - EventLoop
 - 句柄
