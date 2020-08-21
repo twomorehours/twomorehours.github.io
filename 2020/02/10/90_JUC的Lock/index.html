@@ -109,7 +109,8 @@
       
 
       
-      <h2 id="Lock是干啥的"><a href="#Lock是干啥的" class="headerlink" title="Lock是干啥的"></a>Lock是干啥的</h2><p>Lock的作用是对一个资源、多个资源、或者一段逻辑进行同步，同时间只有一个线程可以进行访问</p>
+      <h2 id="前置知识"><a href="#前置知识" class="headerlink" title="前置知识"></a>前置知识</h2><p>想要读懂本篇分析，必须对<a href="https://www.yuhao.pro/2020/01/28/89_JUC%E7%9A%84%E6%A0%B8%E5%BF%83AQS/" target="_blank" rel="noopener">AQS</a>有一定了解</p>
+<h2 id="Lock是干啥的"><a href="#Lock是干啥的" class="headerlink" title="Lock是干啥的"></a>Lock是干啥的</h2><p>Lock的作用是对一个资源、多个资源、或者一段逻辑进行同步，同时间只有一个线程可以进行访问</p>
 <h2 id="Lock和synchronized的区别"><a href="#Lock和synchronized的区别" class="headerlink" title="Lock和synchronized的区别"></a>Lock和synchronized的区别</h2><ul>
 <li>最大的区别是Lock是用Java代码实现的，而synchronized是在JVM层面用C++实现的</li>
 <li>synchronized会在任何情况下都会自动释放锁，但是Lock必须手动释放锁，synchronized使用会更简单一些</li>
