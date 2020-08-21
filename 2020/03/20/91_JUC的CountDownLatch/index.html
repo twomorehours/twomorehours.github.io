@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    DNS入门 |  向天再借两小时
+    JUC的CountDownLatch |  向天再借两小时
   </title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   
@@ -43,7 +43,7 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
-  <article id="post-63_DNS入门" class="article article-type-post" itemscope
+  <article id="post-91_JUC的CountDownLatch" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -51,7 +51,7 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  DNS入门
+  JUC的CountDownLatch
 </h1>
  
 
@@ -60,12 +60,12 @@
 
     
     <div class="article-meta">
-      <a href="/2020/03/25/63_DNS%E5%85%A5%E9%97%A8/" class="article-date">
-  <time datetime="2020-03-25T21:30:39.000Z" itemprop="datePublished">2020-03-25</time>
+      <a href="/2020/03/20/91_JUC%E7%9A%84CountDownLatch/" class="article-date">
+  <time datetime="2020-03-20T23:30:39.000Z" itemprop="datePublished">2020-03-20</time>
 </a>
       
   <div class="article-category">
-    <a class="article-category-link" href="/categories/%E8%BF%90%E7%BB%B4%E7%9F%A5%E8%AF%86/">运维知识</a>
+    <a class="article-category-link" href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a>
   </div>
 
       
@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">1.1k</span>
+            <span class="post-count">438</span>
         </span>
     </span>
 
@@ -84,7 +84,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">5 min</span>
+            <span class="post-count">1 min</span>
         </span>
     </span>
 </div>
@@ -109,60 +109,19 @@
       
 
       
-      <h2 id="什么是DNS"><a href="#什么是DNS" class="headerlink" title="什么是DNS"></a>什么是DNS</h2><p>DNS全称<code>Domain Name System</code>，作用是保存<code>域名</code>到<code>IP地址</code>的映射关系，当我们需要访问网络时，首先要将我们知道的域名转换成IP才能访问，这个转换的过程就要依靠DNS实现</p>
-<h2 id="DNS的分类"><a href="#DNS的分类" class="headerlink" title="DNS的分类"></a>DNS的分类</h2><ul>
-<li>LocalDNS <ul>
-<li>这种DNS是直接与客户端交互的DNS，只保存根DNS服务器的地址，我们所熟知的DNS服务器，如<code>114</code>，就是LocalDNS</li>
-</ul>
-</li>
-<li>NS<ul>
-<li>这种DNS保存真正的映射关系</li>
-</ul>
-</li>
-</ul>
-<h2 id="DNS的层次结构"><a href="#DNS的层次结构" class="headerlink" title="DNS的层次结构"></a>DNS的层次结构</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">            |     根DNS                         ROOTDNS</span><br><span class="line">            |                                &#x2F;   |   \</span><br><span class="line">LocalDNS    |    顶级域名DNS                 com  ...   cn      </span><br><span class="line">            |                            &#x2F;  |   \</span><br><span class="line">            |    (二级域名)权威域名DNS baidu.com   ...   jd.com</span><br></pre></td></tr></table></figure>
+      <h2 id="前置知识"><a href="#前置知识" class="headerlink" title="前置知识"></a>前置知识</h2><p>想要读懂本篇分析，必须对<a href="https://www.yuhao.pro/2020/01/28/89_JUC%E7%9A%84%E6%A0%B8%E5%BF%83AQS/" target="_blank" rel="noopener">AQS</a>有一定了解</p>
+<h2 id="CountDownLatch是干啥的"><a href="#CountDownLatch是干啥的" class="headerlink" title="CountDownLatch是干啥的"></a>CountDownLatch是干啥的</h2><p>主线程需要等待多个并行任务都执行完成，主线程收到通知才能继续执行</p>
+<h2 id="CountDownLatch的构建"><a href="#CountDownLatch的构建" class="headerlink" title="CountDownLatch的构建"></a>CountDownLatch的构建</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//jjava.util.concurrent.CountDownLatch#CountDownLatch</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">CountDownLatch</span><span class="params">(<span class="keyword">int</span> count)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (count &lt; <span class="number">0</span>) <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"count &lt; 0"</span>);</span><br><span class="line">    <span class="keyword">this</span>.sync = <span class="keyword">new</span> Sync(count);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//java.util.concurrent.CountDownLatch.Sync#Sync</span></span><br><span class="line">Sync(<span class="keyword">int</span> count) &#123;</span><br><span class="line">    <span class="comment">// CountDownLatch把这个state定义为并行还未完成的个数</span></span><br><span class="line">    <span class="comment">// 当state是0的时候 主线程就能继续执行了</span></span><br><span class="line">    setState(count);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h2 id="DNS的解析过程"><a href="#DNS的解析过程" class="headerlink" title="DNS的解析过程"></a>DNS的解析过程</h2><p>以<code>www.baidu.com</code>为例</p>
-<ul>
-<li>客户端向LocalDNS发起解析请求</li>
-<li>LocalDNS查看本地缓存，有就直接返回</li>
-<li>localDNS拉取所有根域名服务器地址</li>
-<li>localDNS选择一台根服务器询问com</li>
-<li>根服务器返回com顶级域名服务器地址</li>
-<li>localDNS选择一台com顶级域名服务器询问baidu.com地址</li>
-<li>顶级域名服务器返回baidu.com权威服务器列表</li>
-<li>localDNS选择一台baidu.com的权威域名服务器询问<a href="http://www.baidu.com的地址" target="_blank" rel="noopener">www.baidu.com的地址</a></li>
-<li>权威域名服务器返回地址给localDNS</li>
-<li>localdns加入缓存并返回给客户端</li>
-</ul>
-<p>客户端查询LocalDNS叫做递归查询，LocalDNS查询NS叫做迭代查询</p>
-<h2 id="实战DNS解析过程"><a href="#实战DNS解析过程" class="headerlink" title="实战DNS解析过程"></a>实战DNS解析过程</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ dig yuhao.pro +trace</span><br><span class="line"></span><br><span class="line">; &lt;&lt;&gt;&gt; DiG 9.11.4-P2-RedHat-9.11.4-16.P2.el8 &lt;&lt;&gt;&gt; yuhao.pro +trace</span><br><span class="line">;; global options: +cmd</span><br><span class="line">.			600	IN	NS	m.root-servers.net.</span><br><span class="line">.			600	IN	NS	e.root-servers.net.</span><br><span class="line">.			600	IN	NS	b.root-servers.net.</span><br><span class="line">.			600	IN	NS	i.root-servers.net.</span><br><span class="line">.			600	IN	NS	g.root-servers.net.</span><br><span class="line">.			600	IN	NS	j.root-servers.net.</span><br><span class="line">.			600	IN	NS	h.root-servers.net.</span><br><span class="line">.			600	IN	NS	c.root-servers.net.</span><br><span class="line">.			600	IN	NS	k.root-servers.net.</span><br><span class="line">.			600	IN	NS	l.root-servers.net.</span><br><span class="line">.			600	IN	NS	a.root-servers.net.</span><br><span class="line">.			600	IN	NS	d.root-servers.net.</span><br><span class="line">.			600	IN	NS	f.root-servers.net.</span><br><span class="line">拉取所有根域名服务器</span><br><span class="line">;; Received 239 bytes from 192.168.0.2#53(192.168.0.2) in 1 ms </span><br><span class="line"></span><br><span class="line">pro.			172800	IN	NS	b0.pro.afilias-nst.org.</span><br><span class="line">pro.			172800	IN	NS	a0.pro.afilias-nst.info.</span><br><span class="line">pro.			172800	IN	NS	a2.pro.afilias-nst.info.</span><br><span class="line">pro.			172800	IN	NS	b2.pro.afilias-nst.org.</span><br><span class="line">pro.			172800	IN	NS	c0.pro.afilias-nst.info.</span><br><span class="line">pro.			172800	IN	NS	d0.pro.afilias-nst.org.</span><br><span class="line">pro.			86400	IN	DS	47221 7 2 5A10389E282CB03F1083C1662B218B97CFE61024B991C7C5D8BB5685 AD6487CA</span><br><span class="line">pro.			86400	IN	DS	47221 7 1 00CBFCBDC9C6E659FB2385B3982E93E98D71052D</span><br><span class="line">pro.			86400	IN	RRSIG	DS 8 1 86400 20200803200000 20200721190000 46594 . nIm6n8HFFi&#x2F;6UTswoVBk7r6fklC30g30CpGo1+u9cvhH+qzw14btQXdI SZXrBabTZS4BSGvfxyCz8Rbz71MwNxyl&#x2F;6n0VW6epeD3QB&#x2F;pV2l1EC3J KG3c2fVwrF0ZVwEv520mL+MW0CU2yE6Mvw8Vb1HjWzuUkgkNvAMS0nGW QPjN&#x2F;TIWZib0leySInK9ATVRDsMlas62MNejG9wI5qtO4gXWnmh7SrcG 71HOenhYzn2x+y4s678oYTgoyH+Cos77e3s4Bb7HgdDTkU0F2GZYAqsx wFKwv6Q9BfKm6RkPn7e0vFbXcbO3RgaWFzCsnPe&#x2F;z7JfabUD&#x2F;TauLAHm CFbHDA&#x3D;&#x3D;</span><br><span class="line">从c.root-servers.net拉取到所有pro顶级域名服务器</span><br><span class="line">;; Received 842 bytes from 192.33.4.12#53(c.root-servers.net) in 271 ms</span><br><span class="line"></span><br><span class="line">yuhao.pro.		86400	IN	NS	ns1.bdydns.cn.</span><br><span class="line">yuhao.pro.		86400	IN	NS	ns2.bdydns.cn.</span><br><span class="line">kp4p6t009beh7uf024robe8itfrmgqig.pro. 900 IN NSEC3 1 1 1 D399EAAB KP923TGNHEHHP0DKGQIPBJUEV47IAG41 NS SOA RRSIG DNSKEY NSEC3PARAM</span><br><span class="line">kp4p6t009beh7uf024robe8itfrmgqig.pro. 900 IN RRSIG NSEC3 7 2 900 20200812033203 20200722023203 21233 pro. FyLY6TBGs74o04ZhIcU36E2E0MqTaDHVKuN2I7KMFSzF414LNkdxXC8N cBLnd70erOvG8iio7+e4MXLOiGKaN79tpoQKMSV8Sk8OX96C2GfwGAba LJAwNII&#x2F;PK0EpBPVoElwbz76Y995LGnd7DtGYB9tJKpna3NwOCQEcmWH J34&#x3D;</span><br><span class="line">uck85dbhstr8r41ga67kbqtb3obasndh.pro. 900 IN NSEC3 1 1 1 D399EAAB UCOT87OS98FL5PBK9AMVK6Q3PRPAR9DB NS DS RRSIG</span><br><span class="line">uck85dbhstr8r41ga67kbqtb3obasndh.pro. 900 IN RRSIG NSEC3 7 2 900 20200807151823 20200717141823 21233 pro. +f4QcUECnTM2RAZ6dva3vkCJ8TnX96xDSbIumNKIT1f3X6qNSnBjqE&#x2F;5 UpCjxRE+duxAUP0vafx&#x2F;mNBMEMqvoMP0LW8yO&#x2F;d6xlh9SHyfNRiMpZ&#x2F;M 6vY2ZVu87qPHG27gUz2lhz2rLJYJqERltUvSWu7P1B2aPoeCWh&#x2F;L8fEa gxM&#x3D;</span><br><span class="line">从b0.pro.afilias-nst.org拉取到yuhao.pro的权威域名服务器</span><br><span class="line">;; Received 576 bytes from 199.182.1.1#53(b0.pro.afilias-nst.org) in 208 ms</span><br><span class="line"></span><br><span class="line">yuhao.pro.		300	IN	A	106.12.15.56</span><br><span class="line">从ns2.bdydns.cn取到yuhao.pro的IP地址</span><br><span class="line">;; Received 54 bytes from 112.80.248.202#53(ns2.bdydns.cn) in 5 ms</span><br></pre></td></tr></table></figure>
+<h2 id="等待"><a href="#等待" class="headerlink" title="等待"></a>等待</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//java.util.concurrent.CountDownLatch#await()</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">await</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">    <span class="comment">// 调用AQS获取资源</span></span><br><span class="line">    sync.acquireSharedInterruptibly(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//java.util.concurrent.CountDownLatch.Sync#tryAcquireShared</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">int</span> <span class="title">tryAcquireShared</span><span class="params">(<span class="keyword">int</span> acquires)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// AQS回调判断状态为0 就通过 否则不能通过</span></span><br><span class="line">    <span class="comment">// 不能通过的就回到AQS中进行排队</span></span><br><span class="line">    <span class="comment">// 直到被唤醒之后继续判断</span></span><br><span class="line">    <span class="keyword">return</span> (getState() == <span class="number">0</span>) ? <span class="number">1</span> : -<span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h2 id="DNS记录"><a href="#DNS记录" class="headerlink" title="DNS记录"></a>DNS记录</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">yuhao.pro.		86400	IN	NS	ns1.bdydns.cn.</span><br><span class="line">yuhao.pro.: 记录名</span><br><span class="line">86400: ttl</span><br><span class="line">IN: type IN指代Internet</span><br><span class="line">NS: Name Service 域名服务器</span><br><span class="line">ns1.bdydns.cn.: 存储的值</span><br><span class="line"></span><br><span class="line">yuhao.pro.		300	IN	A	106.12.15.56</span><br><span class="line">yuhao.pro.: 记录名</span><br><span class="line">300: ttl</span><br><span class="line">IN: type IN指代Internet</span><br><span class="line">A: A记录 指代Ipv4地址</span><br><span class="line">106.12.15.56： 存储的值</span><br></pre></td></tr></table></figure>
+<h2 id="释放"><a href="#释放" class="headerlink" title="释放"></a>释放</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//java.util.concurrent.CountDownLatch#countDown</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">countDown</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 调用AQS释放</span></span><br><span class="line">    sync.releaseShared(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//java.util.concurrent.CountDownLatch.Sync#tryReleaseShared</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">boolean</span> <span class="title">tryReleaseShared</span><span class="params">(<span class="keyword">int</span> releases)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// Decrement count; signal when transition to zero</span></span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        <span class="comment">// 释放就是state-1 </span></span><br><span class="line">        <span class="comment">// 释放到0 返回成功后AQS会唤醒等待队列中的节点</span></span><br><span class="line">        <span class="keyword">int</span> c = getState();</span><br><span class="line">        <span class="keyword">if</span> (c == <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        <span class="keyword">int</span> nextc = c-<span class="number">1</span>;</span><br><span class="line">        <span class="keyword">if</span> (compareAndSetState(c, nextc))</span><br><span class="line">            <span class="keyword">return</span> nextc == <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h2 id="DNS的传输协议"><a href="#DNS的传输协议" class="headerlink" title="DNS的传输协议"></a>DNS的传输协议</h2><p>DNS的传输协议是UDP，因为只请求一次就进行，没要进行TCP连接，但是同样也带来了安全问题</p>
-<h2 id="如何选择DNS"><a href="#如何选择DNS" class="headerlink" title="如何选择DNS"></a>如何选择DNS</h2><ul>
-<li>如果不设置，默认都是使用的ISP提供的LocalDNS</li>
-<li>自己设置可以设置阿里，腾讯，114的DNS地址</li>
-</ul>
-<h2 id="DNS劫持"><a href="#DNS劫持" class="headerlink" title="DNS劫持"></a>DNS劫持</h2><ul>
-<li>LocalDNS被控制，DNS记录被篡改，用户拿到的地址是错误的地址</li>
-<li>用户访问了伪装的LocalDNS，直接就拿到了错误的地址</li>
-<li>请求被拦截，并且在响应中插入了错误的地址</li>
-</ul>
-<h2 id="避免DNS劫持"><a href="#避免DNS劫持" class="headerlink" title="避免DNS劫持"></a>避免DNS劫持</h2><ul>
-<li>使用正规的LocalDNS，如阿里，114等</li>
-<li>企业可以设置备用域名</li>
-</ul>
-<h2 id="智能DNS"><a href="#智能DNS" class="headerlink" title="智能DNS"></a>智能DNS</h2><ul>
-<li>概念<ul>
-<li>传统的DNS对于多条A记录只能进行静态轮询，而智能DNS可以根据诸如位置信息，延时信息等指标选择相对较优的IP返回</li>
-</ul>
-</li>
-<li>常见的智能DNS<ul>
-<li>现在的大多数DNS都是智能DNS</li>
-</ul>
-</li>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li>主线程需要等待多个并行任务都执行完成，主线程收到通知才能继续执行，CountDownLatch来做这个过程中的协调</li>
+<li>state在CountDownLatch中的定义是未完成的子任务个数，这个个数等于0，则唤醒等待的主线程节点</li>
+<li>等待回调到子类就是判断state是不是等于0，是就成功通过，不是就到队列继续等待判断</li>
+<li>释放就是将state-1，释放完成后等于0则唤醒等待的节点</li>
 </ul>
 
       
@@ -186,6 +145,8 @@
     <footer class="article-footer">
       
       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AQS/" rel="tag">AQS</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CAS/" rel="tag">CAS</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%BA%BF%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1/" rel="tag">线程间通信</a></li></ul>
+
 
     </footer>
 
@@ -195,19 +156,19 @@
   
   <nav class="article-nav">
     
-      <a href="/2020/03/30/32_springboot%E6%98%AF%E6%80%8E%E4%B9%88%E5%8A%A0%E8%BD%BD%E7%B1%BB%E7%9A%84/" class="article-nav-link">
+      <a href="/2020/03/25/63_DNS%E5%85%A5%E9%97%A8/" class="article-nav-link">
         <strong class="article-nav-caption">上一篇</strong>
         <div class="article-nav-title">
           
-            springboot是怎么加载类的
+            DNS入门
           
         </div>
       </a>
     
     
-      <a href="/2020/03/20/91_JUC%E7%9A%84CountDownLatch/" class="article-nav-link">
+      <a href="/2020/03/17/31_Redis%E9%99%90%E6%B5%81lua%E5%AE%9E%E7%8E%B0/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">JUC的CountDownLatch</div>
+        <div class="article-nav-title">Redis+Lua实现令牌桶限流</div>
       </a>
     
   </nav>
