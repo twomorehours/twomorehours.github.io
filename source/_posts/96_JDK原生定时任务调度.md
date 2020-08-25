@@ -2,7 +2,7 @@
 title: JUC的ScheduledThreadPoolExecutor
 date: 2020-08-03 23:30:39
 categories:
-- 并发编程
+- 任务调度
 tags:
 - 堆
 - 优先级队列
