@@ -1,9 +1,10 @@
 ---
 title: jstat
 date: 2019-11-03 19:30:39
+categories: 
+- JVM
 tags:
-categories:
-- Java
+- GC
 ---
 
 

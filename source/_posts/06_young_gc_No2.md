@@ -2,8 +2,10 @@
 title: young gc No.2
 date: 2019-10-01 14:12:01
 tags:
-categories:
-- Java
+categories: 
+- JVM
+tags:
+- GC
 ---
 
 ## [上节回顾](https://www.yuhao.pro/2020/04/23/03_young_gc_No1/)

@@ -3,6 +3,11 @@ title: 不变、协变、逆变和PECS
 date: 2019-09-24 18:29:26
 categories: 
 - Java
+tags:
+- 不变
+- 逆变
+- 协变
+- pecs
 ---
 
 ## 啥是不变
