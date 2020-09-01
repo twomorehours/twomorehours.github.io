@@ -1,0 +1,130 @@
+
+====================================================
+LogSDK API
+
+interface LogCollector{
+
+    void logMiddleWare(MiddleWareLog log);
+    void logServiceException(ServiceExceptionLog log);
+    void logBiz(BizLog log);
+
+}
+=====================================================
+Log(调用方可见的日志基类 调用方指的是调用LogSDK的地方)
+int logType 日志类型 1.中间件异常 2.业务码异常 3.业务日志打点
+
+
+MiddleWareLog extends Log  中间件异常 如何处理HTTP的错误?
+int middleWareType 中间件类型 1.mysql 2.codis ....
+String middleWareNamespace 中间件ns
+String middleWareIps 中间件报错的ip 多个用,隔开
+String middleWarePorts  中间件报错的port 多个用,隔开
+String requestTraceId 请求Id 待定
+String requestURI 请求uri 待定
+Throwable throwable 中间件异常
+
+
+ServiceExceptionLog extends Log ServiceException
+String requestTraceId 请求Id
+String requestURI 请求uri
+String exceptionCode 错误码
+ServiceException serviceException 错误
+
+
+BizLog extends Log 业务日志打点
+String requestTraceId 请求Id
+String requestURI 请求uri
+String logLevel 日志级别
+String logMsg 日志信息
+Throwable throwable 日志中可能携带的异常
+=====================================================
+
+
+
+
+====================================================
+LogSDK impl
+
+
+class DefaultLogCollector implements LogCollector{
+
+    List<LogSender> senders;
+
+    String department 部门
+    String projectName 项目名
+    String projectNamespace 项目ngx名字空间
+    String projectIp 本项目的ip
+    int projectPort 本项目的port
+    String projectHost 本项目的host
+
+
+    void logMiddleWare(MiddleWareLog log){
+        senders.foreach(sender -> sender.send(topic,toJson(toInternal(log))))
+    }
+    void logServiceException(ServiceExceptionLog log){
+        senders.foreach(sender -> sender.send(topic,toJson(toInternal(log))))
+    }
+    void logBiz(BizLog log){
+        senders.foreach(sender -> sender.send(topic,toJson(toInternal(log))))
+    }
+
+}
+
+
+interface LogSender {
+
+    void send(String topic,String log);
+
+}
+
+class FlumeUdpLogSender implements LogSender{
+
+    FlumeClient client;
+
+    void send(String topic,String log){
+        client.sendMsg(topic,log);
+    }
+}
+
+
+=====================================================
+LogInternal 内部使用的Log 包含一些每个项目的基本信息 这些数据从构建LogCollector时获取
+long timestamp 日志时间戳
+String department 部门
+String projectName 项目名
+String projectNamespace 项目ngx名字空间
+String projectIp 本项目的ip
+int projectPort 本项目的port
+String projectHost 本项目的host
+int logType 日志类型 1.中间件异常 2.业务码异常 3.业务日志打点
+
+
+
+MiddleWareLogInternal extends LogInternal
+int middleWareType 中间件类型 1.mysql 2.codis ....
+String middleWareNamespace 中间件ns
+String middleWareIps 中间件报错的ip 多个用,隔开
+String middleWarePorts  中间件报错的port 多个用,隔开
+String requestTraceId 请求Id 待定
+String requestURI 请求uri 待定
+String exceptionMsg 异常msg
+String exceptionStackTrace 异常栈信息
+
+
+
+ServiceExceptionLogInternal extends LogInternal
+String requestTraceId 请求Id
+String requestURI 请求uri
+String exceptionCode 错误码
+String exceptionMsg 异常msg
+String exceptionStackTrace 异常栈信息
+
+
+BizLogInternal extends LogInternal
+String requestTraceId 请求Id
+String requestURI 请求uri
+String logLevel 日志级别
+String logMsg 日志信息
+String exceptionMsg 异常msg
+String exceptionStackTrace 异常栈信息
+========================================================

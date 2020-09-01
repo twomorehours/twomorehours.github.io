@@ -11,9 +11,9 @@ categories:
 
 - C: Julie. Thanks. I'm really `looking forward to` `getting settled in` here. 
 
-- A: Julie `used to` work at Hooli, and did some greate work there.
+- A: Julie `used to` work at Hooli, and did some great work there.
 
-- C: It was a greate place to work, `but more of` `a springboard to` something like this.
+- C: It was a great place to work, `but more of` `a springboard to` something like this.
 
 - B: Well, I'll let you in on a little secret. We're pretty spoiled here.
 
@@ -23,7 +23,7 @@ categories:
 
 - B: I agree. Everybody was super accommodating when I first `came onboard`.
 
-- C: That's so greate to hear. I've heard some horror stories about the work environment at some firms.
+- C: That's so great to hear. I've heard some horror stories about the work environment at some firms.
 
 - A: `Nothing like that here`. Say, Bill and I `were thinking of` `hitting up` the new `food chunk` for lunch. Want to `tag along`?
 
