@@ -1,6 +1,6 @@
 ---
 title: Double Checking information
-date: 2019-01-10 23:30:39
+date: 2019-01-19 23:30:39
 categories:
 - English
 ---

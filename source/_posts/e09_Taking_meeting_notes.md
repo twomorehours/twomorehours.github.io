@@ -1,6 +1,6 @@
 ---
 title: Taking meeting notes
-date: 2019-01-09 23:30:39
+date: 2019-01-17 23:30:39
 categories:
 - English
 ---
