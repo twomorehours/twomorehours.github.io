@@ -5,7 +5,7 @@ LogSDK API
 interface LogCollector{
 
     void logMiddleWare(MiddleWareLog log);
-    void logServiceException(ServiceExceptionLog log);
+    void logRuntimeException(ServiceExceptionLog log);
     void logBiz(BizLog log);
 
 }
@@ -15,6 +15,7 @@ int logType 日志类型 1.中间件异常 2.业务码异常 3.业务日志打�
 String logLevel   debug info warn error fatal 
 String requestTraceId 请求Id
 String requestURI 请求uri
+Throwable throwable 异常
 
 
 MiddleWareLog extends Log  中间件异常 如何处理HTTP的错误?
@@ -22,16 +23,15 @@ int middleWareType 中间件类型 1.mysql 2.codis ....
 String middleWareNamespace 中间件ns
 String middleWareIps 中间件报错的ip 多个用,隔开
 String middleWarePorts  中间件报错的port 多个用,隔开
-Throwable throwable 中间件异常
 
 
-ServiceExceptionLog extends Log ServiceException
-ServiceException serviceException 异常
+
+RuntimeExceptionLog extends Log RuntimeException
+int exceptionCode 业务错误码 非ServiceException -1
 
 
 BizLog extends Log 业务日志打点
-String logMsg 日志信息
-Throwable throwable 日志中可能携带的异常
+String bizMsg 日志信息
 =====================================================
 
 
@@ -109,11 +109,13 @@ String middleWarePorts  中间件报错的port 多个用,隔开
 
 
 
-ServiceExceptionLogInternal extends LogInternal
-String exceptionCode 错误码
+RuntimeExceptionLogInternal extends LogInternal
+String exceptionCode 错误码(未知Runtime为-1)
 
 
 
 BizLogInternal extends LogInternal
 String logMsg 日志信息
 ========================================================
+
+
