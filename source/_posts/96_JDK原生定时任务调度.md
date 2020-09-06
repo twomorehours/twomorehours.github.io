@@ -10,7 +10,7 @@ tags:
 
 
 ## 前置知识
-想要读懂本篇分析，必须对[Java线程池]](https://www.yuhao.pro/2020/06/13/94_Java%E7%BA%BF%E7%A8%8B%E6%B1%A0/)有一定了解
+想要读懂本篇分析，必须对[Java线程池]](https://www.yuhao.pro/2020/08/20/94_Java%E7%BA%BF%E7%A8%8B%E6%B1%A0/)有一定了解
 
 
 ## ScheduledThreadPoolExecutor是干啥的
