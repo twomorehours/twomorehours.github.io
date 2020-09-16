@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+
+
+<html lang="chinese">
+
+
+<head>
+  <meta charset="utf-8" />
+    
+  <meta name="description" content="two more hours company" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+    Jedis深度剖析 |  向天再借两小时
+  </title>
+  <meta name="generator" content="hexo-theme-yilia-plus">
+  
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
+  
+<link rel="stylesheet" href="/dist/main.css">
+
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/css/remixicon.min.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+  
+<script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+
+  
+  
+
+  
+
+</head>
+
+</html>
+
+<body>
+  <div id="app">
+    <main class="content on">
+      <section class="outer">
+  <article id="post-98_Jedis深度剖析" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  Jedis深度剖析
+</h1>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2020/12/05/98_Jedis%E6%B7%B1%E5%BA%A6%E5%89%96%E6%9E%90/" class="article-date">
+  <time datetime="2020-12-05T23:30:39.000Z" itemprop="datePublished">2020-12-05</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Redis/">Redis</a>
+  </div>
+
+      
+      
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">1.7k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">8 min</span>
+        </span>
+    </span>
+</div>
+
+      
+    </div>
+    
+
+    
+    
+    <div class="tocbot"></div>
+
+
+
+
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="Jedis是什么"><a href="#Jedis是什么" class="headerlink" title="Jedis是什么"></a>Jedis是什么</h2><p>Jedis是Redis的一种Java客户端实现，网络模型为阻塞I/O</p>
+<h2 id="Jedis的组成"><a href="#Jedis的组成" class="headerlink" title="Jedis的组成"></a>Jedis的组成</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Jedis是用户执行任何命令的入口</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Jedis</span> <span class="keyword">extends</span> <span class="title">BinaryJedis</span> <span class="keyword">implements</span> <span class="title">JedisCommands</span>, <span class="title">MultiKeyCommands</span>,</span></span><br><span class="line"><span class="class">    <span class="title">AdvancedJedisCommands</span>, <span class="title">ScriptingCommands</span>, <span class="title">BasicCommands</span>, <span class="title">ClusterCommands</span>, <span class="title">SentinelCommands</span>, <span class="title">ModuleCommands</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// BinaryJedis是具体的实现</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BinaryJedis</span> <span class="keyword">implements</span> <span class="title">BasicCommands</span>, <span class="title">BinaryJedisCommands</span>, <span class="title">MultiKeyBinaryCommands</span>,</span></span><br><span class="line"><span class="class">    <span class="title">AdvancedBinaryJedisCommands</span>, <span class="title">BinaryScriptingCommands</span>, <span class="title">Closeable</span> </span>&#123;</span><br><span class="line">  <span class="comment">// client是connection 负责网络通信和协议处理</span></span><br><span class="line">  <span class="keyword">protected</span> Client client = <span class="keyword">null</span>;</span><br><span class="line">  <span class="keyword">protected</span> Transaction transaction = <span class="keyword">null</span>;</span><br><span class="line">  <span class="comment">// pipeline是批量执行命令的入口</span></span><br><span class="line">  <span class="keyword">protected</span> Pipeline pipeline = <span class="keyword">null</span>;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// Client </span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Client</span> <span class="keyword">extends</span> <span class="title">BinaryClient</span> <span class="keyword">implements</span> <span class="title">Commands</span> </span>&#123;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// BinaryClient 保存一些鉴权相关的信息</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BinaryClient</span> <span class="keyword">extends</span> <span class="title">Connection</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">boolean</span> isInMulti;</span><br><span class="line">  <span class="keyword">private</span> String password;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">int</span> db;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">boolean</span> isInWatch;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// connection 负责网络通信和协议处理 是绝对的核心</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Connection</span> <span class="keyword">implements</span> <span class="title">Closeable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">byte</span>[][] EMPTY_ARGS = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">0</span>][];</span><br><span class="line"></span><br><span class="line">  </span><br><span class="line">  <span class="keyword">private</span> String host = Protocol.DEFAULT_HOST;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">int</span> port = Protocol.DEFAULT_PORT;</span><br><span class="line">  <span class="comment">// 通信的socket</span></span><br><span class="line">  <span class="keyword">private</span> Socket socket;</span><br><span class="line">  <span class="comment">// 网络输出流 包装的socket的stream</span></span><br><span class="line">  <span class="keyword">private</span> RedisOutputStream outputStream;</span><br><span class="line">  <span class="comment">// 网络输入流 包装的socket的stream</span></span><br><span class="line">  <span class="keyword">private</span> RedisInputStream inputStream;</span><br><span class="line">  <span class="comment">// 超时配置</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">int</span> connectionTimeout = Protocol.DEFAULT_TIMEOUT;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">int</span> soTimeout = Protocol.DEFAULT_TIMEOUT;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">boolean</span> broken = <span class="keyword">false</span>;</span><br><span class="line">  <span class="comment">// ssl配置</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">boolean</span> ssl;</span><br><span class="line">  <span class="keyword">private</span> SSLSocketFactory sslSocketFactory;</span><br><span class="line">  <span class="keyword">private</span> SSLParameters sslParameters;</span><br><span class="line">  <span class="keyword">private</span> HostnameVerifier hostnameVerifier;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Jedis的构建"><a href="#Jedis的构建" class="headerlink" title="Jedis的构建"></a>Jedis的构建</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//redis.clients.jedis.Jedis#Jedis(java.lang.String, int)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">Jedis</span><span class="params">(<span class="keyword">final</span> String host, <span class="keyword">final</span> <span class="keyword">int</span> port)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">super</span>(host, port);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//redis.clients.jedis.BinaryJedis#BinaryJedis(java.lang.String, int)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">BinaryJedis</span><span class="params">(<span class="keyword">final</span> String host, <span class="keyword">final</span> <span class="keyword">int</span> port)</span> </span>&#123;</span><br><span class="line">    client = <span class="keyword">new</span> Client(host, port);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//redis.clients.jedis.Client#Client(java.lang.String, int)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">Client</span><span class="params">(<span class="keyword">final</span> String host, <span class="keyword">final</span> <span class="keyword">int</span> port)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">super</span>(host, port);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//redis.clients.jedis.BinaryClient#BinaryClient(java.lang.String, int)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">BinaryClient</span><span class="params">(<span class="keyword">final</span> String host, <span class="keyword">final</span> <span class="keyword">int</span> port)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">super</span>(host, port);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// redis.clients.jedis.Connection#Connection(java.lang.String, int)</span></span><br><span class="line"><span class="comment">// 这里是什么都没有做 jedis的网咯连接是延迟初始化的</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">Connection</span><span class="params">(<span class="keyword">final</span> String host, <span class="keyword">final</span> <span class="keyword">int</span> port)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.host = host;</span><br><span class="line">    <span class="keyword">this</span>.port = port;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Jedis普通命令的执行"><a href="#Jedis普通命令的执行" class="headerlink" title="Jedis普通命令的执行"></a>Jedis普通命令的执行</h2><p>这里以<code>set</code>命令为例，其他命令流程一致，只是协议不同</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// redis.clients.jedis.Jedis#set(java.lang.String, java.lang.String)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">set</span><span class="params">(<span class="keyword">final</span> String key, <span class="keyword">final</span> String value)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 检查是否为事务状态或者pipe模式 </span></span><br><span class="line">    <span class="comment">// 这种情况下禁止执行普通命令</span></span><br><span class="line">    <span class="comment">// 因为会导致返回值顺序错乱， 因为批量执行命令写出之后还没有读取返回值 ，如果执行普通命令，就会读到之前写出命令对应的返回值，导致解析错误，因为一个Jedis连接只有一个</span></span><br><span class="line">    checkIsInMultiOrPipeline();</span><br><span class="line">    <span class="comment">// 写出命令</span></span><br><span class="line">    client.set(key, value);</span><br><span class="line">    <span class="comment">// 读取并解析返回值</span></span><br><span class="line">    <span class="keyword">return</span> client.getStatusCodeReply();</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// redis.clients.jedis.BinaryJedis#checkIsInMultiOrPipeline</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">checkIsInMultiOrPipeline</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 判断是不是处于事务模式</span></span><br><span class="line">    <span class="keyword">if</span> (client.isInMulti()) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> JedisDataException(</span><br><span class="line">            <span class="string">"Cannot use Jedis when in Multi. Please use Transaction or reset jedis state."</span>);</span><br><span class="line">            <span class="comment">// 判断是部署处于pipeline模式 并且还有未读的返回值</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (pipeline != <span class="keyword">null</span> &amp;&amp; pipeline.hasPipelinedResponse()) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> JedisDataException(</span><br><span class="line">            <span class="string">"Cannot use Jedis when in Pipeline. Please use Pipeline or reset jedis state ."</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//redis.clients.jedis.Client#set(java.lang.String, java.lang.String)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">set</span><span class="params">(<span class="keyword">final</span> String key, <span class="keyword">final</span> String value)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 编码为bytes</span></span><br><span class="line">    set(SafeEncoder.encode(key), SafeEncoder.encode(value));</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//redis.clients.jedis.BinaryClient#set(byte[], byte[])</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">set</span><span class="params">(<span class="keyword">final</span> <span class="keyword">byte</span>[] key, <span class="keyword">final</span> <span class="keyword">byte</span>[] value)</span> </span>&#123;</span><br><span class="line">    sendCommand(SET, key, value);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//redis.clients.jedis.Connection#sendCommand(redis.clients.jedis.commands.ProtocolCommand, byte[]...)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sendCommand</span><span class="params">(<span class="keyword">final</span> ProtocolCommand cmd, <span class="keyword">final</span> <span class="keyword">byte</span>[]... args)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="comment">// 先尝试连接</span></span><br><span class="line">      connect();</span><br><span class="line">      <span class="comment">// 发送命令</span></span><br><span class="line">      Protocol.sendCommand(outputStream, cmd, args);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (JedisConnectionException ex) &#123;</span><br><span class="line">      <span class="comment">//...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// redis.clients.jedis.Connection#connect</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">connect</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 先判断是否已经连接了</span></span><br><span class="line">    <span class="keyword">if</span> (!isConnected()) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 创建scoket 并且设置一些网络参数</span></span><br><span class="line">            socket = <span class="keyword">new</span> Socket();</span><br><span class="line">            socket.setReuseAddress(<span class="keyword">true</span>);</span><br><span class="line">            <span class="comment">// 保持连接</span></span><br><span class="line">            socket.setKeepAlive(<span class="keyword">true</span>); </span><br><span class="line">            <span class="comment">// 禁用Nagle 立即发送</span></span><br><span class="line">            socket.setTcpNoDelay(<span class="keyword">true</span>); </span><br><span class="line">            <span class="comment">// close() 立即发送RST</span></span><br><span class="line">            socket.setSoLinger(<span class="keyword">true</span>, <span class="number">0</span>); </span><br><span class="line">            socket.connect(<span class="keyword">new</span> InetSocketAddress(host, port), connectionTimeout);</span><br><span class="line">            <span class="comment">// 读超时</span></span><br><span class="line">            socket.setSoTimeout(soTimeout);</span><br><span class="line"></span><br><span class="line">            </span><br><span class="line">            <span class="comment">//省略 ssl</span></span><br><span class="line">            <span class="comment">//...</span></span><br><span class="line"></span><br><span class="line">            <span class="comment">// 包装输入和输出流 Redis对底层流包装加了buffer 大小是8192b</span></span><br><span class="line">            <span class="comment">// 所以写入的命令大多数情况下都不会直接发送出去 普通命令发送完之后都会主动调用flush</span></span><br><span class="line">            outputStream = <span class="keyword">new</span> RedisOutputStream(socket.getOutputStream());</span><br><span class="line">            inputStream = <span class="keyword">new</span> RedisInputStream(socket.getInputStream());</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException ex) &#123;</span><br><span class="line">            broken = <span class="keyword">true</span>;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> JedisConnectionException(<span class="string">"Failed connecting to host "</span> </span><br><span class="line">                + host + <span class="string">":"</span> + port, ex);</span><br><span class="line">            &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//redis.clients.jedis.Protocol#sendCommand(redis.clients.jedis.util.RedisOutputStream, redis.clients.jedis.commands.ProtocolCommand, byte[]...)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">sendCommand</span><span class="params">(<span class="keyword">final</span> RedisOutputStream os, <span class="keyword">final</span> ProtocolCommand command,</span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">final</span> <span class="keyword">byte</span>[]... args)</span> </span>&#123;</span><br><span class="line">    sendCommand(os, command.getRaw(), args);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//redis.clients.jedis.Protocol#sendCommand(redis.clients.jedis.util.RedisOutputStream, byte[], byte[]...)</span></span><br><span class="line"><span class="comment">// 这里就是对redis协议实现 </span></span><br><span class="line"><span class="comment">// redis的协议文本协议</span></span><br><span class="line"><span class="comment">// 将所有数据写入buffer中</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">sendCommand</span><span class="params">(<span class="keyword">final</span> RedisOutputStream os, <span class="keyword">final</span> <span class="keyword">byte</span>[] command,</span></span></span><br><span class="line"><span class="function"><span class="params">      <span class="keyword">final</span> <span class="keyword">byte</span>[]... args)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        os.write(ASTERISK_BYTE); </span><br><span class="line">        os.writeIntCrLf(args.length + <span class="number">1</span>);</span><br><span class="line">        os.write(DOLLAR_BYTE);</span><br><span class="line">        os.writeIntCrLf(command.length);</span><br><span class="line">        os.write(command);</span><br><span class="line">        os.writeCrLf();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">final</span> <span class="keyword">byte</span>[] arg : args) &#123;</span><br><span class="line">            os.write(DOLLAR_BYTE);</span><br><span class="line">            os.writeIntCrLf(arg.length);</span><br><span class="line">            os.write(arg);</span><br><span class="line">            os.writeCrLf();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> JedisConnectionException(e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//redis.clients.jedis.Connection#getStatusCodeReply</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">getStatusCodeReply</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 将buffer的数据刷到缓冲区中</span></span><br><span class="line">    flush();</span><br><span class="line">    <span class="comment">// 这里解析redis返回协议 同样是文本协议 </span></span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">byte</span>[] resp = (<span class="keyword">byte</span>[]) readProtocolWithCheckingBroken();</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">null</span> == resp) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 将返回数据编码成String</span></span><br><span class="line">      <span class="keyword">return</span> SafeEncoder.encode(resp);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// redis.clients.jedis.util.RedisOutputStream#flush</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">flush</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    <span class="comment">// 刷新缓冲区</span></span><br><span class="line">    flushBuffer();</span><br><span class="line">    <span class="comment">// 刷新底层的流</span></span><br><span class="line">    out.flush();</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//redis.clients.jedis.util.RedisOutputStream#flushBuffer</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">flushBuffer</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    <span class="comment">// 如果有未刷新的数据</span></span><br><span class="line">    <span class="keyword">if</span> (count &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// 写入底层的输出流中</span></span><br><span class="line">      out.write(buf, <span class="number">0</span>, count);</span><br><span class="line">      count = <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Jedis的pipeline"><a href="#Jedis的pipeline" class="headerlink" title="Jedis的pipeline"></a>Jedis的pipeline</h2><p>pipeline是Jedis批量执行命令的一种方式，将一批命令发到服务端批量执行，降低多次执行的网络延时</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//redis.clients.jedis.BinaryJedis#pipelined</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Pipeline <span class="title">pipelined</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 一个jedis关联一个pipeline</span></span><br><span class="line">    pipeline = <span class="keyword">new</span> Pipeline();</span><br><span class="line">    <span class="comment">// pipeline和普通命令共享一个连接</span></span><br><span class="line">    pipeline.setClient(client);</span><br><span class="line">    <span class="keyword">return</span> pipeline;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 以pipeline执行set为例</span></span><br><span class="line"><span class="comment">//redis.clients.jedis.PipelineBase#set(java.lang.String, java.lang.String)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Response&lt;String&gt; <span class="title">set</span><span class="params">(<span class="keyword">final</span> String key, <span class="keyword">final</span> String value)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 这一步和普通命令一样 将命令写入到缓冲区 没有flush</span></span><br><span class="line">    getClient(key).set(key, value);</span><br><span class="line">    <span class="comment">// 添加一个节点到等待响应队列 并不是真正的获取响应</span></span><br><span class="line">    <span class="keyword">return</span> getResponse(BuilderFactory.STRING);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//redis.clients.jedis.Queable#getResponse</span></span><br><span class="line"><span class="keyword">protected</span> &lt;T&gt; <span class="function">Response&lt;T&gt; <span class="title">getResponse</span><span class="params">(Builder&lt;T&gt; builder)</span> </span>&#123;</span><br><span class="line">    Response&lt;T&gt; lr = <span class="keyword">new</span> Response&lt;T&gt;(builder);</span><br><span class="line">    <span class="comment">// 添加一个节点到等待响应队列</span></span><br><span class="line">    pipelinedResponses.add(lr);</span><br><span class="line">    <span class="keyword">return</span> lr;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 执行N多命令后 N多命令都已经写入了buffer 没有flush</span></span><br><span class="line"><span class="comment">// flush并且批量读取结果</span></span><br><span class="line"><span class="comment">// redis.clients.jedis.Pipeline#syncAndReturnAll</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> List&lt;Object&gt; <span class="title">syncAndReturnAll</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 等待响应队列不为空</span></span><br><span class="line">    <span class="keyword">if</span> (getPipelinedResponseLength() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">     <span class="comment">// flush并且读取批量结果</span></span><br><span class="line">      List&lt;Object&gt; unformatted = client.getMany(getPipelinedResponseLength());</span><br><span class="line">      List&lt;Object&gt; formatted = <span class="keyword">new</span> ArrayList&lt;Object&gt;();</span><br><span class="line">      <span class="keyword">for</span> (Object o : unformatted) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">          formatted.add(generateResponse(o).get());</span><br><span class="line">        &#125; <span class="keyword">catch</span> (JedisDataException e) &#123;</span><br><span class="line">          formatted.add(e);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">return</span> formatted;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> java.util.Collections.&lt;Object&gt; emptyList();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//redis.clients.jedis.Connection#getMany</span></span><br><span class="line"> <span class="function"><span class="keyword">public</span> List&lt;Object&gt; <span class="title">getMany</span><span class="params">(<span class="keyword">final</span> <span class="keyword">int</span> count)</span> </span>&#123;</span><br><span class="line">     <span class="comment">// flush</span></span><br><span class="line">    flush();</span><br><span class="line">    <span class="keyword">final</span> List&lt;Object&gt; responses = <span class="keyword">new</span> ArrayList&lt;Object&gt;(count);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; i++) &#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">          <span class="comment">// 逐个读取结果</span></span><br><span class="line">        responses.add(readProtocolWithCheckingBroken());</span><br><span class="line">      &#125; <span class="keyword">catch</span> (JedisDataException e) &#123;</span><br><span class="line">        responses.add(e);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> responses;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="JedisPool"><a href="#JedisPool" class="headerlink" title="JedisPool"></a>JedisPool</h2><p>JedisPool就是一个Jedis的连接池，底层是靠<code>Apache Commons Pool</code>实现的</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//redis.clients.jedis.JedisPool#JedisPool(org.apache.commons.pool2.impl.GenericObjectPoolConfig, java.lang.String, int, int, int, java.lang.String, int, java.lang.String)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">JedisPool</span><span class="params">(<span class="keyword">final</span> GenericObjectPoolConfig poolConfig, <span class="keyword">final</span> String host, <span class="keyword">int</span> port,</span></span></span><br><span class="line"><span class="function"><span class="params">      <span class="keyword">final</span> <span class="keyword">int</span> connectionTimeout, <span class="keyword">final</span> <span class="keyword">int</span> soTimeout, <span class="keyword">final</span> String password, <span class="keyword">final</span> <span class="keyword">int</span> database,</span></span></span><br><span class="line"><span class="function"><span class="params">      <span class="keyword">final</span> String clientName)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 提供一个创建Jedis的工厂 所以这里JedisPool中的连接也是延迟初始化的</span></span><br><span class="line">    <span class="keyword">super</span>(poolConfig, <span class="keyword">new</span> JedisFactory(host, port, connectionTimeout, soTimeout, password,</span><br><span class="line">        database, clientName));</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 获取一个连接</span></span><br><span class="line"><span class="comment">//redis.clients.jedis.JedisPool#getResource</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Jedis <span class="title">getResource</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 从pool中取一个</span></span><br><span class="line">    Jedis jedis = <span class="keyword">super</span>.getResource();</span><br><span class="line">    <span class="comment">// 保存所属的连接池</span></span><br><span class="line">    jedis.setDataSource(<span class="keyword">this</span>);</span><br><span class="line">    <span class="keyword">return</span> jedis;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+        <div class="declare">
+          <ul class="post-copyright">
+            <li>
+              <i class="ri-copyright-line"></i>
+              <strong>Copyright： </strong>
+              Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
+            </li>
+          </ul>
+        </div>
+        
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/pipeline/" rel="tag">pipeline</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+  
+  <nav class="article-nav">
+    
+    
+      <a href="/2020/11/20/97_%E4%BD%8E%E5%B9%B6%E5%8F%91%E5%A4%9A%E8%A7%84%E5%88%99%E9%99%90%E6%B5%81%E5%B7%A5%E5%85%B7/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">低并发多规则的限流控制实现</div>
+      </a>
+    
+  </nav>
+
+
+  
+
+  
+  
+<!-- valine评论 -->
+<div id="vcomments-box">
+    <div id="vcomments">
+    </div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        app_id: 'j7og6mDnkAIEtuTza7hQ3LNa-gzGzoHsz',
+        app_key: 'MFzzLmRJtNRHg35aF1dvI3M5',
+        path: window.location.pathname,
+        notify: 'false',
+        verify: 'false',
+        avatar: 'monsterid',
+        placeholder: '给我的文章加点评论吧~',
+        recordIP: true
+    });
+    const infoEle = document.querySelector('#vcomments .info');
+    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+        infoEle.childNodes.forEach(function (item) {
+            item.parentNode.removeChild(item);
+        });
+    }
+</script>
+<style>
+    #vcomments-box {
+        padding: 5px 30px;
+    }
+
+    @media screen and (max-width: 800px) {
+        #vcomments-box {
+            padding: 5px 0px;
+        }
+    }
+
+    #vcomments-box #vcomments {
+        background-color: #fff;
+    }
+
+    .v .vlist .vcard .vh {
+        padding-right: 20px;
+    }
+
+    .v .vlist .vcard {
+        padding-left: 10px;
+    }
+</style>
+
+  
+
+  
+  
+  
+  
+  
+
+</article>
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2019-2020
+        <i class="ri-heart-fill heart_icon"></i> 向天再借两小时
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>Visitors:<span id="busuanzi_value_site_uv"></span></s>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>Views:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+        <li>
+          <a href="javascript:void(0)" target="_black">辽ICP备20010154</a>
+        </li>
+        
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+      <div class="float_btns">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+      </div>
+    </main>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <script>
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        document.querySelector('.content').classList.remove('on');
+        document.querySelector('.sidebar').classList.remove('on');
+      }
+    </script>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+
+
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script>
+
+
+
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+
+<script type="text/javascript" src="https://js.users.51.la/20544303.js"></script>
+
+  
+<script src="/js/clickLove.js"></script>
+
+
+
+<!-- 复制 -->
+
+  
+<link rel="stylesheet" href="/css/clipboard.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+
+
+    
+    <div id="music">
+    
+    
+    
+    <iframe frameborder="no" border="1" marginwidth="0" marginheight="0" width="200" height="52"
+        src="//music.163.com/outchain/player?type=2&id=430114655&auto=0&height=32"></iframe>
+</div>
+
+<style>
+    #music {
+        position: fixed;
+        right: 15px;
+        bottom: 0;
+        z-index: 998;
+    }
+</style>
+    
+  </div>
+</body>
+
+</html>
