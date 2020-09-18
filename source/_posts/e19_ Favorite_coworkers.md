@@ -19,7 +19,6 @@ categories:
 
 - A: Yeah, that Jim is a really `team player`. `As for me`, I `get along well with` Kelly.
 
-
 - B: Kelly is really `warm and personable` , `which is why` we have her in customer service.
 
 - A: Agreed. `I'd even say` she's the most `attentive` employee at the company.
