@@ -229,6 +229,13 @@ private void delayedExecute(RunnableScheduledFuture<?> task) {
 }
 ```
 
+## FixedDelay和FixedRate的区别
+- FixedDelay后面任务的开始执行时间是前面任务执行完的时间加上period
+- FixedRate后面任务的开始执行时间是前面任务开始执行的时间加上period
+- FixedDelay后面任务的执行延迟恒等于前面任务的执行时间
+- FixedRate后面任务的执行延迟分两种情况，如果前面任务的执行时间小于等于period，那么后面任务的延迟为0，如果大于，则后面任务的延迟时间为【前面任务的执行时间-period】
+- 一般使用的都是FixedRate
+
 ## 总结
 - ScheduledThreadPoolExecutor用于处理定时任务的调度需求，比如定时拉取数据刷新本地缓存等
 - ScheduledThreadPoolExecutor是ThreadPoolExecutor的子类，自定义了内部的任务队列为优先级阻塞队列，以此来实现任务的定时拉取
