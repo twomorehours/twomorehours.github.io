@@ -21,4 +21,4 @@ categories:
 
 - B: Well, I'm spending a lot of time on `low-level tasks`, which is `keeping me from the more impactful things`. I feel like I can `add more value to` the company, if `those tasks were done by someone more junior`.
 
-- A: Yeah, I `find living here more convininet` that `back` in the West.
+- A: Yeah, I `find living here more convininet` than `back` in the West.
