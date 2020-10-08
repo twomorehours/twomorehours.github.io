@@ -1,13 +1,13 @@
 ---
 title: A job offer
-date: 2019-02-27 23:30:39
+date: 2019-03-01 23:30:39
 categories:
 - English
 ---
 
 - A: Hi jeremy. `Have you given more thought to` the job offer?
 
-- B: Absolutely. It's a very `generous` offer, but `I do have some questions and cocerns`.
+- B: Absolutely. It's a very `generous` offer, but `I do have some quest ions and cocerns`.
   
 - A: Okay, `what in particular`? Is it the `annual leave`?
 
