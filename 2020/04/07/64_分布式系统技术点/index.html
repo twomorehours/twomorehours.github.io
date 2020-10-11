@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">583</span>
+            <span class="post-count">907</span>
         </span>
     </span>
 
@@ -84,7 +84,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">2 min</span>
+            <span class="post-count">3 min</span>
         </span>
     </span>
 </div>
@@ -259,6 +259,45 @@
 </li>
 <li>调用链<ul>
 <li>查找问题方便</li>
+</ul>
+</li>
+</ul>
+<h2 id="一致性"><a href="#一致性" class="headerlink" title="一致性"></a>一致性</h2><ul>
+<li><p>CAP</p>
+<ul>
+<li>P<ul>
+<li>分区容错性</li>
+<li>必须保证，因为任何分布式系统都可能出现网络不通的情况</li>
+</ul>
+</li>
+<li>C<ul>
+<li>一致性</li>
+<li>想要保证一致性，就要等写操作同步完成之后才能拉取，没同步到不能拉取（网络延迟或者分区），这时就会导致不可用</li>
+</ul>
+</li>
+<li>A<ul>
+<li>可用性</li>
+<li>想要保证可用性，就是任何时候都能拉取，这个时候就可能会拉到未同步的旧数据，就会影响一致性</li>
+</ul>
+</li>
+<li>实践<ul>
+<li>注册中心使用AP，因为不用保证各个节点拉到的完全一致</li>
+<li>配置中心使用CP，各个节点拉到的配置不一致，可能会发生业务错误</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>保证一致性的方式</p>
+<ul>
+<li>写<ul>
+<li>永远都是写主，日志向从单向复制，写入超过半数可提交，因为过了半数之后，再次选举的时候，没有数据的是少数，不能被选为住，数据不会丢失</li>
+</ul>
+</li>
+<li>读：<ul>
+<li>只读主： 读到的永远都是最新的数据，但是会导致主压力大</li>
+<li>读主读从：先和主对比logindex，如果是最新的，直接返回数据，如果不是最新的，将请求转发到主，这样会减轻主的读压力</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
