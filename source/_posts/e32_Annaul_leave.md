@@ -21,7 +21,7 @@ categories:
 
 - B: `Will he be able to` `handle this extra workload`?
 
-- A: `I have complete faith in him`. `Besides`, `he's been looking for opportunites to` `step up` `here at` the office.
+- A: `I have complete faith in him`. `Besides`, `he's been looking for opportunites to` `step up` `here at` the office. 
 
 - B: Well, `I'd really like to` `accommodate you`, Mark. `Maybe there is some way` `we can meet in the mddile`?
 
