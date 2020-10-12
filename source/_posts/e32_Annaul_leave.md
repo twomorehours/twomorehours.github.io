@@ -9,7 +9,7 @@ categories:
 
 - B: Sure Mark. `What's up`?
   
-- A: `I was wondering if I could` `take esome time off` `at the end of` next month.
+- A: `I was wondering if I could` `take some time off` `at the end of` next month.
 
 - B: `How much time are we talking about here`?
 
