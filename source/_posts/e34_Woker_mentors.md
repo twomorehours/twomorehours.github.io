@@ -21,4 +21,4 @@ categories:
 
 - B: Absolutely. `She's helped me be` more productive and `resilient` `in my career`.
 
-- A: `Sounds like` `they're a wealth of knowledge`!
+- A: `Sounds like` `they do have a wealth of knowledge`!
