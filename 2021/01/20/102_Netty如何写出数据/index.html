@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+
+
+<html lang="chinese">
+
+
+<head>
+  <meta charset="utf-8" />
+    
+  <meta name="description" content="two more hours company" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+    netty如何写出数据 |  向天再借两小时
+  </title>
+  <meta name="generator" content="hexo-theme-yilia-plus">
+  
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
+  
+<link rel="stylesheet" href="/dist/main.css">
+
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/css/remixicon.min.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+  
+<script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+
+  
+  
+
+  
+
+</head>
+
+</html>
+
+<body>
+  <div id="app">
+    <main class="content on">
+      <section class="outer">
+  <article id="post-102_Netty如何写出数据" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  netty如何写出数据
+</h1>
+ 
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2021/01/20/102_Netty%E5%A6%82%E4%BD%95%E5%86%99%E5%87%BA%E6%95%B0%E6%8D%AE/" class="article-date">
+  <time datetime="2021-01-20T23:30:39.000Z" itemprop="datePublished">2021-01-20</time>
+</a>
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Netty/">Netty</a>
+  </div>
+
+      
+      
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">1.3k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">6 min</span>
+        </span>
+    </span>
+</div>
+
+      
+    </div>
+    
+
+    
+    
+    <div class="tocbot"></div>
+
+
+
+
+
+    
+
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+
+      
+      <h2 id="业务上执行writeAndFlush"><a href="#业务上执行writeAndFlush" class="headerlink" title="业务上执行writeAndFlush"></a>业务上执行writeAndFlush</h2><p>一条出站数据的从业务调用writeAndFlush写入一个对象开始</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//io.netty.channel.AbstractChannel#writeAndFlush(java.lang.Object)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> ChannelFuture <span class="title">writeAndFlush</span><span class="params">(Object msg)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 将数据交给pipeline</span></span><br><span class="line">    <span class="keyword">return</span> pipeline.writeAndFlush(msg);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//io.netty.channel.DefaultChannelPipeline#writeAndFlush(java.lang.Object)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> ChannelFuture <span class="title">writeAndFlush</span><span class="params">(Object msg)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 出站数据从尾部开始传播</span></span><br><span class="line">    <span class="keyword">return</span> tail.writeAndFlush(msg);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//io.netty.channel.AbstractChannelHandlerContext#writeAndFlush(java.lang.Object)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> ChannelFuture <span class="title">writeAndFlush</span><span class="params">(Object msg)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> writeAndFlush(msg, newPromise());</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//io.netty.channel.AbstractChannelHandlerContext#writeAndFlush(java.lang.Object, io.netty.channel.ChannelPromise)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> ChannelFuture <span class="title">writeAndFlush</span><span class="params">(Object msg, ChannelPromise promise)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 标记为flush</span></span><br><span class="line">    write(msg, <span class="keyword">true</span>, promise);</span><br><span class="line">    <span class="keyword">return</span> promise;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//io.netty.channel.AbstractChannelHandlerContext#write(java.lang.Object, boolean, io.netty.channel.ChannelPromise)</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">write</span><span class="params">(Object msg, <span class="keyword">boolean</span> flush, ChannelPromise promise)</span> </span>&#123;</span><br><span class="line">        <span class="comment">//...</span></span><br><span class="line">        <span class="comment">// 找到第一个出站handler</span></span><br><span class="line">        <span class="keyword">final</span> AbstractChannelHandlerContext next = findContextOutbound(flush ?</span><br><span class="line">                (MASK_WRITE | MASK_FLUSH) : MASK_WRITE);</span><br><span class="line">        <span class="keyword">final</span> Object m = pipeline.touch(msg, next);</span><br><span class="line">        <span class="comment">// 判断是不是在eventloop中 如果是就直接执行 如果不是就是封装成一个任务交给eventloop</span></span><br><span class="line">        <span class="comment">// 这样做的目的是 所有读写操作都要交给eventloop 保证线程安全</span></span><br><span class="line">        EventExecutor executor = next.executor();</span><br><span class="line">        <span class="keyword">if</span> (executor.inEventLoop()) &#123;</span><br><span class="line">            <span class="keyword">if</span> (flush) &#123;</span><br><span class="line">                next.invokeWriteAndFlush(m, promise);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                next.invokeWrite(m, promise);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 如果是业务线程池调用write就走这里</span></span><br><span class="line">            <span class="comment">// 封装后的task 执行的和上面的逻辑一样 也是找下一个出站handler调用</span></span><br><span class="line">            <span class="keyword">final</span> WriteTask task = WriteTask.newInstance(next, m, promise, flush);</span><br><span class="line">           <span class="comment">//...</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="出站编码器"><a href="#出站编码器" class="headerlink" title="出站编码器"></a>出站编码器</h2><p>绝大多数情况都会有一个自定义的编码器，将数据编码成和接收方约定的格式的字节流，方便接收方进行解码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 编码器的顶级抽象 自定义编码器要继承这个编码器</span></span><br><span class="line"><span class="comment">//io.netty.handler.codec.MessageToByteEncoder#write</span></span><br><span class="line"> <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">write</span><span class="params">(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">    ByteBuf buf = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 过滤处理类型 默认只处理注解上标记的类型</span></span><br><span class="line">        <span class="keyword">if</span> (acceptOutboundMessage(msg)) &#123;</span><br><span class="line">            <span class="meta">@SuppressWarnings</span>(<span class="string">"unchecked"</span>)</span><br><span class="line">            <span class="comment">// 转换成标记的类型</span></span><br><span class="line">            I cast = (I) msg;</span><br><span class="line">            <span class="comment">// 分配内存空间</span></span><br><span class="line">            buf = allocateBuffer(ctx, cast, preferDirect);</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// 调用子类进行编码</span></span><br><span class="line">                <span class="comment">// 子类编码这里就是自定义的了</span></span><br><span class="line">                <span class="comment">// 只要你保证解码器能解析出来就可以</span></span><br><span class="line">                <span class="comment">// 比如 |4 bytes length| data| 这种就可以用长度域解码器进行解码</span></span><br><span class="line">                encode(ctx, cast, buf);</span><br><span class="line">            &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                <span class="comment">// 编码完成后释放掉原始对象(如果原始对象是bytebuf，就回收对象及内存)</span></span><br><span class="line">                ReferenceCountUtil.release(cast);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (buf.isReadable()) &#123;</span><br><span class="line">                <span class="comment">// 如果有数据流</span></span><br><span class="line">                <span class="comment">// 继续写出</span></span><br><span class="line">                ctx.write(buf, promise);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                buf.release();</span><br><span class="line">                ctx.write(Unpooled.EMPTY_BUFFER, promise);</span><br><span class="line">            &#125;</span><br><span class="line">            buf = <span class="keyword">null</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            ctx.write(msg, promise);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (EncoderException e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> e;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> EncoderException(e);</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (buf != <span class="keyword">null</span>) &#123;</span><br><span class="line">            buf.release();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="写到Head节点"><a href="#写到Head节点" class="headerlink" title="写到Head节点"></a>写到Head节点</h2><p>任何出站数据最后都会被写到Head节点，然后被写入java channel中</p>
+<ul>
+<li>write<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//io.netty.channel.DefaultChannelPipeline.HeadContext#write</span></span><br><span class="line"> <span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">write</span><span class="params">(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 调用channel内部的unsafe完成</span></span><br><span class="line">    unsafe.write(msg, promise);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//io.netty.channel.AbstractChannel.AbstractUnsafe#write</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">write</span><span class="params">(Object msg, ChannelPromise promise)</span> </span>&#123;</span><br><span class="line">    assertEventLoop();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 写到缓冲队列中 不直接写到socket</span></span><br><span class="line">    ChannelOutboundBuffer outboundBuffer = <span class="keyword">this</span>.outboundBuffer;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">    outboundBuffer.addMessage(msg, size, promise);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//io.netty.channel.ChannelOutboundBuffer#addMessage</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addMessage</span><span class="params">(Object msg, <span class="keyword">int</span> size, ChannelPromise promise)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 生成一个新节点 然后一波指针操作 写到未flush队列中</span></span><br><span class="line">    Entry entry = Entry.newInstance(msg, size, total(msg), promise);</span><br><span class="line">    <span class="keyword">if</span> (tailEntry == <span class="keyword">null</span>) &#123;</span><br><span class="line">        flushedEntry = <span class="keyword">null</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        Entry tail = tailEntry;</span><br><span class="line">        tail.next = entry;</span><br><span class="line">    &#125;</span><br><span class="line">    tailEntry = entry;</span><br><span class="line">    <span class="keyword">if</span> (unflushedEntry == <span class="keyword">null</span>) &#123;</span><br><span class="line">        unflushedEntry = entry;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 记录未刷新的数据有多少</span></span><br><span class="line">    <span class="comment">// increment pending bytes after adding message to the unflushed arrays.</span></span><br><span class="line">    <span class="comment">// See https://github.com/netty/netty/issues/1619</span></span><br><span class="line">    incrementPendingOutboundBytes(entry.pendingSize, <span class="keyword">false</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//io.netty.channel.ChannelOutboundBuffer#incrementPendingOutboundBytes(long, boolean)</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">incrementPendingOutboundBytes</span><span class="params">(<span class="keyword">long</span> size, <span class="keyword">boolean</span> invokeLater)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (size == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 如果写缓冲的队列长度超过64K 就标记为不可写</span></span><br><span class="line">    <span class="keyword">long</span> newWriteBufferSize = TOTAL_PENDING_SIZE_UPDATER.addAndGet(<span class="keyword">this</span>, size);</span><br><span class="line">    <span class="keyword">if</span> (newWriteBufferSize &gt; channel.config().getWriteBufferHighWaterMark()) &#123;</span><br><span class="line">        <span class="comment">// 标记为channel不可写 并且传播一个事件</span></span><br><span class="line">        setUnwritable(invokeLater);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>flush<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//io.netty.channel.AbstractChannel.AbstractUnsafe#flush</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">flush</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    assertEventLoop();</span><br><span class="line"></span><br><span class="line">    ChannelOutboundBuffer outboundBuffer = <span class="keyword">this</span>.outboundBuffer;</span><br><span class="line">    <span class="keyword">if</span> (outboundBuffer == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 把写入缓冲的数据 刷到待flush队列中 并且将写缓冲字节数减少</span></span><br><span class="line">    <span class="comment">// 如果降低到32K以下 就标记为可写</span></span><br><span class="line">    outboundBuffer.addFlush();</span><br><span class="line">    <span class="comment">// 刷新到java channel</span></span><br><span class="line">    flush0();</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//io.netty.channel.AbstractChannel.AbstractUnsafe#flush0</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">flush0</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (inFlush0) &#123;</span><br><span class="line">        <span class="comment">// Avoid re-entrance</span></span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> ChannelOutboundBuffer outboundBuffer = <span class="keyword">this</span>.outboundBuffer;</span><br><span class="line">    <span class="keyword">if</span> (outboundBuffer == <span class="keyword">null</span> || outboundBuffer.isEmpty()) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    inFlush0 = <span class="keyword">true</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 调用写入</span></span><br><span class="line">        doWrite(outboundBuffer);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">       <span class="comment">//...</span></span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        inFlush0 = <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// io.netty.channel.nio.AbstractNioByteChannel#doWrite</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doWrite</span><span class="params">(ChannelOutboundBuffer in)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">    <span class="comment">// 最多连续写64次</span></span><br><span class="line">    <span class="keyword">int</span> writeSpinCount = config().getWriteSpinCount();</span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">        <span class="comment">// 取出第一个待flush数据</span></span><br><span class="line">        Object msg = in.current();</span><br><span class="line">        <span class="keyword">if</span> (msg == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// Wrote all messages.</span></span><br><span class="line">            clearOpWrite();</span><br><span class="line">            <span class="comment">// Directly return here so incompleteWrite(...) is not called.</span></span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 写入</span></span><br><span class="line">        writeSpinCount -= doWriteInternal(in, msg);</span><br><span class="line">    &#125; <span class="keyword">while</span> (writeSpinCount &gt; <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    incompleteWrite(writeSpinCount &lt; <span class="number">0</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//io.netty.channel.nio.AbstractNioByteChannel#doWriteInternal</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">doWriteInternal</span><span class="params">(ChannelOutboundBuffer in, Object msg)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (msg <span class="keyword">instanceof</span> ByteBuf) &#123;</span><br><span class="line">        ByteBuf buf = (ByteBuf) msg;</span><br><span class="line">        <span class="keyword">if</span> (!buf.isReadable()) &#123;</span><br><span class="line">            in.remove();</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">final</span> <span class="keyword">int</span> localFlushedAmount = doWriteBytes(buf);</span><br><span class="line">        <span class="keyword">if</span> (localFlushedAmount &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            in.progress(localFlushedAmount);</span><br><span class="line">            <span class="keyword">if</span> (!buf.isReadable()) &#123;</span><br><span class="line">                <span class="comment">// 如果写成功了 就把刚才写入的数据移除flush队列</span></span><br><span class="line">                in.remove();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">    <span class="keyword">return</span> WRITE_STATUS_SNDBUF_FULL;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//io.netty.channel.socket.nio.NioSocketChannel#doWriteBytes</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">int</span> <span class="title">doWriteBytes</span><span class="params">(ByteBuf buf)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">int</span> expectedWrittenBytes = buf.readableBytes();</span><br><span class="line">    <span class="comment">// 写到java channel中</span></span><br><span class="line">    <span class="comment">// bytebuf 会将自己数据读到java channel中</span></span><br><span class="line">    <span class="keyword">return</span> buf.readBytes(javaChannel(), expectedWrittenBytes);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li>一条出站数据的从业务调用writeAndFlush写入一个对象开始， 并从tail开始传播，一定是在eventloop中执行</li>
+<li>绝大多数情况都会有一个自定义的编码器，将数据编码成和接收方约定的格式的字节流，方便接收方进行解码</li>
+<li>任何出站数据最后都会被写到Head节点，首先写到write队列中，然后被迁移到flush队列中，最终写到jav channel中</li>
+</ul>
+
+      
+      <!-- reward -->
+      
+    </div>
+    
+    
+      <!-- copyright -->
+      
+        <div class="declare">
+          <ul class="post-copyright">
+            <li>
+              <i class="ri-copyright-line"></i>
+              <strong>Copyright： </strong>
+              Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
+            </li>
+          </ul>
+        </div>
+        
+    <footer class="article-footer">
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/flush/" rel="tag">flush</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%86%99%E7%BC%93%E5%86%B2/" rel="tag">写缓冲</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%BC%96%E8%A7%A3%E7%A0%81/" rel="tag">编解码</a></li></ul>
+
+
+    </footer>
+
+  </div>
+
+  
+  
+  <nav class="article-nav">
+    
+    
+      <a href="/2021/01/10/101_Netty%E8%87%AA%E5%B8%A6%E7%9A%84%E8%A7%A3%E7%A0%81%E5%99%A8/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">netty自带的解码器</div>
+      </a>
+    
+  </nav>
+
+
+  
+
+  
+  
+<!-- valine评论 -->
+<div id="vcomments-box">
+    <div id="vcomments">
+    </div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        app_id: 'j7og6mDnkAIEtuTza7hQ3LNa-gzGzoHsz',
+        app_key: 'MFzzLmRJtNRHg35aF1dvI3M5',
+        path: window.location.pathname,
+        notify: 'false',
+        verify: 'false',
+        avatar: 'monsterid',
+        placeholder: '给我的文章加点评论吧~',
+        recordIP: true
+    });
+    const infoEle = document.querySelector('#vcomments .info');
+    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+        infoEle.childNodes.forEach(function (item) {
+            item.parentNode.removeChild(item);
+        });
+    }
+</script>
+<style>
+    #vcomments-box {
+        padding: 5px 30px;
+    }
+
+    @media screen and (max-width: 800px) {
+        #vcomments-box {
+            padding: 5px 0px;
+        }
+    }
+
+    #vcomments-box #vcomments {
+        background-color: #fff;
+    }
+
+    .v .vlist .vcard .vh {
+        padding-right: 20px;
+    }
+
+    .v .vlist .vcard {
+        padding-left: 10px;
+    }
+</style>
+
+  
+
+  
+  
+  
+  
+  
+
+</article>
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2019-2020
+        <i class="ri-heart-fill heart_icon"></i> 向天再借两小时
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>Visitors:<span id="busuanzi_value_site_uv"></span></s>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>Views:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+        <li>
+          <a href="javascript:void(0)" target="_black">辽ICP备20010154</a>
+        </li>
+        
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+      <div class="float_btns">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+      </div>
+    </main>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <script>
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        document.querySelector('.content').classList.remove('on');
+        document.querySelector('.sidebar').classList.remove('on');
+      }
+    </script>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+
+
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script>
+
+
+
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+
+<script type="text/javascript" src="https://js.users.51.la/20544303.js"></script>
+
+  
+<script src="/js/clickLove.js"></script>
+
+
+
+<!-- 复制 -->
+
+  
+<link rel="stylesheet" href="/css/clipboard.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+
+
+    
+    <div id="music">
+    
+    
+    
+    <iframe frameborder="no" border="1" marginwidth="0" marginheight="0" width="200" height="52"
+        src="//music.163.com/outchain/player?type=2&id=430114655&auto=0&height=32"></iframe>
+</div>
+
+<style>
+    #music {
+        position: fixed;
+        right: 15px;
+        bottom: 0;
+        z-index: 998;
+    }
+</style>
+    
+  </div>
+</body>
+
+</html>
