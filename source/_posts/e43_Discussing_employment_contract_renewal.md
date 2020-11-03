@@ -1,26 +1,28 @@
 ---
-title: How to give a job interview Part II
-date: 2019-03-21 23:30:39
+title: Discussing employment contract renewal
+date: 2019-03-23 23:30:39
 categories:
 - English
 ---
 
-- A: Hi,Grace.`How's the interview prep coming along`?
+- A: Sean, we'd like to `renew your contract` for another year `with a 3% raise`.
 
-- B: Well, all right, but `I'm not quite sure` how to `phrase` the these interview questions?
+- B: `To be perfectly honest`, I believe `I'm worth much more than that`.
 
-- A: Well, first of all, you want them to `keep them open-ended` to give the interviewees a chance to `elaborate`.
+- A: `Could you be more specific`?
 
-- B: Ok, so avoid those `yes or no questions`.
+- B: As you may know, I've `taken on many additional responsibilities`, and have consistently `demonstrated results`.
 
-- A: Exactly. `One way is to` `ask for specific examples` of when they solved a problem or `took the initiative`.
+- A: `You certainly have`.
 
-- B: All right, `sounds easy enough`. Should I ask a few `situational questions` too?
+- B: And `on that note`, I should tell you I have receive some very generous offers from a few firms.
 
-- A: Sure. You can always `start by` saying "`How would you response if ..`" and `continue from there`.
+- A: How generous `are we talking about here`?
 
-- B: Ok, but `what should I do` if the interviewee doesn't answer the question directly.
+- B: They are offering `a better incentive structure` and `a wider range of perms`.
 
-- A: Well, you can always ask them to `expand` , or you can `rephrase` that questions later.
+- A: Frankly, `I'm not sure` how flexible we can be `in terms of the compensation`.
 
-- B: Ok, got it. `Thanks for all the great tips`.
+- B: Well, I'm `inclined to` go where `my impact is reflected in my salary`.
+
+- A: Okay, `I'll see what can be done.`
