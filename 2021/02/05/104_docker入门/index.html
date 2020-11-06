@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">482</span>
+            <span class="post-count">629</span>
         </span>
     </span>
 
@@ -84,7 +84,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">1 min</span>
+            <span class="post-count">2 min</span>
         </span>
     </span>
 </div>
@@ -144,8 +144,8 @@
 <li>分层保存，联合挂载，实现镜像的复用</li>
 <li>镜像结构<ul>
 <li>只读层：依赖的基础镜像</li>
-<li>可读写层： 存储镜像增量信息</li>
-<li>init层：用来存放/etc/*</li>
+<li>可读写层： 存储镜像增量信息（运行容器的时候才会挂载）</li>
+<li>init层：用来存放/etc/*（运行容器的时候才会挂载）</li>
 </ul>
 </li>
 </ul>
@@ -158,7 +158,7 @@
 </ul>
 </li>
 </ul>
-<h2 id="Dockerfile"><a href="#Dockerfile" class="headerlink" title="Dockerfile"></a>Dockerfile</h2><p>构建一个镜像的文本文件，制定了构建镜像所需的各种指令,比如 FROM COPY RUN ENV CMD ,一个指令就是一层 没有复用价值的相关命令用 &amp;&amp; 连接，让其保持在一层</p>
+<h2 id="Dockerfile"><a href="#Dockerfile" class="headerlink" title="Dockerfile"></a>Dockerfile</h2><p>构建一个新镜像实质上就是在基础镜像的基础上启动一个容器，也就是增加一个读写层，然后执行一些逻辑，最后commit这个容器，也就是保存这个读写层，生成一个新的镜像<br>Dockerfile中保存了生成新镜像的各种指令，在使用docker build的时候，docker会自动的启动一些临时容器去执行这些指令，然后自动commit保存，然后删除这个临时容器，一个指令（RUN ENV WORKDIR 等）就是一个层，也就是会启动一个临时容器，所以使用<code>&amp;&amp;</code>尽量让指令放在一个临时容器中执行,可以有效的减少构建时间</p>
 <h2 id="docker仓库"><a href="#docker仓库" class="headerlink" title="docker仓库"></a>docker仓库</h2><ul>
 <li><p>docker hub</p>
 </li>
