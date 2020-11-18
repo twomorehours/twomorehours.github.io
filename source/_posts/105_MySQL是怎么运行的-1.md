@@ -70,4 +70,18 @@ mysql> show status like 'thread%';
 | Threads_running   | 2     |
 +-------------------+-------+
 ```
+
+## Mysql的字符集
+- 服务端字符集
+  - server
+    - 使用utf8mb4
+  - database
+    - 使用utf8mb4
+  - table
+    - 不指定默认使用database字符集，不建议指定
+  - column
+    - 不指定默认使用column字符集，不建议指定
+- 客户端字符集
+  - session
+建议将server、database默认字符集配置文件中设置为utf8mb4, 客户端连接时也指定为utf8mb4,防止乱码
     
