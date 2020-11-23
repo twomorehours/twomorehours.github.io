@@ -1,5 +1,5 @@
 ---
-title: MySQL是怎么运行的学习笔记-入门
+title: MySQL基本概念
 date: 2020-03-11 23:30:39
 categories:
 - MySQL
