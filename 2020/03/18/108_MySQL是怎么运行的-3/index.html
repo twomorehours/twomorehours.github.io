@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">444</span>
+            <span class="post-count">1k</span>
         </span>
     </span>
 
@@ -84,7 +84,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">1 min</span>
+            <span class="post-count">3 min</span>
         </span>
     </span>
 </div>
@@ -136,6 +136,28 @@
 <li>联合索引是一种特殊的二级索引，是由多个字段组合而成的索引，生成一个B+树，排序优先级由钱到后依次降低，使用联合索引时要满足左前缀原则，当前缀不相同时会定位到不同的数据范围，不同的数据范围内的后面的索引也不一定是有序的</li>
 </ul>
 </li>
+</ul>
+<h2 id="索引的损耗"><a href="#索引的损耗" class="headerlink" title="索引的损耗"></a>索引的损耗</h2><ul>
+<li>索引需要占空间</li>
+<li>增删改时需要维护索引，索引值变化时，导致索引数据移动到其他页，需要有移动成本，甚至会导致页分裂，导致更大的成本</li>
+<li>mysql在执行查询时需要先生成收集一些统计数据来执行计划，如果索引过多，对导致这段时间延长，甚至会降低查询速度</li>
+</ul>
+<h2 id="索引的作用"><a href="#索引的作用" class="headerlink" title="索引的作用"></a>索引的作用</h2><p>核心就是以空间换时间</p>
+<ul>
+<li>快速定位到想要查询的数据范围</li>
+<li>根据索引排序时，因为其本身有序，无需使用文件内排序</li>
+</ul>
+<h2 id="左前缀原则"><a href="#左前缀原则" class="headerlink" title="左前缀原则"></a>左前缀原则</h2><p>左前缀原则是对使用联合索引的一个要求，因为联合索引是在一个范围内，前面字段控制的是整体顺序，后面字段控制的是局部顺序，只有前面字段固定了，后面的数据才是根据后面的字段有序的，才能进行二分或者排序，如果查询中没有前面的字段，或者前面的字段是一个范围，那么剩余的数据就是多个局部有序的数据段，无法定位到一个确定范围，全局无序，也不能直接用于排序</p>
+<h2 id="什么时候使用索引"><a href="#什么时候使用索引" class="headerlink" title="什么时候使用索引"></a>什么时候使用索引</h2><ul>
+<li>某个字段需要被频繁查询</li>
+<li>某个字段的基数要足够大<ul>
+<li>基数就是这个字段所有的值去重后的个数，基数越大，没有索引的时候就需要将engine更多的数据返回给server，server进行过滤，加了索引之后，engine就会只把正确数据返回给server，返回正确数据的概率是原来全表扫描的基数倍。所以基数越大，收效月明显。这个基数具体多大取决于业务，一般来说userID的基数就足够大。</li>
+</ul>
+</li>
+</ul>
+<h2 id="创建索引需要注意的情况"><a href="#创建索引需要注意的情况" class="headerlink" title="创建索引需要注意的情况"></a>创建索引需要注意的情况</h2><ul>
+<li>主键索引需要使用递增趋势的值，这样就不会发生页分裂，因为前面页不够就会新创建页</li>
+<li>大字段尽量不要建索引，如长字符串，占用空间太大，如果非要用，可以使用前缀索引</li>
 </ul>
 <h2 id="索引的查询流程"><a href="#索引的查询流程" class="headerlink" title="索引的查询流程"></a>索引的查询流程</h2><p>先定位页，再定位数据</p>
 <ul>
