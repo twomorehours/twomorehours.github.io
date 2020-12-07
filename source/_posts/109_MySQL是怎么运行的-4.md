@@ -3,9 +3,6 @@ title: Mysql的数据目录
 date: 2020-03-20 23:30:39
 categories:
 - MySQL
-tags:
-- InnoDB
-- B+树
 ---
 
 ## Mysql数据目录结构
