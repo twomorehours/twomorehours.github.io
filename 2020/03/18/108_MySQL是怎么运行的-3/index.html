@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">1k</span>
+            <span class="post-count">1.2k</span>
         </span>
     </span>
 
@@ -84,7 +84,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">3 min</span>
+            <span class="post-count">4 min</span>
         </span>
     </span>
 </div>
@@ -109,7 +109,36 @@
       
 
       
-      <h2 id="B-树的结构"><a href="#B-树的结构" class="headerlink" title="B+树的结构"></a>B+树的结构</h2><ul>
+      <h2 id="Mysql数据目录结构"><a href="#Mysql数据目录结构" class="headerlink" title="Mysql数据目录结构"></a>Mysql数据目录结构</h2><ul>
+<li>Mysql的数据目录存储在变量<code>datadir</code>中</li>
+<li>每个数据库有一个文件夹</li>
+<li>文件夹中存放的是.frm(表结构)和.ibd(表数据), Mysql8以后都合并到.ibd中了</li>
+<li>其他文件<ul>
+<li>服务器进程文件</li>
+<li>服务器日志文件</li>
+<li>SSL和RSA证书文件</li>
+</ul>
+</li>
+</ul>
+<h2 id="Mysql自带的数据库"><a href="#Mysql自带的数据库" class="headerlink" title="Mysql自带的数据库"></a>Mysql自带的数据库</h2><ul>
+<li>mysql<ul>
+<li>存储用户信息，mysql自身的配置信息</li>
+</ul>
+</li>
+<li>information_schema<ul>
+<li>存储表的一些元数据，有哪些列，有哪些索引等</li>
+</ul>
+</li>
+<li>performance_schema<ul>
+<li>保存一些mysql运行期间的状态信息，是对mysql服务器的一个性能监控</li>
+</ul>
+</li>
+<li>sys<ul>
+<li>这个数据库通过把information_schema和performance_schema通过视图组合起来，更方便的查询性能信息</li>
+</ul>
+</li>
+</ul>
+<h2 id="B-树的结构"><a href="#B-树的结构" class="headerlink" title="B+树的结构"></a>B+树的结构</h2><ul>
 <li>根节点<ul>
 <li>根节点一旦创建就不会移动，始终页号不变</li>
 </ul>
@@ -199,11 +228,11 @@
   
   <nav class="article-nav">
     
-      <a href="/2020/03/20/109_MySQL%E6%98%AF%E6%80%8E%E4%B9%88%E8%BF%90%E8%A1%8C%E7%9A%84-4/" class="article-nav-link">
+      <a href="/2020/03/25/63_DNS%E5%85%A5%E9%97%A8/" class="article-nav-link">
         <strong class="article-nav-caption">上一篇</strong>
         <div class="article-nav-title">
           
-            Mysql的数据目录
+            DNS入门
           
         </div>
       </a>
