@@ -17,7 +17,7 @@ categories:
 
 - B: Right! Since you're type B and `laid back`. `she's probably going to think` `you are a slaker`.
 
-- A: Yeah. I mean, to be fair, `I do procrastinate`. But `at the end of the day, I do ge things done`.
+- A: Yeah. I mean, to be fair, `I do procrastinate`. But `at the end of the day, I do get things done`.
 
 - B: True. Well `she may be hard to work wtih` , but she really is `proactive` and does `get results`.
 
