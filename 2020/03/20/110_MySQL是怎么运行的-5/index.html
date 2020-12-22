@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">148</span>
+            <span class="post-count">350</span>
         </span>
     </span>
 
@@ -123,6 +123,29 @@
 </ul>
 </li>
 <li>比较得出代价最小的</li>
+</ul>
+<h2 id="Mysql的统计数据"><a href="#Mysql的统计数据" class="headerlink" title="Mysql的统计数据"></a>Mysql的统计数据</h2><p>Mysql在执行期间会动态生成一些统计数据，这些数据就是生成执行计划的基础，这写数据会在数量变化大的时候自动后台更新</p>
+<ul>
+<li>innodb_table_stats<ul>
+<li>database_name 数据库名</li>
+<li>table_name 表名</li>
+<li>last_udpate 最后更新时间</li>
+<li>n_rows 表中的记录数 估计值 选择几个页面求出平均值 然后乘以所有的叶子节点页面</li>
+<li>clustered_index_size 聚簇索引占用的页面数量</li>
+<li>sum_of_other_index_size 其他索引占用的页面数量</li>
+</ul>
+</li>
+<li>innodb_index_stats<ul>
+<li>database_name 数据库名</li>
+<li>table_name 表名</li>
+<li>index_name 索引名</li>
+<li>last_udpate 最后更新时间</li>
+<li>stat_name 统计项的名称 一个索引有多个统计项</li>
+<li>stat_value 对应统计项的值</li>
+<li>sample_size 为了生成统计数据采样的页面数量</li>
+<li>stat_description 对用的统计项的描述</li>
+</ul>
+</li>
 </ul>
 
       
