@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    InnoDB的索引实现 |  向天再借两小时
+    Archives: 2019/5 |  向天再借两小时
   </title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   
@@ -43,272 +43,55 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
-  <article id="post-108_MySQL是怎么运行的-3" class="article article-type-post" itemscope
-  itemprop="blogPost" data-scroll-reveal>
-
-  <div class="article-inner">
+  <article class="articles">
     
-    <header class="article-header">
+    
+    <h1 class="page-type-title">2019/5</h1>
+    
+    
+  
+  
+  
+  
+  
+  
+  <div class="archives-wrap">
+    <div class="archive-year-wrap">
+      <a href="/archives/2019" class="archive-year">2019</a>
+    </div>
+    <div class="archives">
+      
+      <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2019/05/02/e64_Taking_effective_meeting_minutes/" class="archive-article-date">
+  <time datetime="2019-05-02T23:30:39.000Z" itemprop="datePublished">05/02</time>
+</a>
        
-<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  InnoDB的索引实现
-</h1>
+<h2 itemprop="name">
+  <a class="archive-article-title" href="/2019/05/02/e64_Taking_effective_meeting_minutes/"
+    >Taking effective meeting minutes</a> 
+</h2>
  
 
     </header>
     
-
     
-    <div class="article-meta">
-      <a href="/2020/03/18/108_MySQL%E6%98%AF%E6%80%8E%E4%B9%88%E8%BF%90%E8%A1%8C%E7%9A%84-3/" class="article-date">
-  <time datetime="2020-03-18T23:30:39.000Z" itemprop="datePublished">2020-03-18</time>
-</a>
-      
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
   </div>
-
-      
-      
-<div class="word_count">
-    <span class="post-time">
-        <span class="post-meta-item-icon">
-            <i class="ri-quill-pen-line"></i>
-            <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">1.2k</span>
-        </span>
-    </span>
-
-    <span class="post-time">
-        &nbsp; | &nbsp;
-        <span class="post-meta-item-icon">
-            <i class="ri-book-open-line"></i>
-            <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">4 min</span>
-        </span>
-    </span>
-</div>
-
-      
-    </div>
-    
-
-    
-    
-    <div class="tocbot"></div>
-
-
-
-
-
-    
-
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-      
-
-      
-      <h2 id="Mysql数据目录结构"><a href="#Mysql数据目录结构" class="headerlink" title="Mysql数据目录结构"></a>Mysql数据目录结构</h2><ul>
-<li>Mysql的数据目录存储在变量<code>datadir</code>中</li>
-<li>每个数据库有一个文件夹</li>
-<li>文件夹中存放的是.frm(表结构)和.ibd(表数据), Mysql8以后都合并到.ibd中了</li>
-<li>其他文件<ul>
-<li>服务器进程文件</li>
-<li>服务器日志文件</li>
-<li>SSL和RSA证书文件</li>
-</ul>
-</li>
-</ul>
-<h2 id="Mysql自带的数据库"><a href="#Mysql自带的数据库" class="headerlink" title="Mysql自带的数据库"></a>Mysql自带的数据库</h2><ul>
-<li>mysql<ul>
-<li>存储用户信息，mysql自身的配置信息</li>
-</ul>
-</li>
-<li>information_schema<ul>
-<li>存储表的一些元数据，有哪些列，有哪些索引等</li>
-</ul>
-</li>
-<li>performance_schema<ul>
-<li>保存一些mysql运行期间的状态信息，是对mysql服务器的一个性能监控</li>
-</ul>
-</li>
-<li>sys<ul>
-<li>这个数据库通过把information_schema和performance_schema通过视图组合起来，更方便的查询性能信息</li>
-</ul>
-</li>
-</ul>
-<h2 id="B-树的结构"><a href="#B-树的结构" class="headerlink" title="B+树的结构"></a>B+树的结构</h2><ul>
-<li>根节点<ul>
-<li>根节点一旦创建就不会移动，始终页号不变</li>
-</ul>
-</li>
-<li>非叶子节点<ul>
-<li>非叶子不存储真实的记录数据，只存储目录项，非叶子节点就是B+树的树干，同层不同节点使用双向链表连接</li>
-</ul>
-</li>
-<li>叶子节点<ul>
-<li>叶子节点存储真实的记录数据，不同节点之间使用双向链表连接</li>
-</ul>
-</li>
-</ul>
-<h2 id="索引分类"><a href="#索引分类" class="headerlink" title="索引分类"></a>索引分类</h2><ul>
-<li>聚集索引<ul>
-<li>聚集索引是主键索引，叶子节点存储的是真实的记录数据</li>
-</ul>
-</li>
-<li>二级索引<ul>
-<li>二级索引是以指定字段顺序构建B+树，叶子节点存储的是主键的值，这样可以节省空间</li>
-</ul>
-</li>
-<li>联合索引<ul>
-<li>联合索引是一种特殊的二级索引，是由多个字段组合而成的索引，生成一个B+树，排序优先级由钱到后依次降低，使用联合索引时要满足左前缀原则，当前缀不相同时会定位到不同的数据范围，不同的数据范围内的后面的索引也不一定是有序的</li>
-</ul>
-</li>
-</ul>
-<h2 id="索引的损耗"><a href="#索引的损耗" class="headerlink" title="索引的损耗"></a>索引的损耗</h2><ul>
-<li>索引需要占空间</li>
-<li>增删改时需要维护索引，索引值变化时，导致索引数据移动到其他页，需要有移动成本，甚至会导致页分裂，导致更大的成本</li>
-<li>mysql在执行查询时需要先生成收集一些统计数据来执行计划，如果索引过多，对导致这段时间延长，甚至会降低查询速度</li>
-</ul>
-<h2 id="索引的作用"><a href="#索引的作用" class="headerlink" title="索引的作用"></a>索引的作用</h2><p>核心就是以空间换时间</p>
-<ul>
-<li>快速定位到想要查询的数据范围</li>
-<li>根据索引排序时，因为其本身有序，无需使用文件内排序</li>
-</ul>
-<h2 id="左前缀原则"><a href="#左前缀原则" class="headerlink" title="左前缀原则"></a>左前缀原则</h2><p>左前缀原则是对使用联合索引的一个要求，因为联合索引是在一个范围内，前面字段控制的是整体顺序，后面字段控制的是局部顺序，只有前面字段固定了，后面的数据才是根据后面的字段有序的，才能进行二分或者排序，如果查询中没有前面的字段，或者前面的字段是一个范围，那么剩余的数据就是多个局部有序的数据段，无法定位到一个确定范围，全局无序，也不能直接用于排序</p>
-<h2 id="什么时候使用索引"><a href="#什么时候使用索引" class="headerlink" title="什么时候使用索引"></a>什么时候使用索引</h2><ul>
-<li>某个字段需要被频繁查询</li>
-<li>某个字段的基数要足够大<ul>
-<li>基数就是这个字段所有的值去重后的个数，基数越大，没有索引的时候就需要将engine更多的数据返回给server，server进行过滤，加了索引之后，engine就会只把正确数据返回给server，返回正确数据的概率是原来全表扫描的基数倍。所以基数越大，收效月明显。这个基数具体多大取决于业务，一般来说userID的基数就足够大。</li>
-</ul>
-</li>
-</ul>
-<h2 id="创建索引需要注意的情况"><a href="#创建索引需要注意的情况" class="headerlink" title="创建索引需要注意的情况"></a>创建索引需要注意的情况</h2><ul>
-<li>主键索引需要使用递增趋势的值，这样就不会发生页分裂，因为前面页不够就会新创建页</li>
-<li>大字段尽量不要建索引，如长字符串，占用空间太大，如果非要用，可以使用前缀索引</li>
-</ul>
-<h2 id="索引的查询流程"><a href="#索引的查询流程" class="headerlink" title="索引的查询流程"></a>索引的查询流程</h2><p>先定位页，再定位数据</p>
-<ul>
-<li>从根节点的slot二分查找，找到所属的组，然后从组内找到最后一个小于这个值的节点，根据页号调到下一层节点</li>
-<li>重复上述步骤，一直到叶子节点</li>
-<li>从叶子节点的slot查找，找到所属的组，然后遍历这个组内的值，找到匹配或者不匹配的</li>
-</ul>
-<h2 id="没有索引的查询流程"><a href="#没有索引的查询流程" class="headerlink" title="没有索引的查询流程"></a>没有索引的查询流程</h2><p>没有索引定位不到具体的数据范围，只能从叶子节点的第一页开始逐页逐条数据遍历，找到符合的</p>
-
-      
-      <!-- reward -->
-      
-    </div>
-    
-    
-      <!-- copyright -->
-      
-        <div class="declare">
-          <ul class="post-copyright">
-            <li>
-              <i class="ri-copyright-line"></i>
-              <strong>Copyright： </strong>
-              Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
-            </li>
-          </ul>
-        </div>
-        
-    <footer class="article-footer">
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/B-%E6%A0%91/" rel="tag">B+树</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/InnoDB/" rel="tag">InnoDB</a></li></ul>
-
-
-    </footer>
-
-  </div>
-
-  
-  
-  <nav class="article-nav">
-    
-      <a href="/2020/03/20/110_MySQL%E6%98%AF%E6%80%8E%E4%B9%88%E8%BF%90%E8%A1%8C%E7%9A%84-5/" class="article-nav-link">
-        <strong class="article-nav-caption">上一篇</strong>
-        <div class="article-nav-title">
-          
-            Mysql的查询优化
-          
-        </div>
-      </a>
-    
-    
-      <a href="/2020/03/17/31_Redis%E9%99%90%E6%B5%81lua%E5%AE%9E%E7%8E%B0/" class="article-nav-link">
-        <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">Redis+Lua实现令牌桶限流</div>
-      </a>
-    
-  </nav>
-
-
-  
-
-  
-  
-<!-- valine评论 -->
-<div id="vcomments-box">
-    <div id="vcomments">
-    </div>
-</div>
-<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
-<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
-<script>
-    new Valine({
-        el: '#vcomments',
-        app_id: 'j7og6mDnkAIEtuTza7hQ3LNa-gzGzoHsz',
-        app_key: 'MFzzLmRJtNRHg35aF1dvI3M5',
-        path: window.location.pathname,
-        notify: 'false',
-        verify: 'false',
-        avatar: 'monsterid',
-        placeholder: '给我的文章加点评论吧~',
-        recordIP: true
-    });
-    const infoEle = document.querySelector('#vcomments .info');
-    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
-        infoEle.childNodes.forEach(function (item) {
-            item.parentNode.removeChild(item);
-        });
-    }
-</script>
-<style>
-    #vcomments-box {
-        padding: 5px 30px;
-    }
-
-    @media screen and (max-width: 800px) {
-        #vcomments-box {
-            padding: 5px 0px;
-        }
-    }
-
-    #vcomments-box #vcomments {
-        background-color: #fff;
-    }
-
-    .v .vlist .vcard .vh {
-        padding-right: 20px;
-    }
-
-    .v .vlist .vcard {
-        padding-left: 10px;
-    }
-</style>
-
-  
-
-  
-  
-  
-  
-  
-
 </article>
+      
+      
+    </div>
+  </div>
+  
+  
+
+  
+  <nav class="page-nav">
+    
+    <a class="extend prev" rel="prev" href="/archives/2019/05/">上一页</a><a class="page-number" href="/archives/2019/05/">1</a><span class="page-number current">2</span>
+  </nav>
+  
 </section>
       <footer class="footer">
   <div class="outer">
@@ -436,24 +219,6 @@
 
 
 
-
-
-<script src="/js/tocbot.min.js"></script>
-
-<script>
-  // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
-  tocbot.init({
-    tocSelector: '.tocbot',
-    contentSelector: '.article-entry',
-    headingSelector: 'h1, h2, h3, h4, h5, h6',
-    hasInnerContainers: true,
-    scrollSmooth: true,
-    scrollContainer: 'main',
-    positionFixedSelector: '.tocbot',
-    positionFixedClass: 'is-position-fixed',
-    fixedSidebarOffset: 'auto'
-  });
-</script>
 
 
 
