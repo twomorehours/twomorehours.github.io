@@ -185,5 +185,5 @@ pageFooter: false
 #ICP备案信息尾部显示
 icp:
   enable: true
-  url: "javascript:void(0)" # 备案链接
-  text: "辽ICP备20010154" # 备案信息
+  url: "https://beian.miit.gov.cn/#/Integrated/index" # 备案链接
+  text: "辽ICP备20010154号" # 备案信息
