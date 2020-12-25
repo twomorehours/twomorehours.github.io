@@ -106,3 +106,27 @@ Mysql为了提升查询性能，会按照以下规则进行重写SQL
     - 在查询过程去使用了临时表 最常见的场景就是对没有索引的字段进行group 一般需要优化
   - Using filesort
     - 文件内排序 最常见的场景就是使用没有索引的字段进行排序 并且数据量比较大 内存放不下 一般需要优化
+
+## InnoDB Buffer Pool
+InnoDB Buffer Pool是innoDB的内存部分，用来缓存数据页
+- 构成
+  - Buffer Pool由控制块和缓冲页组成， 控制块用来维护链表，控制块中持有缓冲液的地址， 缓冲页用来保存数据页的数据
+- 空闲链表
+  - Free list 用来维护buffer pool中可以被使用的缓冲页，链表中的节点是控制块
+- 脏页
+  - 内存中数据更改了，但是还没有刷新到磁盘上，因为每次都刷新到磁盘上很慢，大多数情况下都是后台线程刷新到磁盘上，维护这些脏页的是Flush list
+- LRU链表
+  - 缓存的数据不能无限的多，当内存到达上限之后，就淘汰最久没被使用的数据
+  - 这个链表是分段链表
+    - young部分： 存放访问频率高的数据
+    - old部分：存放新加载到缓存的数据，之后数据再次被访问时在内存中已经超过了1s，才会被移动到young
+    - 这种设计是为了避免让大量的使用频率低的数据（如全表扫描）将真正的热数据挤出去
+- hash表
+  - 判断一个页是否加载到buffer pool中就以表空间号+页号为key取控制块
+- show engine innodb status可以查看一些buffer pool的运行时统计数据
+  - Total large memory allocated： 已经分配的内存
+  - Buffer pool size ： Buffer pool的大小 以页为单位
+  - Free buffers： 空闲链表的长度
+  - Database pages： LRU链表的长度
+  - Old database pages LRU链表old部分的长度
+  - Modified db pages  FLush list长度
