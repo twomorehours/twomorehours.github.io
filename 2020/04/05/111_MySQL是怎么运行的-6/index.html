@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">226</span>
+            <span class="post-count">493</span>
         </span>
     </span>
 
@@ -135,6 +135,31 @@
 </li>
 <li>手动事务<ul>
 <li>当要批量执行操作的时候就需要手动开启事务，使用<code>begin</code>， 全部执行成功后使用<code>commit</code>提交，或者失败情况下使用<code>rollback</code>回滚 </li>
+</ul>
+</li>
+</ul>
+<h2 id="Mysql如何保证事务的持久性"><a href="#Mysql如何保证事务的持久性" class="headerlink" title="Mysql如何保证事务的持久性"></a>Mysql如何保证事务的持久性</h2><ul>
+<li>保证持久性就是保证Mysql崩溃后，提交的数据不丢失，这就要求提交的数据必须写在磁盘上，但是每次提交都刷写磁盘（随机IO）性能太低，所以Mysql引入了redo log来保证事务的持久性</li>
+<li>redolog的写入<ul>
+<li>开启事务</li>
+<li>修改buffer pool ，修改页的控制块加入flush链表</li>
+<li>提交事务</li>
+<li>操作的数据写入redo log buffer（这步实际上是有可能丢失数据的）</li>
+<li>后台数据将buffer的数据顺序刷写到磁盘上</li>
+</ul>
+</li>
+<li>redo log保存了什么<ul>
+<li>redo log保存了修改的物理信息，即页号加数据</li>
+</ul>
+</li>
+<li>redo log怎么使用<ul>
+<li>mysql在异常恢复的时候，会读取redo log的数据重放</li>
+</ul>
+</li>
+<li>redo log的特征<ul>
+<li>redo log 是循环的 如果要写满了 要强制刷写到数据页</li>
+<li>redo log很小</li>
+<li>redo log是分组的，一个影响多条数据的操作会分到一组，这一组保存或者重放时是原子的</li>
 </ul>
 </li>
 </ul>
