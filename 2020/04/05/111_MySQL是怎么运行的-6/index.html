@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    Mysql的查询优化 |  向天再借两小时
+    Mysql的事务 |  向天再借两小时
   </title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   
@@ -43,7 +43,7 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
-  <article id="post-110_MySQL是怎么运行的-5" class="article article-type-post" itemscope
+  <article id="post-111_MySQL是怎么运行的-6" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -51,7 +51,7 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  Mysql的查询优化
+  Mysql的事务
 </h1>
  
 
@@ -60,8 +60,8 @@
 
     
     <div class="article-meta">
-      <a href="/2020/03/20/110_MySQL%E6%98%AF%E6%80%8E%E4%B9%88%E8%BF%90%E8%A1%8C%E7%9A%84-5/" class="article-date">
-  <time datetime="2020-03-20T23:30:39.000Z" itemprop="datePublished">2020-03-20</time>
+      <a href="/2020/04/05/111_MySQL%E6%98%AF%E6%80%8E%E4%B9%88%E8%BF%90%E8%A1%8C%E7%9A%84-6/" class="article-date">
+  <time datetime="2020-04-05T23:30:39.000Z" itemprop="datePublished">2020-04-05</time>
 </a>
       
   <div class="article-category">
@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">1.6k</span>
+            <span class="post-count">226</span>
         </span>
     </span>
 
@@ -84,7 +84,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">5 min</span>
+            <span class="post-count">1 min</span>
         </span>
     </span>
 </div>
@@ -109,207 +109,32 @@
       
 
       
-      <h2 id="Mysql的执行计划生成"><a href="#Mysql的执行计划生成" class="headerlink" title="Mysql的执行计划生成"></a>Mysql的执行计划生成</h2><p>Mysql会计计算各种条件下产生代价，并选择代价最小的方式执行，代价主要包括两种，IO和CPU</p>
-<ul>
-<li>根据查询条件，找出所有可能使用的索引</li>
-<li>计算全表扫描的代价<ul>
-<li>IO代价：分页数(每页16K) * 1</li>
-<li>CPU代价：记录数(估算) * 0.2</li>
+      <h2 id="什么叫做事务"><a href="#什么叫做事务" class="headerlink" title="什么叫做事务"></a>什么叫做事务</h2><p>需要保证事务四大特性的一个或者多张个数据库操作叫做事务</p>
+<h2 id="事务的四大特性"><a href="#事务的四大特性" class="headerlink" title="事务的四大特性"></a>事务的四大特性</h2><ul>
+<li>Atomic(原子性)<ul>
+<li>所有操作，要么全部成功，要么全部失败</li>
 </ul>
 </li>
-<li>计算使用不同索引的代价<ul>
-<li>IO代价：索引扫描区间条数（估算） * 1(每个索引算一页，算回表)</li>
-<li>CPU代价：索引扫描区间条数（估算） * 0.2</li>
+<li>Consistent(一致性)<ul>
+<li>不违反显示世界的规律，比如AB转账前后的总额是不变的</li>
 </ul>
 </li>
-<li>比较得出代价最小的</li>
-</ul>
-<h2 id="Mysql的统计数据"><a href="#Mysql的统计数据" class="headerlink" title="Mysql的统计数据"></a>Mysql的统计数据</h2><p>Mysql在执行期间会动态生成一些统计数据，这些数据就是生成执行计划的基础，这写数据会在数量变化大的时候自动后台更新</p>
-<ul>
-<li>innodb_table_stats<ul>
-<li>database_name 数据库名</li>
-<li>table_name 表名</li>
-<li>last_udpate 最后更新时间</li>
-<li>n_rows 表中的记录数 估计值 选择几个页面求出平均值 然后乘以所有的叶子节点页面</li>
-<li>clustered_index_size 聚簇索引占用的页面数量</li>
-<li>sum_of_other_index_size 其他索引占用的页面数量</li>
+<li>Isolation(隔离性)<ul>
+<li>不同的事务之间不应该互相干扰</li>
 </ul>
 </li>
-<li>innodb_index_stats<ul>
-<li>database_name 数据库名</li>
-<li>table_name 表名</li>
-<li>index_name 索引名</li>
-<li>last_udpate 最后更新时间</li>
-<li>stat_name 统计项的名称 一个索引有多个统计项</li>
-<li>stat_value 对应统计项的值</li>
-<li>sample_size 为了生成统计数据采样的页面数量</li>
-<li>stat_description 对用的统计项的描述</li>
+<li>Durability(持久性)<ul>
+<li>已经提交的事务要一直存在</li>
 </ul>
 </li>
 </ul>
-<h2 id="Mysql对查询语句的重写"><a href="#Mysql对查询语句的重写" class="headerlink" title="Mysql对查询语句的重写"></a>Mysql对查询语句的重写</h2><p>Mysql为了提升查询性能，会按照以下规则进行重写SQL</p>
-<ul>
-<li>移除不必要的括号</li>
-<li>常量传递 会把已经赋值的变量替换成常量</li>
-<li>移除没用的条件 1=1 等</li>
-<li>表达式计算 a= 1 + 1 =&gt; a=2</li>
-<li>HAVING子句和WHERE子句合并 HAVING后面如果不是聚合函数等依赖分组结果相关的过滤条件都会移动到WHERE后面 可以减少参与分组的数据量 提升分组速度</li>
-</ul>
-<h2 id="Explain各项的解释"><a href="#Explain各项的解释" class="headerlink" title="Explain各项的解释"></a>Explain各项的解释</h2><ul>
-<li>id<ul>
-<li>每个select会有一个id 连接查询会有相同的id</li>
+<h2 id="Mysql事务的使用"><a href="#Mysql事务的使用" class="headerlink" title="Mysql事务的使用"></a>Mysql事务的使用</h2><ul>
+<li>自动提交事务<ul>
+<li>Mysql是默认自动提交事务的，即使没有显示开启事务，当执行一条语句时也是默认开启并且提交事务</li>
 </ul>
 </li>
-<li>select_type<ul>
-<li>SIMPLE <ul>
-<li>简单查询 没有子查询和union 连接查询也是SIMPLE</li>
-</ul>
-</li>
-<li>PRIMARY <ul>
-<li>子查询 union情况下最左边的查询</li>
-</ul>
-</li>
-<li>UNION <ul>
-<li>union查询靠后面的查询</li>
-</ul>
-</li>
-<li>UNION RESULT <ul>
-<li>union时自动生成的用于去重的查询</li>
-</ul>
-</li>
-<li>SUBQUERY<ul>
-<li>子查询</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>type<ul>
-<li>const<ul>
-<li>对主键或者唯一二级索引的等值查询</li>
-</ul>
-</li>
-<li>eq_ref<ul>
-<li>连接查询时，被驱动表的连接条件是主键或者是不允许NULL的唯一二级索引</li>
-</ul>
-</li>
-<li>ref<ul>
-<li>对普通的二级索引的等值查询</li>
-</ul>
-</li>
-<li>index_merge<ul>
-<li>索引合并，同时使用多个索引，取交集或者并集，来减少回表次数</li>
-</ul>
-</li>
-<li>range<ul>
-<li>对索引进行范围查询</li>
-</ul>
-</li>
-<li>index<ul>
-<li>全索引扫描 当能够使用索引覆盖，但是使用的不是前导列索引，不能形成扫描范围时，需要对索引进行全部扫描，不需要回表</li>
-</ul>
-</li>
-<li>all<ul>
-<li>全表扫描</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>possible_keys &amp; keys<ul>
-<li>possible_keys<ul>
-<li>可能使用的索引</li>
-</ul>
-</li>
-<li>keys<ul>
-<li>将会使用的索引</li>
-</ul>
-</li>
-<li>key_len<ul>
-<li>使用的索引长度 就是索引列类型所占的长度</li>
-<li>索引列支持NULL +1字节</li>
-<li>索引列长度可变 +2字节</li>
-<li>这个主要是看联合索引道理使用了哪些前导列 key_len是前导列的长度相加</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>ref<ul>
-<li>描述和某某列等值匹配的是什么</li>
-<li>const 常量</li>
-<li>其他的表的字段 连接查询时使用</li>
-<li>func 匹配的值是函数</li>
-</ul>
-</li>
-<li>rows<ul>
-<li>从存储引擎返回给server层的数量（估计）</li>
-</ul>
-</li>
-<li>filtered<ul>
-<li>server层过滤之后还剩多少条 （估计）</li>
-</ul>
-</li>
-<li>Extra<ul>
-<li>Using Index<ul>
-<li>索引覆盖 不用回表</li>
-</ul>
-</li>
-<li>Using index condition<ul>
-<li>联合索引中前导列使用了模糊匹配或者范围匹配，后面的索引列不能形成扫描范围，这个时候就会采用逐个过滤相关索引，以减少回表 也成为索引下推</li>
-</ul>
-</li>
-<li>Using where<ul>
-<li>当某个条件需要在server层进行判断的时候 会显示这个  比如从某个索引取出数据后还需要过滤另外一个字段 这个字段不在刚才的索引中</li>
-</ul>
-</li>
-<li>Using join buffer <ul>
-<li>连接查询时， 当使用BNL算法时，会一次从驱动表中取出一个批次的数据 和被驱动表进行匹配 减少IO 提升性能</li>
-</ul>
-</li>
-<li>Using Temporary<ul>
-<li>在查询过程去使用了临时表 最常见的场景就是对没有索引的字段进行group 一般需要优化</li>
-</ul>
-</li>
-<li>Using filesort<ul>
-<li>文件内排序 最常见的场景就是使用没有索引的字段进行排序 并且数据量比较大 内存放不下 一般需要优化</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="InnoDB-Buffer-Pool"><a href="#InnoDB-Buffer-Pool" class="headerlink" title="InnoDB Buffer Pool"></a>InnoDB Buffer Pool</h2><p>InnoDB Buffer Pool是innoDB的内存部分，用来缓存数据页</p>
-<ul>
-<li>构成<ul>
-<li>Buffer Pool由控制块和缓冲页组成， 控制块用来维护链表，控制块中持有缓冲液的地址， 缓冲页用来保存数据页的数据</li>
-</ul>
-</li>
-<li>空闲链表<ul>
-<li>Free list 用来维护buffer pool中可以被使用的缓冲页，链表中的节点是控制块</li>
-</ul>
-</li>
-<li>脏页<ul>
-<li>内存中数据更改了，但是还没有刷新到磁盘上，因为每次都刷新到磁盘上很慢，大多数情况下都是后台线程刷新到磁盘上，维护这些脏页的是Flush list</li>
-</ul>
-</li>
-<li>LRU链表<ul>
-<li>缓存的数据不能无限的多，当内存到达上限之后，就淘汰最久没被使用的数据</li>
-<li>这个链表是分段链表<ul>
-<li>young部分： 存放访问频率高的数据</li>
-<li>old部分：存放新加载到缓存的数据，之后数据再次被访问时在内存中已经超过了1s，才会被移动到young</li>
-<li>这种设计是为了避免让大量的使用频率低的数据（如全表扫描）将真正的热数据挤出去</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>hash表<ul>
-<li>判断一个页是否加载到buffer pool中就以表空间号+页号为key取控制块</li>
-</ul>
-</li>
-<li>show engine innodb status可以查看一些buffer pool的运行时统计数据<ul>
-<li>Total large memory allocated： 已经分配的内存</li>
-<li>Buffer pool size ： Buffer pool的大小 以页为单位</li>
-<li>Free buffers： 空闲链表的长度</li>
-<li>Database pages： LRU链表的长度</li>
-<li>Old database pages LRU链表old部分的长度</li>
-<li>Modified db pages  FLush list长度</li>
+<li>手动事务<ul>
+<li>当要批量执行操作的时候就需要手动开启事务，使用<code>begin</code>， 全部执行成功后使用<code>commit</code>提交，或者失败情况下使用<code>rollback</code>回滚 </li>
 </ul>
 </li>
 </ul>
@@ -335,7 +160,7 @@
     <footer class="article-footer">
       
       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E8%BF%9E%E6%8E%A5/" rel="tag">连接</a></li></ul>
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ACID/" rel="tag">ACID</a></li></ul>
 
 
     </footer>
@@ -346,19 +171,19 @@
   
   <nav class="article-nav">
     
-      <a href="/2020/03/20/109_MySQL%E6%98%AF%E6%80%8E%E4%B9%88%E8%BF%90%E8%A1%8C%E7%9A%84-4/" class="article-nav-link">
+      <a href="/2020/04/07/64_%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%8A%80%E6%9C%AF%E7%82%B9/" class="article-nav-link">
         <strong class="article-nav-caption">上一篇</strong>
         <div class="article-nav-title">
           
-            Mysql的查询入门
+            分布式系统技术点
           
         </div>
       </a>
     
     
-      <a href="/2020/03/18/108_MySQL%E6%98%AF%E6%80%8E%E4%B9%88%E8%BF%90%E8%A1%8C%E7%9A%84-3/" class="article-nav-link">
+      <a href="/2020/04/01/79_Netty%E7%9A%84NioEventLoop%E8%AF%A6%E8%A7%A3/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">InnoDB的索引实现</div>
+        <div class="article-nav-title">netty的NioEventLoop详解</div>
       </a>
     
   </nav>
