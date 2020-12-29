@@ -42,3 +42,10 @@ tags:
   - redo log 是循环的 如果要写满了 要强制刷写到数据页
   - redo log很小
   - redo log是分组的，一个影响多条数据的操作会分到一组，这一组保存或者重放时是原子的
+
+## 回滚如何实现
+- Mysql在事务操作的时候会保存被修改之前的数据，这样的记录叫做undo log
+- undo log可以有多个，根节点是数据的上的roll_pointer, 越新的undo log越靠近roll pointer
+- 插入的undo log保存的是插入的id 回滚时直接删除此id
+- 更新的undo log保存的是修改了哪些字段的数据
+- undo log不能提交之后立即删除，因为MVCC的原因，有可能有些读事务还在引用undo log(快照读的时候，写事务还没有结束)
