@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    MySQL常见面试题分析 |  向天再借两小时
+    Golang简单实现观察者模式 |  向天再借两小时
   </title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   
@@ -43,7 +43,7 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
-  <article id="post-85_MySQL常见面试题分析" class="article article-type-post" itemscope
+  <article id="post-112_Golang简单实现观察者模式" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -51,7 +51,7 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  MySQL常见面试题分析
+  Golang简单实现观察者模式
 </h1>
  
 
@@ -60,12 +60,12 @@
 
     
     <div class="article-meta">
-      <a href="/2020/03/08/85_MySQL%E5%B8%B8%E8%A7%81%E9%9D%A2%E8%AF%95%E9%A2%98%E5%88%86%E6%9E%90/" class="article-date">
-  <time datetime="2020-03-08T23:30:39.000Z" itemprop="datePublished">2020-03-08</time>
+      <a href="/2021/02/05/112_Golang%E7%AE%80%E5%8D%95%E5%AE%9E%E7%8E%B0%E8%A7%82%E5%AF%9F%E8%80%85%E6%A8%A1%E5%BC%8F/" class="article-date">
+  <time datetime="2021-02-05T23:30:39.000Z" itemprop="datePublished">2021-02-05</time>
 </a>
       
   <div class="article-category">
-    <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+    <a class="article-category-link" href="/categories/Golang/">Golang</a>
   </div>
 
       
@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">1.4k</span>
+            <span class="post-count">460</span>
         </span>
     </span>
 
@@ -84,7 +84,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">4 min</span>
+            <span class="post-count">2 min</span>
         </span>
     </span>
 </div>
@@ -109,259 +109,64 @@
       
 
       
-      <h2 id="InnoDB的存储结构"><a href="#InnoDB的存储结构" class="headerlink" title="InnoDB的存储结构"></a>InnoDB的存储结构</h2><ul>
-<li><p>Mysql的存储以页为单位</p>
-<ul>
-<li>页头<ul>
-<li>记录控制信息，包含左右页面的指针，页使用情况等</li>
-</ul>
-</li>
-<li>虚记录<ul>
-<li>用于快速确定页内数据的范围</li>
-<li>最大虚记录<ul>
-<li>比页内最大主键大</li>
-</ul>
-</li>
-<li>最小虚记录<ul>
-<li>比页内最小虚记录还小</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>记录堆<ul>
-<li>行记录存储区 <ul>
-<li>有效数据 </li>
-<li>被标记删除的无效数据</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>未分配区域<ul>
-<li>还未使用的空间</li>
-</ul>
-</li>
-<li>自由空间链表<ul>
-<li>标记删除记录组成的链表（页中放入数据时优先使用）</li>
-</ul>
-</li>
-<li>页尾<ul>
-<li>存储页内数据的校验信息</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>页内记录的维护</p>
-<ul>
-<li>顺序保证<ul>
-<li>页内逻辑连续，即分配的空间不是物理上连续的，而是通过链表维护的先后顺序 </li>
-</ul>
-</li>
-<li>插入逻辑<ul>
-<li>优先复用已经标记删除链表的空间，然后再使用未分配的</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>页内查找</p>
-<ul>
-<li>页内使用二分查找进行搜索</li>
-</ul>
-</li>
-</ul>
-<h2 id="InnoDB的索引"><a href="#InnoDB的索引" class="headerlink" title="InnoDB的索引"></a>InnoDB的索引</h2><ul>
-<li>索引的分类<ul>
-<li>聚集索引<ul>
-<li>数据是存在主键索引树中的</li>
-<li>数据按主键顺序存储</li>
-<li>要尽量使用递增的主键，防止页分裂</li>
-</ul>
-</li>
-<li>二级索引<ul>
-<li>叶子节点存储的数据是主键值 </li>
-<li>要用主键回表</li>
-<li>主键大小会影响全局索引大小</li>
-</ul>
-</li>
-<li>联合索引<ul>
-<li>联合索引也是一种二级索引，只不过由多个字段组合而成，一个联合索引只有一棵索引树<ul>
-<li>BTree由第一列构建</li>
-<li>页里面按照各列有序，越靠前的优先级越高</li>
-<li>要使用左前缀原则<ul>
-<li>不能跳过中间列</li>
-<li>前面的使用范围查询 ，后面索引不能使用</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>优化分析<ul>
-<li>主键选择<ul>
-<li>有业务意义 使用业务自增主键</li>
-<li>没有业务意义，使用数据库自增主键</li>
-</ul>
-</li>
-<li>联合索引<ul>
-<li>按照区分度排序，越高越靠前，低了没必要做索引</li>
-<li>常用查询合理使用索引覆盖</li>
-<li>字符串索引，合理设置长度，否则会导致索引过大 </li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="InnoDB的内存管理"><a href="#InnoDB的内存管理" class="headerlink" title="InnoDB的内存管理"></a>InnoDB的内存管理</h2><ul>
-<li><p>内存池</p>
-<ul>
-<li>BufferPool <ul>
-<li>InnoDB的整个分配内存的总称</li>
-</ul>
-</li>
-<li>Page Hash <ul>
-<li>内存页和磁盘页的映射关系</li>
-</ul>
-</li>
-<li>Free List <ul>
-<li>空闲页链表，分配内存使用</li>
-</ul>
-</li>
-<li>Flush List <ul>
-<li>脏页，数据写到内存中，还没有刷到磁盘上</li>
-</ul>
-</li>
-<li>Clean List <ul>
-<li>数据页，保存正常的数据</li>
-</ul>
-</li>
-<li>LRU List <ul>
-<li>LRU链表，里面保存着数据页和脏页</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>内存页的写入和写出</p>
-<ul>
-<li>当数据从磁盘中读取之后，加载到内存中</li>
-<li>首先从空闲页链表中寻找位置，如果找到了，就载入内存，并且加入LRU链表</li>
-<li>如果空闲链表没有位置，就从LRU中选择一个最老的淘汰掉，然后载入内存，并且加入LRU链表</li>
-<li>数据页可以直接被淘汰</li>
-<li>脏页在被淘汰之前必须先将数据刷到磁盘上</li>
-</ul>
-</li>
-<li><p>LRU的实现</p>
-<ul>
-<li>普通的LRU<ul>
-<li>单个链表</li>
-<li>有新的数据就放到头，并且淘汰最老的数据</li>
-<li>不能应对全表扫描的情况，会冲掉真正的热数据</li>
-</ul>
-</li>
-<li>MySQL分段LRU<ul>
-<li>链表分为new和old，比例为5:3</li>
-<li>新数据首次加载放入old区域</li>
-<li>当访问数据时，如果数据在old区，那么判断这个数据在old区的时长是否超过了阈值，如果超过了就放入new区，new区放不下的情况下，淘汰到old区</li>
-<li>新数据放入时淘汰数据只从old区淘汰，这就解决了全表扫描的问题</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>InnoDB的事务管理</p>
-<ul>
-<li><p>事务特性</p>
-<ul>
-<li>A 全部成功或者失败</li>
-<li>C 数据操作前后一致（整体一致）</li>
-<li>I 事务之间互不干扰</li>
-<li>D 提交的数据不丢失</li>
-</ul>
-</li>
-<li><p>常见的事务并隔离问题</p>
-<ul>
-<li>脏读<ul>
-<li>一个事务读到其他事务未提交的数据</li>
-</ul>
-</li>
-<li>不可重复读<ul>
-<li>一个事务读到其他事务在本事务未完成时提交了的数据</li>
-</ul>
-</li>
-<li>幻读<ul>
-<li>更新（当前读）了其他事务已经提交的数据</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>隔离级别</p>
-<ul>
-<li>RU<ul>
-<li>一个事务可以读到其他事务未提交的数据</li>
-</ul>
-</li>
-<li>RC<ul>
-<li>一个事务可以读到其他事务在本事务未完成时提交了的数据</li>
-</ul>
-</li>
-<li>RR（MySQL默认）<ul>
-<li>一个事务读不到到其他事务在本事务未完成时提交了的数据，但是可以更新到</li>
-</ul>
-</li>
-<li>Serial<ul>
-<li>所有事务串行化，没有并发问题</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>MVCC</p>
-<ul>
-<li><p>解决读写并发的问题（多版本），最终解决策略是我只读到我开启事务时的版本</p>
-<ul>
-<li><p>当前读 </p>
-<ul>
-<li>永远读最新的 一般用于update</li>
-</ul>
-</li>
-<li><p>undolog</p>
-<ul>
-<li>记录一条数据的多个版本，支持mvcc</li>
-<li>指向事务开始之前的数据，作为回滚之用</li>
-<li>何时清理undolog<ul>
-<li>回滚，直接删除，因为还没有快照读能引用</li>
-<li>清理比最小的活跃事务id还老的undolog</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>快照读</p>
-<ul>
-<li>创建快照时刻的活跃的事务Id记录下来，查询时候不查询这些事务提交的数据的<br>  从最新的查找undolog，如果比最小的活跃还小，就是在我之前提交的，是能查到的</li>
-<li>RR，RC的实现，区别是RR创建一次快照，所以整个事务的看到视图是一致的，但是RC是每次都创建快照，所以能读到别的事务提交的数据</li>
-</ul>
-</li>
-<li><p>redolog</p>
-<ul>
-<li>意义：顺序写，速度很快 刷盘量小，没有整个页刷盘那么大</li>
-<li>数据恢复</li>
-</ul>
-</li>
-<li><p>写数据流程</p>
-<ul>
-<li>写undolog</li>
-<li>写内存</li>
-<li>写redolog</li>
-<li>提交</li>
-<li>生效redolog</li>
-<li>生效内存</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
+      <h2 id="观察者模式的用途"><a href="#观察者模式的用途" class="headerlink" title="观察者模式的用途"></a>观察者模式的用途</h2><p>观察者模式最典型的用途就是<code>主流程</code>和<code>外部流程</code>的解耦，比如下订单要赠送一些礼品，那么下订单就是主流程，赠送礼品就是外部流程，如果把所有流程都写到下单中，下单的逻辑就会非常的长，不利于阅读，所以将这些流程单独抽出去</p>
+<h2 id="观察者模式的实现"><a href="#观察者模式的实现" class="headerlink" title="观察者模式的实现"></a>观察者模式的实现</h2><figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> utils</span><br><span class="line"></span><br><span class="line"><span class="comment">// Observer 观察者</span></span><br><span class="line"><span class="keyword">type</span> Observer <span class="keyword">interface</span> &#123;</span><br><span class="line">	Update(*Observable, <span class="keyword">interface</span>&#123;&#125;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Observable 被观察者</span></span><br><span class="line"><span class="keyword">type</span> Observable <span class="keyword">struct</span> &#123;</span><br><span class="line">	observers []Observer</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// NewObservable 新建一个被观察者</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewObservable</span><span class="params">()</span> *<span class="title">Observable</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;Observable&#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Attach 增加一个观察者</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(o *Observable)</span> <span class="title">Attach</span><span class="params">(observer Observer)</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> _, obs := <span class="keyword">range</span> o.observers &#123;</span><br><span class="line">		<span class="keyword">if</span> obs == observer &#123;</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	o.observers = <span class="built_in">append</span>(o.observers, observer)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Dettach 删除一个观察者</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(o *Observable)</span> <span class="title">Dettach</span><span class="params">(observer Observer)</span></span> &#123;</span><br><span class="line">	index := <span class="number">-1</span></span><br><span class="line">	<span class="keyword">for</span> i, obs := <span class="keyword">range</span> o.observers &#123;</span><br><span class="line">		<span class="keyword">if</span> obs == observer &#123;</span><br><span class="line">			index = i</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> index == <span class="number">-1</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	o.observers = <span class="built_in">append</span>(o.observers[:index], o.observers[index+<span class="number">1</span>:]...)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Notify 通知被观察者</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(o *Observable)</span> <span class="title">Notify</span><span class="params">(arg <span class="keyword">interface</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> _, obs := <span class="keyword">range</span> o.observers &#123;</span><br><span class="line">		<span class="comment">// 缩小作用域 某个观察者失败不影响其他观察者</span></span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(obs Observer)</span></span> &#123;</span><br><span class="line">			<span class="keyword">defer</span> <span class="built_in">recover</span>()</span><br><span class="line">			obs.Update(o, arg)</span><br><span class="line">		&#125;(obs)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="使用示例"><a href="#使用示例" class="headerlink" title="使用示例"></a>使用示例</h2><pre><code class="golang"><span class="keyword">package</span> utils
+
+<span class="keyword">import</span> (
+    <span class="string">"fmt"</span>
+    <span class="string">"testing"</span>
+    <span class="string">"time"</span>
+)
+
+<span class="keyword">type</span> ObsA <span class="keyword">struct</span> {
+    a <span class="keyword">int</span> <span class="comment">// 加这个是为了让对象分配到不同的内存 如果不加 所有的空对象都是分配到相同的地址</span>
+}
+
+<span class="function"><span class="keyword">func</span> <span class="params">(o *ObsA)</span> <span class="title">Update</span><span class="params">(observable *Observable, arg <span class="keyword">interface</span>{})</span></span> {
+    fmt.Println(<span class="string">"Obs1"</span>, arg)
+}
+
+<span class="keyword">type</span> ObsB <span class="keyword">struct</span> {
+    a <span class="keyword">int</span> <span class="comment">// 同上</span>
+}
+
+<span class="function"><span class="keyword">func</span> <span class="params">(o *ObsB)</span> <span class="title">Update</span><span class="params">(observable *Observable, arg <span class="keyword">interface</span>{})</span></span> {
+    fmt.Println(<span class="string">"Obs2"</span>, arg)
+}
+
+<span class="comment">// 输出</span>
+<span class="comment">// Obs1 abc</span>
+<span class="comment">// Obs2 abc</span>
+<span class="comment">// ========</span>
+<span class="comment">// Obs2 abc</span>
+
+<span class="function"><span class="keyword">func</span> <span class="title">TestObs</span><span class="params">(t *testing.T)</span></span> {
+    observable := NewObservable()
+    <span class="keyword">var</span> obsa1 ObsA
+    <span class="keyword">var</span> obsb1 ObsB
+
+    <span class="comment">// 去重</span>
+    observable.Attach(&amp;obsa1)
+    observable.Attach(&amp;obsa1)
+    observable.Attach(&amp;obsb1)
+    observable.Attach(&amp;obsb1)
+
+    observable.Notify(<span class="string">"abc"</span>)
+
+    <span class="comment">// 等待执行完</span>
+    time.Sleep(<span class="number">1</span> * time.Second)
+
+    <span class="comment">// 删除</span>
+    observable.Dettach(&amp;obsa1)
+
+    fmt.Println(<span class="string">"========"</span>)
+    observable.Notify(<span class="string">"abc"</span>)
+
+    <span class="comment">// 等待执行完</span>
+    time.Sleep(<span class="number">1</span> * time.Second)
+}</code></pre>
 
       
       <!-- reward -->
@@ -384,7 +189,7 @@
     <footer class="article-footer">
       
       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/BTree/" rel="tag">BTree</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LRU/" rel="tag">LRU</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E4%BA%8C%E7%BA%A7%E7%B4%A2%E5%BC%95/" rel="tag">二级索引</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%B7%A6%E5%89%8D%E7%BC%80%E6%B3%95%E5%88%99/" rel="tag">左前缀法则</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E8%81%94%E5%90%88%E7%B4%A2%E5%BC%95/" rel="tag">联合索引</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E8%81%9A%E9%9B%86%E7%B4%A2%E5%BC%95/" rel="tag">聚集索引</a></li></ul>
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E8%A7%82%E5%AF%9F%E8%80%85/" rel="tag">观察者</a></li></ul>
 
 
     </footer>
@@ -395,19 +200,19 @@
   
   <nav class="article-nav">
     
-      <a href="/2020/03/09/86_Redis%E5%B8%B8%E8%A7%81%E9%9D%A2%E8%AF%95%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/" class="article-nav-link">
+      <a href="/2021/02/23/107_Golang%E7%9A%84Once/" class="article-nav-link">
         <strong class="article-nav-caption">上一篇</strong>
         <div class="article-nav-title">
           
-            Redis常见面试问题分析
+            Golang中的单例实现-Once
           
         </div>
       </a>
     
     
-      <a href="/2020/03/05/77_%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E4%BD%BF%E7%94%A8Netty/" class="article-nav-link">
+      <a href="/2021/01/30/103_%E5%8D%95%E6%9C%BA%E6%A8%A1%E6%8B%9F%E5%A4%A7%E9%87%8F%E8%BF%9E%E6%8E%A5%E5%8F%8A%E7%BA%BF%E7%A8%8B%E6%B1%A0%E5%A4%A7%E5%B0%8F%E8%AE%A1%E7%AE%97/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">为什么用使用netty</div>
+        <div class="article-nav-title">单机模拟大量连接以及线程池参数选择</div>
       </a>
     
   </nav>
