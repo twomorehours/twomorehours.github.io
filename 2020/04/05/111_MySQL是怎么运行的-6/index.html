@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">640</span>
+            <span class="post-count">1.3k</span>
         </span>
     </span>
 
@@ -84,7 +84,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">2 min</span>
+            <span class="post-count">4 min</span>
         </span>
     </span>
 </div>
@@ -170,7 +170,72 @@
 <li>更新的undo log保存的是修改了哪些字段的数据</li>
 <li>undo log不能提交之后立即删除，因为MVCC的原因，有可能有些读事务还在引用undo log(快照读的时候，写事务还没有结束)</li>
 </ul>
-<h2 id=""><a href="#" class="headerlink" title=""></a></h2>
+<h2 id="常见的读写一致性问题"><a href="#常见的读写一致性问题" class="headerlink" title="常见的读写一致性问题"></a>常见的读写一致性问题</h2><ul>
+<li>脏读<ul>
+<li>读到其他事务未提交的数据</li>
+</ul>
+</li>
+<li>不可重复读<ul>
+<li>一个事物的数据读到了另一个事务在本事务活跃期间提交的数据</li>
+</ul>
+</li>
+<li>幻读<ul>
+<li>一个事务写(当前读)了其他事务在本事务活跃期间提交的数据</li>
+</ul>
+</li>
+</ul>
+<h2 id="事务的隔离级别"><a href="#事务的隔离级别" class="headerlink" title="事务的隔离级别"></a>事务的隔离级别</h2><ul>
+<li>READ UNCOMMITTED<ul>
+<li>读未提交 可能发生脏读，不可重复读，幻读</li>
+</ul>
+</li>
+<li>READ COMMITTED<ul>
+<li>读已提交 可能发生不可重复读     幻读 脏读通过MVCC解决</li>
+</ul>
+</li>
+<li>REPEATABEL READ<ul>
+<li>读已提交 MYSQL默认级别  可能发生幻读（小概率，因为有Next key lock）  脏读,不可重复读通过MVCC解决</li>
+</ul>
+</li>
+<li>SERIALIZABLE<ul>
+<li>序列化 各种显现都不能发生 因为是串行的</li>
+</ul>
+</li>
+</ul>
+<h2 id="MVCC"><a href="#MVCC" class="headerlink" title="MVCC"></a>MVCC</h2><p><code>Multi Version Concurrent Control</code>，多版本并发控制，用来再保证一定隔离性的情况下，提高Mysql的读写并发能力</p>
+<ul>
+<li><p>READ VIEW<br>MVCC中有一个读快照的东西，一个事务在特定时候（后面说）会产生一个快照，然后用快照保存的信息，和数据的undo log链上的事务id进行比较，找到此事务应该读取的版本</p>
+</li>
+<li><p>READ VIEW的构成</p>
+<ul>
+<li>trx_ids数组： 当前所有活跃的事物id</li>
+<li>min_trx_id: trx_ids数组里面的最小值</li>
+<li>max_trx_id: mysql下一个要生成的事物id</li>
+</ul>
+</li>
+<li><p>READ VIEW和版本链的对比步骤</p>
+<ul>
+<li>判断当前数据的trx_id是不是本事务，如果是，证明本事务正在修改这条数据，则可见</li>
+<li>如果不是本事务，那就从roll_ptr开始遍历</li>
+<li>如果判断事务id小于min_trx_id，证明在本事务开启之前就有了，则可见</li>
+<li>如果事务id大于max_trx_id，证明是本事务之后的事务，则不可见</li>
+<li>如果事务id在两者之间，那就判断事务id是否在trx_ids数组中，如果不在，则证明这个事务也是在本事务之前提交的，也可见，否则不可见</li>
+</ul>
+</li>
+<li><p>READ VIEW的生成时机</p>
+<ul>
+<li>READ COMMITTED<ul>
+<li>每次查询的时候都会生成，所以能够查到其他事务在本事务之前提交的数据，但是不能查到未提交的数据，因为在数组中存在或者比max_trx_id更大</li>
+</ul>
+</li>
+<li>REPEATABEL READ<ul>
+<li>只在第一次查询的时候生成一次，所以查不到在此事务期间其他事物提交的数据，因为其他事务要么在数组中存在或者比max_trx_id更大</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
       
       <!-- reward -->
       
