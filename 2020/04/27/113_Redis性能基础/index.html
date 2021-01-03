@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">545</span>
+            <span class="post-count">1k</span>
         </span>
     </span>
 
@@ -84,7 +84,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">1 min</span>
+            <span class="post-count">3 min</span>
         </span>
     </span>
 </div>
@@ -160,6 +160,41 @@
 <li>Redis最最外层本身就是一个非常大Hash表，如果Key非常多，那么就会造成非常严重的Hash冲突，导致一个bucket下的链表非常的长，可能退化为O(n)</li>
 <li>这个时候就需要更换为一个容量更大的hash表，但是如果一次执行全部数据的Rehash的话，会阻塞所有的客户端请求</li>
 <li>Redis使用了渐进式rehash的方式。来一个用户请求就顺带迁移一个bucket的数据到新hash表中，把延迟均匀分布到每一个请求上，这样就不会导致假死</li>
+</ul>
+<h2 id="Redis为什么使用单线程"><a href="#Redis为什么使用单线程" class="headerlink" title="Redis为什么使用单线程"></a>Redis为什么使用单线程</h2><ul>
+<li>能保证相对高的性能<ul>
+<li>Redis主流程是纯内存操作，且比较简单，性能很高</li>
+<li>Redis使用了I/O复用的网络模型，单线程即可处理大量的连接数</li>
+<li>Redis的耗时操作都是异步进行的，比如持久化等</li>
+<li>单线程可以减少锁的开销</li>
+</ul>
+</li>
+<li>减少同步代码的编码，降低代码复杂度，提升可维护性<ul>
+<li>比如分布式锁的实现，redis天生就是单线程，不需要特殊处理</li>
+</ul>
+</li>
+</ul>
+<h2 id="Redis操作有哪些可能发生阻塞"><a href="#Redis操作有哪些可能发生阻塞" class="headerlink" title="Redis操作有哪些可能发生阻塞"></a>Redis操作有哪些可能发生阻塞</h2><ul>
+<li>集合全量查询查询<ul>
+<li>尽量避免对超大集合使用全量查询，或者压根就不要使用超大集合，可以结合业务做一下折衷</li>
+</ul>
+</li>
+<li>大key删除<ul>
+<li>因为大key删除不仅要释放内存，操作系统还要把释放的内存加到free链表中，如果释放内存很多，会发生阻塞，尽量不要使用大key，或者可以采取分段删除的方式，Redis 4.0提供了异步删除的方式，如果业务允许，则可以使用</li>
+</ul>
+</li>
+<li>同步AOF<ul>
+<li>RDB是纯异步操作，不会阻塞，但是AOF如果配置了同步写的话，会发生主线程和磁盘的频繁交互，阻塞主线程，推荐appendfsync不使用always，使用 everysec即可</li>
+</ul>
+</li>
+<li>flushdb<ul>
+<li>删除所有的key效果比大key删除更为严重，但是这个操作在正常服务的生产环境中极少使用，就不重点说了</li>
+</ul>
+</li>
+<li>主从同步<ul>
+<li>主节点同步时都是异步执行的，不会阻塞主节点，但是从节点首次接受RDB的时候会使用flushdb并且是同步载入RDB，会发生阻塞，但是因为此时从节点没有请求，这种情况无伤大雅</li>
+</ul>
+</li>
 </ul>
 
       
