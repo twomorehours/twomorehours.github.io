@@ -103,3 +103,4 @@ MVCC中有一个读快照的东西，一个事务在特定时候（后面说）�
   - 如果是主键或者是唯一索引，则最多只加一条
 - Repeatable Read的情况下 for udapte 会加gap lock， 防止范围内插入数据，造成幻读
 - UCR CR RR 默认读都不加锁
+- DDL时最开始会加MDL写锁，此时DML不能执行，DDL获取到MDL写锁之后，会降级为MDL读锁，此时DML可以执行，当DDL执行结束后会再次获取MDL写锁，获取写锁的目的是两个DDL不能同时执行
