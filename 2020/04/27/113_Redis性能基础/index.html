@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">1k</span>
+            <span class="post-count">1.3k</span>
         </span>
     </span>
 
@@ -84,7 +84,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">3 min</span>
+            <span class="post-count">4 min</span>
         </span>
     </span>
 </div>
@@ -193,6 +193,27 @@
 </li>
 <li>主从同步<ul>
 <li>主节点同步时都是异步执行的，不会阻塞主节点，但是从节点首次接受RDB的时候会使用flushdb并且是同步载入RDB，会发生阻塞，但是因为此时从节点没有请求，这种情况无伤大雅</li>
+</ul>
+</li>
+</ul>
+<h2 id="Redis的持久化"><a href="#Redis的持久化" class="headerlink" title="Redis的持久化"></a>Redis的持久化</h2><ul>
+<li>RDB<ul>
+<li>需要将全量数据写入磁盘，即使是异步，也会占用很多资源，影响性能</li>
+<li>频率不宜过高</li>
+<li>重启恢复数据很快</li>
+<li>这个过程使用的COW，只有在住进程发生数据变更的时候会把数据复制给子进程内存</li>
+</ul>
+</li>
+<li>AOF<ul>
+<li>采用的是追加写，性能损耗较小</li>
+<li>三种频率 always everysec no  always每次刷盘不推荐 不需要持久化使用no 需要持久化使用everysec</li>
+<li>重启恢复速度慢</li>
+<li>当AOF文件很大的时候Redis会fork子进程进行AOF重写，即那内存中最新的数据通过插入的命令保存到磁盘上，这个过程使用的COW，只有在住进程发生数据变更的时候会把数据复制给子进程内存</li>
+</ul>
+</li>
+<li>选择<ul>
+<li>RDB频率频率高性能损耗过大，频率低丢数据风险太大，一般不用</li>
+<li>AOF everysec异步写入，性能损耗可以接受，数据最多丢失1s，一般采用这这种方式</li>
 </ul>
 </li>
 </ul>
