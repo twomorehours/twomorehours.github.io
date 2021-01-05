@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">1.3k</span>
+            <span class="post-count">1.6k</span>
         </span>
     </span>
 
@@ -84,7 +84,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">4 min</span>
+            <span class="post-count">5 min</span>
         </span>
     </span>
 </div>
@@ -167,6 +167,7 @@
 <li>Redis使用了I/O复用的网络模型，单线程即可处理大量的连接数</li>
 <li>Redis的耗时操作都是异步进行的，比如持久化等</li>
 <li>单线程可以减少锁的开销</li>
+<li>单线程可以降低cpu上下文切换的消耗</li>
 </ul>
 </li>
 <li>减少同步代码的编码，降低代码复杂度，提升可维护性<ul>
@@ -192,7 +193,51 @@
 </ul>
 </li>
 <li>主从同步<ul>
-<li>主节点同步时都是异步执行的，不会阻塞主节点，但是从节点首次接受RDB的时候会使用flushdb并且是同步载入RDB，会发生阻塞，但是因为此时从节点没有请求，这种情况无伤大雅</li>
+<li>主节点同步时都是异步执行的，不会阻塞主节点，但是从节点首次接受RDB的时候会使用flushdb并且是同步载入RDB，会发生阻塞，但是因为此时从节点没有请求，这种情况无伤大雅<br>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</li>
+</ul>
+</li>
+</ul>
+<h2 id="Redis有哪些淘汰策略"><a href="#Redis有哪些淘汰策略" class="headerlink" title="Redis有哪些淘汰策略"></a>Redis有哪些淘汰策略</h2><p>淘汰策略就是Redis满了的时候要删除一些key释放空间，有以下几种策略</p>
+<ul>
+<li>noevication<ul>
+<li>不逐出， 内存满了也不删除任何数据，适用于不能丢失数据的场景，不适用不同的缓存场景</li>
+</ul>
+</li>
+<li>all keys random<ul>
+<li>从所有key中随机删除一些key</li>
+</ul>
+</li>
+<li>all keys ttl<ul>
+<li>从所有key中随机选取一些key，然后选取最近过期的数据进行删除</li>
+</ul>
+</li>
+<li>all keys lru<ul>
+<li>从所有key中随机选取一些key，然后根据操作时间选取最旧没被使用的key删除</li>
+</ul>
+</li>
+<li>all keys lfu<ul>
+<li>从所有key中随机选取一些key，然后根据操作次数选取使用最少的key删除</li>
+</ul>
+</li>
+<li>volitale keys random<ul>
+<li>从设置过期时间的key中随机删除一些key</li>
+</ul>
+</li>
+<li>volitale keys ttl<ul>
+<li>从设置过期时间的key中随机选取一些key，然后选取最近过期的数据进行删除</li>
+</ul>
+</li>
+<li>volitale keys lru<ul>
+<li>从设置过期时间的key中随机选取一些key，然后根据操作时间选取最旧没被使用的key删除</li>
+</ul>
+</li>
+<li>volitale keys lfu<ul>
+<li>从设置过期时间的key中随机选取一些key，然后根据操作次数选取使用最少的key删除</li>
+</ul>
+</li>
+<li>选择策略<ul>
+<li>业务上可能过期都要设置过期时间</li>
+<li><h1 id="淘汰策略使用volitale-keys-lru"><a href="#淘汰策略使用volitale-keys-lru" class="headerlink" title="淘汰策略使用volitale keys lru"></a>淘汰策略使用volitale keys lru</h1></li>
 </ul>
 </li>
 </ul>
@@ -213,7 +258,22 @@
 </li>
 <li>选择<ul>
 <li>RDB频率频率高性能损耗过大，频率低丢数据风险太大，一般不用</li>
-<li>AOF everysec异步写入，性能损耗可以接受，数据最多丢失1s，一般采用这这种方式</li>
+<li>AOF everysec异步写入，性能损耗可以接受，数据最多丢失1s，一般采用这这种方式<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>be168765bf1337365ef3a1ee1932a6b53368a21c</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
 </ul>
 </li>
 </ul>
