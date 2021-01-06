@@ -193,7 +193,7 @@
 </ul>
 </li>
 <li>主从同步<ul>
-<li>主节点同步时都是异步执行的，不会阻塞主节点，但是从节点首次接受RDB的时候会使用flushdb并且是同步载入RDB，会发生阻塞，但是因为此时从节点没有请求，这种情况无伤大雅<br>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</li>
+<li>主节点同步时都是异步执行的，不会阻塞主节点，但是从节点首次接受RDB的时候会使用flushdb并且是同步载入RDB，会发生阻塞，但是因为此时从节点没有请求，这种情况无伤大雅</li>
 </ul>
 </li>
 </ul>
@@ -237,7 +237,7 @@
 </li>
 <li>选择策略<ul>
 <li>业务上可能过期都要设置过期时间</li>
-<li><h1 id="淘汰策略使用volitale-keys-lru"><a href="#淘汰策略使用volitale-keys-lru" class="headerlink" title="淘汰策略使用volitale keys lru"></a>淘汰策略使用volitale keys lru</h1></li>
+<li>淘汰策略使用volitale keys lru</li>
 </ul>
 </li>
 </ul>
@@ -258,22 +258,7 @@
 </li>
 <li>选择<ul>
 <li>RDB频率频率高性能损耗过大，频率低丢数据风险太大，一般不用</li>
-<li>AOF everysec异步写入，性能损耗可以接受，数据最多丢失1s，一般采用这这种方式<blockquote>
-<blockquote>
-<blockquote>
-<blockquote>
-<blockquote>
-<blockquote>
-<blockquote>
-<p>be168765bf1337365ef3a1ee1932a6b53368a21c</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</blockquote>
-</blockquote>
-</blockquote>
-</blockquote>
-</li>
+<li>AOF everysec异步写入，性能损耗可以接受，数据最多丢失1s，一般采用这这种方式</li>
 </ul>
 </li>
 </ul>
