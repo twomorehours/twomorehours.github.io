@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">747</span>
+            <span class="post-count">890</span>
         </span>
     </span>
 
@@ -84,7 +84,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">2 min</span>
+            <span class="post-count">3 min</span>
         </span>
     </span>
 </div>
@@ -191,6 +191,35 @@
 <li>选择<ul>
 <li>一般选择使用先更新数据库再删除缓存，因为其出现问题概率较小，配合短的过期时间，能尽量减少缓存不一致的时间</li>
 <li>如果不能容忍缓存不一致，如更新用户账户余额等，则需要加分布式锁</li>
+</ul>
+</li>
+</ul>
+<h2 id="Redis的常见问题"><a href="#Redis的常见问题" class="headerlink" title="Redis的常见问题"></a>Redis的常见问题</h2><ul>
+<li>缓存雪崩<ul>
+<li>大量key同时过期，大量请求直接打到数据库<ul>
+<li>过期时间加上随机值</li>
+</ul>
+</li>
+<li>Redis宕机<ul>
+<li>搭建高可用集群</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>缓存击穿<ul>
+<li>某个热点数据过期，大量请求同时打到数据库<ul>
+<li>热点数据不过期不淘汰</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>缓存穿透<ul>
+<li>查询不存在的key，直接传过缓存打到数据库，可能是恶意请求<ul>
+<li>缓存空值，适用于key比较集中的且量小的情况</li>
+<li>使用布隆过滤器</li>
+<li>前端判别恶意请求</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
