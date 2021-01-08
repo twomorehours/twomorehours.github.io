@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">519</span>
+            <span class="post-count">747</span>
         </span>
     </span>
 
@@ -84,7 +84,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">1 min</span>
+            <span class="post-count">2 min</span>
         </span>
     </span>
 </div>
@@ -171,7 +171,28 @@
 <li>这些内存碎片重用率较低</li>
 <li>重启可以去除碎片，但是没有实操意义</li>
 <li>Redis4以上增加了碎片整理功能</li>
-<li>info memory查看信息<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># Memory</span><br><span class="line">used_memory:36921568 # 存储的值占用的内存</span><br><span class="line">used_memory_rss:26771456 # 实际分配的内存</span><br><span class="line">mem_fragmentation_ratio:0.73 # 实际分配内存 &#x2F; 存储的值占用的内存</span><br><span class="line"># 如果mem_fragmentation_ratio &gt; 1 则证明有未使用的内存，如果超过1.5则证明有三分之一的空间未使用，需要处理</span><br><span class="line"># 如果mem_fragmentation_ratio &lt; 1 则说明分配的分配的内存不足 使用了swap 需要立即增加内存</span><br></pre></td></tr></table></figure></li>
+<li>info memory查看信息<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># Memory</span><br><span class="line">used_memory:36921568 # 存储的值占用的内存</span><br><span class="line">used_memory_rss:26771456 # 实际分配的内存</span><br><span class="line">mem_fragmentation_ratio:0.73 # 实际分配内存 &#x2F; 存储的值占用的内存</span><br><span class="line"># 如果mem_fragmentation_ratio &gt; 1 则证明有未使用的内存，如果超过1.5则证明有三分之一的空间未使用，需要处理</span><br><span class="line"># 如果mem_fragmentation_ratio &lt; 1 则说明分配的分配的内存不足 使用了swap 需要立即增加内存</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h2 id="缓存一致性问题"><a href="#缓存一致性问题" class="headerlink" title="缓存一致性问题"></a>缓存一致性问题</h2><ul>
+<li>先删除缓存再更新数据库<ul>
+<li>并发情况下，如果查询请求先于更新请求查询了数据库，并且后于更新请求更新了redis，则会出现不一致</li>
+</ul>
+</li>
+<li>先更新数据库再删除缓存<ul>
+<li>并发情况下， 如果恰好缓存不存在（首次或者过期），会出现上面同样的问题</li>
+</ul>
+</li>
+<li>先更新数据库再更新缓存<ul>
+<li>并发情况下，先更新数据库的请求晚于后更新数据库的请求更新缓存，则会出现不一致</li>
+</ul>
+</li>
+<li>选择<ul>
+<li>一般选择使用先更新数据库再删除缓存，因为其出现问题概率较小，配合短的过期时间，能尽量减少缓存不一致的时间</li>
+<li>如果不能容忍缓存不一致，如更新用户账户余额等，则需要加分布式锁</li>
+</ul>
+</li>
 </ul>
 
       
@@ -204,19 +225,19 @@
   
   <nav class="article-nav">
     
-      <a href="/2020/07/10/41_%E4%B8%80%E4%B8%AA%E7%94%B1LinkedTreeMap%E5%BC%95%E5%8F%91%E7%9A%84%E8%A1%80%E6%A1%88/" class="article-nav-link">
+      <a href="/2020/07/07/73_spring%E4%B8%AD%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F2/" class="article-nav-link">
         <strong class="article-nav-caption">上一篇</strong>
         <div class="article-nav-title">
           
-            一个由LinkedTreeMap引发的血案
+            Spring中使用的设计模式(二)
           
         </div>
       </a>
     
     
-      <a href="/2020/07/07/73_spring%E4%B8%AD%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F2/" class="article-nav-link">
+      <a href="/2020/06/28/72_spring%E4%B8%AD%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F1/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">Spring中使用的设计模式(二)</div>
+        <div class="article-nav-title">Spring中使用的设计模式(一)</div>
       </a>
     
   </nav>
