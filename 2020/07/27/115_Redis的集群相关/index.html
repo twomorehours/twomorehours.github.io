@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    Redis的使用场景以及常见问题 |  向天再借两小时
+    Redis的集群 |  向天再借两小时
   </title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   
@@ -43,7 +43,7 @@
   <div id="app">
     <main class="content on">
       <section class="outer">
-  <article id="post-114_Redis的使用场景以及常见问题" class="article article-type-post" itemscope
+  <article id="post-115_Redis的集群相关" class="article article-type-post" itemscope
   itemprop="blogPost" data-scroll-reveal>
 
   <div class="article-inner">
@@ -51,7 +51,7 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  Redis的使用场景以及常见问题
+  Redis的集群
 </h1>
  
 
@@ -60,8 +60,8 @@
 
     
     <div class="article-meta">
-      <a href="/2020/07/07/114_Redis%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF%E4%BB%A5%E5%8F%8A%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98/" class="article-date">
-  <time datetime="2020-07-07T23:30:39.000Z" itemprop="datePublished">2020-07-07</time>
+      <a href="/2020/07/27/115_Redis%E7%9A%84%E9%9B%86%E7%BE%A4%E7%9B%B8%E5%85%B3/" class="article-date">
+  <time datetime="2020-07-27T23:30:39.000Z" itemprop="datePublished">2020-07-27</time>
 </a>
       
   <div class="article-category">
@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">890</span>
+            <span class="post-count">247</span>
         </span>
     </span>
 
@@ -84,7 +84,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">3 min</span>
+            <span class="post-count">1 min</span>
         </span>
     </span>
 </div>
@@ -109,117 +109,21 @@
       
 
       
-      <h2 id="String的使用场景"><a href="#String的使用场景" class="headerlink" title="String的使用场景"></a>String的使用场景</h2><ul>
-<li>保存对象<ul>
-<li>这是最常见的缓存使用场景，保存应用程序中的一个对象</li>
+      <h2 id="Redis的主从复制"><a href="#Redis的主从复制" class="headerlink" title="Redis的主从复制"></a>Redis的主从复制</h2><ul>
+<li>初始复制<ul>
+<li>初始复制是指从节点第一上线，之前没有接受任何的数据</li>
+<li>从节点给主节点发送psync同步请求</li>
+<li>主节点灰度fullresync响应，并返回主节点的id</li>
+<li>主机节点使用bgsave dump出rdb快照， 推送给从节点，并保存在这个期间生成的写日志</li>
+<li>从节点接受rdb全量恢复数据</li>
+<li>主节点给从节点推送这个过程中发生的写请求</li>
+<li>进入正常状态，主节点会持续把写请求推给从节点，并记录在一个环形数组的buffer中</li>
 </ul>
 </li>
-<li>分布式锁<ul>
-<li>使用setnx实现分布式锁</li>
-</ul>
-</li>
-</ul>
-<h2 id="List的使用场景"><a href="#List的使用场景" class="headerlink" title="List的使用场景"></a>List的使用场景</h2><ul>
-<li>实现队列<ul>
-<li>通过RPUSH LPOP实现分布式队列</li>
-</ul>
-</li>
-</ul>
-<h2 id="Set的使用场景"><a href="#Set的使用场景" class="headerlink" title="Set的使用场景"></a>Set的使用场景</h2><ul>
-<li>保存一批相同类型相同意义的数据，去重<ul>
-<li>如保存一个人的资产，一本书的章节等</li>
-</ul>
-</li>
-</ul>
-<h2 id="Hash的使用场景"><a href="#Hash的使用场景" class="headerlink" title="Hash的使用场景"></a>Hash的使用场景</h2><ul>
-<li>保存一个对象，这个对象的的字段需要单独读写</li>
-<li>保存一批相同类型的KV数据，对用应用程序中Map的使用场景</li>
-</ul>
-<h2 id="Zset的使用场景"><a href="#Zset的使用场景" class="headerlink" title="Zset的使用场景"></a>Zset的使用场景</h2><ul>
-<li>排行榜<ul>
-<li>通过score进行排序</li>
-</ul>
-</li>
-<li>时间序列数据<ul>
-<li>score设置为时间，根据时间排序</li>
-</ul>
-</li>
-<li>延时队列<ul>
-<li>socre为当前时间+延时时间，从头取出</li>
-</ul>
-</li>
-</ul>
-<h2 id="Bitmap的使用场景"><a href="#Bitmap的使用场景" class="headerlink" title="Bitmap的使用场景"></a>Bitmap的使用场景</h2><ul>
-<li>签到信息<ul>
-<li>签到标记为1 未签到为0</li>
-</ul>
-</li>
-<li>布隆过滤器<ul>
-<li>用于减少无效请求穿透到数据库</li>
-</ul>
-</li>
-</ul>
-<h2 id="HyperLogLog的使用场景"><a href="#HyperLogLog的使用场景" class="headerlink" title="HyperLogLog的使用场景"></a>HyperLogLog的使用场景</h2><ul>
-<li>UV计算<ul>
-<li>是用概率统计算法实现相同User的去重，有一定误差，但是占用空间极小，对精确度没有太高可以考虑使用</li>
-</ul>
-</li>
-</ul>
-<h2 id="Redis的内存碎片"><a href="#Redis的内存碎片" class="headerlink" title="Redis的内存碎片"></a>Redis的内存碎片</h2><ul>
-<li>Redis一般使用jemalloc分配内存，分配内存时都是固定大小的，所以一定有一些剩余</li>
-<li>删除数据的时候，空间不会立即返还给操作系统也会造成内存碎片</li>
-<li>这些内存碎片重用率较低</li>
-<li>重启可以去除碎片，但是没有实操意义</li>
-<li>Redis4以上增加了碎片整理功能</li>
-<li>info memory查看信息<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># Memory</span><br><span class="line">used_memory:36921568 # 存储的值占用的内存</span><br><span class="line">used_memory_rss:26771456 # 实际分配的内存</span><br><span class="line">mem_fragmentation_ratio:0.73 # 实际分配内存 &#x2F; 存储的值占用的内存</span><br><span class="line"># 如果mem_fragmentation_ratio &gt; 1 则证明有未使用的内存，如果超过1.5则证明有三分之一的空间未使用，需要处理</span><br><span class="line"># 如果mem_fragmentation_ratio &lt; 1 则说明分配的分配的内存不足 使用了swap 需要立即增加内存</span><br></pre></td></tr></table></figure>
-
-</li>
-</ul>
-<h2 id="缓存一致性问题"><a href="#缓存一致性问题" class="headerlink" title="缓存一致性问题"></a>缓存一致性问题</h2><ul>
-<li>先删除缓存再更新数据库<ul>
-<li>并发情况下，如果查询请求先于更新请求查询了数据库，并且后于更新请求更新了redis，则会出现不一致</li>
-</ul>
-</li>
-<li>先更新数据库再删除缓存<ul>
-<li>并发情况下， 如果恰好缓存不存在（首次或者过期），会出现上面同样的问题</li>
-</ul>
-</li>
-<li>先更新数据库再更新缓存<ul>
-<li>并发情况下，先更新数据库的请求晚于后更新数据库的请求更新缓存，则会出现不一致</li>
-</ul>
-</li>
-<li>选择<ul>
-<li>一般选择使用先更新数据库再删除缓存，因为其出现问题概率较小，配合短的过期时间，能尽量减少缓存不一致的时间</li>
-<li>如果不能容忍缓存不一致，如更新用户账户余额等，则需要加分布式锁</li>
-</ul>
-</li>
-</ul>
-<h2 id="Redis的常见问题"><a href="#Redis的常见问题" class="headerlink" title="Redis的常见问题"></a>Redis的常见问题</h2><ul>
-<li>缓存雪崩<ul>
-<li>大量key同时过期，大量请求直接打到数据库<ul>
-<li>过期时间加上随机值</li>
-</ul>
-</li>
-<li>Redis宕机<ul>
-<li>搭建高可用集群</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>缓存击穿<ul>
-<li>某个热点数据过期，大量请求同时打到数据库<ul>
-<li>热点数据不过期不淘汰</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>缓存穿透<ul>
-<li>查询不存在的key，直接传过缓存打到数据库，可能是恶意请求<ul>
-<li>缓存空值，适用于key比较集中的且量小的情况</li>
-<li>使用布隆过滤器</li>
-<li>前端判别恶意请求</li>
-</ul>
-</li>
+<li>断点复制<ul>
+<li>断点复制是指从节点不是刚上线而是因为网络原因断线了</li>
+<li>这种情况下丛节点发送psync会携带上次的offset</li>
+<li>如果这个offset在环形数组中还存在就同步剩余的数据过去，如果不存在就和初始复制一样走全量</li>
 </ul>
 </li>
 </ul>
@@ -254,19 +158,19 @@
   
   <nav class="article-nav">
     
-      <a href="/2020/07/07/73_spring%E4%B8%AD%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F2/" class="article-nav-link">
+      <a href="/2020/08/01/91_JUC%E7%9A%84CountDownLatch/" class="article-nav-link">
         <strong class="article-nav-caption">上一篇</strong>
         <div class="article-nav-title">
           
-            Spring中使用的设计模式(二)
+            JUC的CountDownLatch
           
         </div>
       </a>
     
     
-      <a href="/2020/06/28/72_spring%E4%B8%AD%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F1/" class="article-nav-link">
+      <a href="/2020/07/25/40_%E9%9B%AA%E8%8A%B1%E7%AE%97%E6%B3%95/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">Spring中使用的设计模式(一)</div>
+        <div class="article-nav-title">雪花算法</div>
       </a>
     
   </nav>
