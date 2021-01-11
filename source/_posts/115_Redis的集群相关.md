@@ -29,3 +29,11 @@ categories:
 - 主从过期时间不一致的问题
   - 使用expire设置过期时， redis会使用服务端当前时间加上过期时间来作为过期时间，因为主库同步到从库需要时间，所以从库的过期时间起点和主库并不一致，这个时候绝对的过期时间也会比主库晚
   - 应该使用expireAt来设置过期时间，这样主库和从库的过期时间就一致，可以吧客户端的expire包装成expireAt
+
+## Redis哨兵
+- Redis sentinel用来保证Redis的主从高可用,Redis sentinel 一般也是以集群的形式使用
+- Redis sentinel节点通过master节点的pub/sub来确定其他sentinel节点的地址，通过这个地址建立连接
+- Redis sentinel通过对主节点执行info slave获取从节点信息，并和从节点建立连接
+- Redis sentinel对master和slave执行ping，如果连续超时超过配置的值，则将主节点标记为主观下线并广播信息
+- Redis sentinel收到超过半数的sentinel节点同意之后对master标记客观下线，然后提升某个从节点为master，并让其他节点replicaof 新master
+- Redis sentinel选择提升从节点的顺序是 配置优先级(根据硬件手动配置的，一般也不配)-> 复制进度 -> 节点id大小，小的优先
