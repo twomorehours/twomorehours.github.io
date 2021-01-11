@@ -37,3 +37,23 @@ categories:
 - Redis sentinel对master和slave执行ping，如果连续超时超过配置的值，则将主节点标记为主观下线并广播信息
 - Redis sentinel收到超过半数的sentinel节点同意之后对master标记客观下线，然后提升某个从节点为master，并让其他节点replicaof 新master
 - Redis sentinel选择提升从节点的顺序是 配置优先级(根据硬件手动配置的，一般也不配)-> 复制进度 -> 节点id大小，小的优先
+
+## Redis cluster
+- Redis cluster是Redis自带的集群实现，但是使用并不广泛
+- Redis cluster使用16384个slot， 每个节点负责一部分slot，key经过hash运算之后和16384取模，决定最终在哪个节点上
+- 集群内部的节点通过gossip通信，也就是随机选几个节点进行通信，最终消息被扩散到整个集群
+- Redis cluster的每个节点都有主备，主节点出问题之后，丛节点会提升，但是如果超过一半的主节点都挂了，集群将不能提供服务
+- 客户端访问使用重定向方式，集群每个节点都保存着其他节点负责的slot信息，当请求不是自己负责的slot时，会返回客户端重定向，客户端会缓存这个重定向，然后访问这个节点
+- 集群增删节点都会涉及到数据的迁移，当访问迁移slot的数据时，原数据节点会给出临时重定向，客户端会访问相关的新数据节点，但是不会缓存
+- 想要使用Redis新版本的功能时，可以考虑使用Redis cluster
+
+## Codis cluster
+- Codis cluster是业界使用广泛的Redis集群实现，对Redis进行了二次开发，并且又开了一个proxy层
+- 结构
+  - Zk集群：Codis使用zk集群保存codis集群元信息，保存slot的分配信息
+  - Codis proxy： 负责处理客户端请求的节点，从zk获取slot的信息，并调用Codis server获取数据，proxy没有状态，增减不需要数据迁移
+  - Codis server：二次开发的Redis server， 每个server group负责一部分slot，这个和Redis cluster很像，一个server group内部有主备，这里面的高可用由Redis sentinel负责
+  - Redis sentinel：负责codis server group内部的高可用
+- Codis server增减时会发生数据迁移，有同步迁移和异步迁移，一般使用异步迁移，原数据节点随机选择数据发到新节点，然后新节点给出ack，然后原节点删除这条数据继续发送下一条
+- 当请求到正在迁移的slot内的数据时，会强制把这条数据迁移然后再返回
+- Codis cluster是业界使用广泛的实现，可以采用
