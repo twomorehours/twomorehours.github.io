@@ -1,5 +1,5 @@
 ---
-title:Managing conflict in the office
+title: Managing conflict in the office
 date: 2019-05-18 23:30:39
 categories:
 - English
