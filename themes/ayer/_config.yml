@@ -105,12 +105,12 @@ layout:
 # 1、Valine[一款快速、简洁且高效的无后端评论系统](https://github.com/xCss/Valine)
 # 启用Valine必须先创建leancloud应用， 获取 id|key 填入即可
 leancloud:
-  enable: true
+  enable: false
   app_id: j7og6mDnkAIEtuTza7hQ3LNa-gzGzoHsz # Your leancloud application appid
   app_key: MFzzLmRJtNRHg35aF1dvI3M5 # Your leancloud application appkey
 # Valine配置
 valine:
-  enable: true # 是否启用
+  enable: false # 是否启用
   verify: false # 是否启用防垃圾验证
   notify: false # 是否开启邮件提醒(https://valine.js.org/notify.html)
   avatar: monsterid # 头像样式(https://valine.js.org/avatar.html)
@@ -155,7 +155,7 @@ music:
 
 # 访问量统计(不蒜子)
 busuanzi:
-  enable: true
+  enable: false
 
 # 友盟cnzz统计(url填js代码src链接)
 cnzz:
