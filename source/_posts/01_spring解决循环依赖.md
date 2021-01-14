@@ -2,7 +2,7 @@
 title: spring解决循环依赖
 date: 2019-09-01 15:29:26
 categories:
-- SpringBoot
+- Spring
 tags:
 - 快慢指针
 - 多层缓存

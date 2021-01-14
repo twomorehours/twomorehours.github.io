@@ -3,7 +3,7 @@ title: Hystrix存在的意义
 date: 2020-02-14 15:00:39
 tags:
 categories:
-- SpringCloud
+- Spring
 ---
 
 ## Hystrix解决了什么问题
