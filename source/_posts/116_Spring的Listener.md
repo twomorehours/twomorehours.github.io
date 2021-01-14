@@ -129,5 +129,128 @@ public ApplicationListenerMethodAdapter(String beanName, Class<?> targetClass, M
 
 ## 事件的发布
 ```java
+//org.springframework.context.support.AbstractApplicationContext#publishEvent(org.springframework.context.ApplicationEvent)
+// 发布Event的入口
+public void publishEvent(ApplicationEvent event) {
+  publishEvent(event, null);
+}
+//org.springframework.context.support.AbstractApplicationContext#publishEvent(java.lang.Object, org.springframework.core.ResolvableType)
+protected void publishEvent(Object event, @Nullable ResolvableType eventType) {
+  Assert.notNull(event, "Event must not be null");
 
+  // Decorate event as an ApplicationEvent if necessary
+  ApplicationEvent applicationEvent;
+  if (event instanceof ApplicationEvent) {
+    applicationEvent = (ApplicationEvent) event;
+  }
+  else {
+    applicationEvent = new PayloadApplicationEvent<>(this, event);
+    if (eventType == null) {
+      eventType = ((PayloadApplicationEvent<?>) applicationEvent).getResolvableType();
+    }
+  }
+
+  // Multicast right now if possible - or lazily once the multicaster is initialized
+  if (this.earlyApplicationEvents != null) {
+    this.earlyApplicationEvents.add(applicationEvent);
+  }
+  else {
+    // 基本都是走这里
+    getApplicationEventMulticaster().multicastEvent(applicationEvent, eventType);
+  }
+
+  // 如果有Parent Context 也会发布事件 比如SpringMVC
+  if (this.parent != null) {
+    if (this.parent instanceof AbstractApplicationContext) {
+      ((AbstractApplicationContext) this.parent).publishEvent(event, eventType);
+    }
+    else {
+      this.parent.publishEvent(event);
+    }
+  }
+}
+//org.springframework.context.event.SimpleApplicationEventMulticaster#multicastEvent(org.springframework.context.ApplicationEvent, org.springframework.core.ResolvableType)
+public void multicastEvent(final ApplicationEvent event, @Nullable ResolvableType eventType) {
+  ResolvableType type = (eventType != null ? eventType : resolveDefaultEventType(event));
+  Executor executor = getTaskExecutor();
+  for (ApplicationListener<?> listener : getApplicationListeners(event, type)) {
+    if (executor != null) {
+      // 逐个调用Listener
+      executor.execute(() -> invokeListener(listener, event));
+    }
+    else {
+      invokeListener(listener, event);
+    }
+  }
+}
+//org.springframework.context.event.SimpleApplicationEventMulticaster#invokeListener
+protected void invokeListener(ApplicationListener<?> listener, ApplicationEvent event) {
+  ErrorHandler errorHandler = getErrorHandler();
+  if (errorHandler != null) {
+    try {
+      // 调用
+      doInvokeListener(listener, event);
+    }
+    catch (Throwable err) {
+      errorHandler.handleError(err);
+    }
+  }
+  else {
+    doInvokeListener(listener, event);
+  }
+}
+//org.springframework.context.event.SimpleApplicationEventMulticaster#doInvokeListener
+private void doInvokeListener(ApplicationListener listener, ApplicationEvent event) {
+  try {
+    // 到Listener的具体实现
+    listener.onApplicationEvent(event);
+  }
+  catch (ClassCastException ex) {
+    //..
+  }
+}
+//org.springframework.context.event.ApplicationListenerMethodAdapter#onApplicationEvent
+public void onApplicationEvent(ApplicationEvent event) {
+  // 默认使用的是Method适配器的方式实现的 也就是反射调用
+  processEvent(event);
+}
+//org.springframework.context.event.ApplicationListenerMethodAdapter#processEvent
+public void processEvent(ApplicationEvent event) {
+  // 判断是不是关心的事件
+  Object[] args = resolveArguments(event);
+  // 如果没有返回 这里就跳过了
+  if (shouldHandle(event, args)) {
+    // 处理
+    Object result = doInvoke(args);
+    if (result != null) {
+      handleResult(result);
+    }
+    else {
+      logger.trace("No result object given - no result to handle");
+    }
+  }
+}
+//org.springframework.context.event.ApplicationListenerMethodAdapter#resolveArguments
+protected Object[] resolveArguments(ApplicationEvent event) {
+  // 取出方法上的能兼容的Event的类型（Event的类型或者其父类）
+  ResolvableType declaredEventType = getResolvableType(event);
+  if (declaredEventType == null) {
+    return null;
+  }
+ //...
+  return new Object[] {event};
+}
+//org.springframework.context.event.ApplicationListenerMethodAdapter#doInvoke
+protected Object doInvoke(Object... args) {
+  // 使用BeanName取出Bean
+  Object bean = getTargetBean();
+  ReflectionUtils.makeAccessible(this.method);
+  try {
+    // 反射调用
+    return this.method.invoke(bean, args);
+  }
+  catch (IllegalArgumentException ex) {
+    //...
+  }
+}
 ```
