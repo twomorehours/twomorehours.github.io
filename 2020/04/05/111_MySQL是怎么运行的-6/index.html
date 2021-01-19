@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">1.6k</span>
+            <span class="post-count">1.7k</span>
         </span>
     </span>
 
@@ -84,7 +84,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">5 min</span>
+            <span class="post-count">6 min</span>
         </span>
     </span>
 </div>
@@ -236,15 +236,28 @@
 </li>
 </ul>
 <h2 id="InnoDB的锁"><a href="#InnoDB的锁" class="headerlink" title="InnoDB的锁"></a>InnoDB的锁</h2><ul>
-<li>锁是一个内存结构，保存着加锁事务的id和等待状态，锁和聚簇索引的数据关联</li>
+<li>锁是一个内存结构，保存着加锁事务的id和等待状态，锁和索引关联</li>
 <li>一个事务要加锁的时候首先判断这条数据有没有锁，如果没有则生成一个结构waiting=false, 如果有则waiting=true</li>
 <li>当一个事务执行结束之后释放锁的时候，会唤醒其他等待的事务</li>
 <li>insert 、update、 in share mode 、 for update 会加锁</li>
-<li>所有的锁都加上主键上</li>
-<li>扫描到了的聚簇索引数据就需要加锁<ul>
-<li>如果没有索引，那么就是全表扫描，所以就是全部记录都需要加锁</li>
-<li>如果使用了索引，则扫描索引范围内的需要回表的数据需要加锁</li>
-<li>如果是主键或者是唯一索引，则最多只加一条</li>
+<li>行锁<ul>
+<li>顾名思义，锁一行</li>
+</ul>
+</li>
+<li>间隙锁<ul>
+<li>锁一个索引数据到之前一个索引范围的间隙，前开后开</li>
+</ul>
+</li>
+<li>Next Key Lock<ul>
+<li>是行锁换个间隙锁合在一起的叫法，加锁的单位都是Next Key Lock，即前开后闭</li>
+</ul>
+</li>
+<li>加锁原则<ul>
+<li>所有的锁都加在索引上，如果一个索引都没有，那也是关联在主键索引上</li>
+<li>扫描到对象会加锁，举个例子，一个索引是非唯一索引，那么查询的时候一定查询到一个不满足的数据为止，那么第一个不满足的数据就会被扫描到</li>
+<li>如果是等值查询，如果是唯一索引，那么不会加间隙锁只会加行锁，因为查出来的数据没有间隙，不会有新数据插入</li>
+<li>如果是等值查询，如果是非唯一索引，第一个扫描到的不满足的数据不会加行锁，只加间隙锁</li>
+<li>order desc的扫描顺序是从后往前</li>
 </ul>
 </li>
 <li>Repeatable Read的情况下 for udapte 会加gap lock， 防止范围内插入数据，造成幻读</li>
