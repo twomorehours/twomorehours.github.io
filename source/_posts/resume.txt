@@ -53,11 +53,13 @@ so we are sure there is something wrong with this mysql.
 use to make sure we can see what we want in a ton of logs. If we click it, we will jump to a new page where we can get all the logs which are related wwith this alarm. 
 This can help us out when a text message can't show us more details.
 
-4. We can configure multi parallel combinations of level, time span and threshold at the same time.  For example we can add a configuration,its level is error , it's time span is 3 minutes 
-and its thredshold is 10, we can also add another one with fatal level, 1-minute time span and the threshold is just one. This can make sure almost every situation can be covered.
+4. We can configure multi parallel rules at the same time. A rule is consists of 3 parts, they are level, time span and threshold. For example we can add a configuration,its level is error, 
+its time span is 3 minutes and its thredshold is 10, we can also add another one with fatal level, 1-minute time span and the threshold is just 1. Once It's very flexible, and this can make sure 
+almost every situation can be covered.
 
-5.We provide two different kinds of SDKs for catering to different teams ,since they use different programming language. And we have taken the simplicity into consideration at the very 
-beginning of the project. when we use springboot , we can open this feature only with an annotaion and this will never have an impact on the business code.
+5.We provide two different kinds of SDKs for catering to different teams since they use different programming language. And we have taken the simplicity into consideration at the very 
+beginning of the project. We take advantage of auto configuration of springboot. For a team use springboot, the only thing they need to do is to import our package in pom file.
+This feature will never have an impact on the business code.
 
 
 Geo Service
