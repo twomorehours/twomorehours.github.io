@@ -35,9 +35,9 @@ in that case I just mentioned. This feature is very useful.
 
 Log Monitor System
 Introduction:
-This project is used to collect and analyze the error messages from the other projects, and give an alarm according to the config. The persons who receive alarms are able to get to
-the root of prolems directly by the text messages. We provide Java and Golang SDK for different teams, and It's actually easy to use.  There have been more than 30 projects which
-are connected with it.
+This project is used to collect and analyze the error logs from the other projects, and give an alarm according to the config. The persons who receive alarm text 
+messages are able to get to the root of a prolem easily. We provide Java and Golang SDK for different teams, and It's actually easy to use. There have been more than 
+30 projects which are connected with it up to now.
 
 Spotlight:
 1.We use flume UDP mode, clients send logs to server port with Netty directly. This way we can avoid read disk files , it's pretty slow to do that. The UDP procotol is more 
