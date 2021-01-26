@@ -1,0 +1,79 @@
+User Virtual Asset Center
+Introduction:
+This project is used to maintain users' virtual asset, such as VIP, which is one of the most importants project in our department. Its average QPS is more than 10000.
+so, This requires this project has high performance and availabilty. 
+
+Spotlight:
+1.We use Redis to implement a distributed delay queue in order to retry some callback operations. For example,once a user pays for a VIP product on Wechat or Alipay, we will receive a callback,
+which informs us to add the correponding rights to the user, we must make sure this final step is successful. Before we brought in this queue, we need to handle some failed callback oprations 
+mannually when some errors occured, and retrying immediately in program doesn't work for some problems in terms of network, since it's almost impossible to recover in a few seconds. 
+So we brought in this queue, we stored a data with its expected execute time to zset when an error occurs and start some new Threads to pull and execute again. We do get a great result, The frequency of Manual processing 
+has decreased by 80%.
+
+2.We use Redis bitmap to store users' purchase information of a book.  Before we did this, we stored a chapter's id to a set when a user bought it. But it took up too much memeory 
+space, so we changed to this way. We use a bit  to represent a chapter of a book, this saves a lot of memory space, and even gets a better performance.
+
+3.We use bucket sort algorithm based in Redis to sort the reading time of ten millions of users. If we use a traditional zset, we need to store all data to only one node of a codis cluster. 
+This must make this node overload, and the key would be pretty big, it must has a poor performance. So, we use a bucket in zset to store just a number of the users who have the same
+reading time. For example, the first bucket stores the number of the users who all have 1-minute reading time. This can spread individual user's reading time to every node in the codis cluster.
+Then we start a schedule task ,it runs every 10 seconds, it's resiponsible for generating the real rank for every bucket by suming up the number of the other buckets in front of it.
+For example, when calculating the rank of the fifth bucket, we need to sum up the numbers from first to fourth bucket. If a user want to get his rank, the only step is to get it by his reading time. 
+It's extremely fast.
+
+4.We use snowflake algorithm to generate id, especially for orderid.  Before we did this,  we use Redis to do the same thing.  But if some network error occured, the generator was not
+available. So we choosed the algorithm released by Twitter. It can reduce dependencies on Redis significantly since it works without network. It can enhance performance and availibility.  
+
+5.We use to Spark to analyze data of charging and payment, and give an alarm according to the config. We do this in case an operator make a wrong price for some products by mistake, 
+especially for those sell well. For example, a vip product is worth 50 yuan, but a operator prices it only 5 yuan by mistake, if a lot of users find this bug, we will suffer a huge loss .
+After we added this function, we are able to receive an alarm in a few minutes in the case I just mentioned. This feature is very useful.
+
+
+
+
+
+Log Monitor System
+Introduction:
+This project is used to collect and analyze the error messages from the other projects, and give an alarm according to the config. The persons who receive alarms are able to get to
+the root of prolems directly by the text messages. We provide Java and Golang SDK for different teams, and It's actually easy to use.  There have been more than 30 projects which
+are connected with it.
+
+Spotlight:
+1.We use flume UDP mode, clients send logs to server port with Netty directly. This way we can avoid read disk files , it's pretty slow to do that. The UDP procotol is more 
+effecient than TCP although it may cause losing a little data. We can stand that since we don't need a very exact number.  In these circumustances, this project can process 10000
+logs per second in only one node.
+
+2.We can highlight the main reason that result in an alarm. Before we did this, we could just receive the number of errors, nobody knew what happend. So we collect many 
+fields this time, such as ip、port、request path、error log and etc and analyze them. So we can find something very useful from a text message,which can help us get the root 
+of a problem quickly. For expample, a text massages may says 90% of ip addresses belongs to an mysql instance, and 90% of exceptions are ConnectionTomeoutException, 
+so we are sure there is something wrong with this mysql.
+
+3.We store error messages to ElasticSearch, when an error is detected by a schedule task, it will send an alarm message via text message and mail, and it also generate a link, 
+if you click that, you can get all the logs in terms of this alarm. This can help you out when a text message can't show you more details.
+
+4. We can configure multi parallel combinations of level, time span and threshold at the same time.  For example we can add a configuration,its level is error , it's time span is 3 minutes 
+and its thredshold is 10, we can also add another one with fatal level, 1-minute time span and the threshold is just one. This can make sure almost every situation can be covered.
+
+5.We provide two different kinds of SDKs for catering to different teams ,since they use different programming language. And we have taken the simplicity into consideration at the very 
+beginning of the project. when we use springboot , we can open this feature only with an annotaion and this will never have an impact on the business code.
+
+
+Geo Service
+Introduction:
+This project is used to access to the external map service providers like Gaode and Baidu, and provide capabilities like location and route planning. As the only map network export,
+We must make sure it' always available.  Its average QPS is about 1000, so we also need to take the performance into consideration.
+
+Spotlight:
+1. We use a schedule task to adjust the priorities of these providers according to their success rate for a higher effeciency. Before we did this, the order of a request was fixed.  We tried to get a result from Gaode
+firstly, if failed, we would send a same request to Baidu. But There was something wrong with this. which was that the service of the proviers were not as stable as we imagine. Sometimes  
+they have been unavilable for a long time. in this case, the first request is meaningless, and even it would waste time and connection resources. So we calculate the success rates in individual time windows, 
+and adjuest the request order to providers in order to make sure this first request is successful.
+
+2.We use http connection pool to improve the http performance. Before we used that, a new connection need to be established for a new reuqest,and we know this kind of operrations is very expensive.
+And someday I found the response headers from the providers show that their http server support the feature keep-alive. So we brought in the connection pool, and it achieved a great effcect. The average resonponse 
+time has decreased by 60%. 
+
+
+
+
+
+
