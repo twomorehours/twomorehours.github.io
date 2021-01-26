@@ -40,26 +40,28 @@ messages are able to get to the root of a prolem easily. We provide Java and Gol
 30 projects which are connected with it up to now.
 
 Spotlight:
-1.We use flume UDP mode, clients send logs to server via network directly. This way we can avoid reading disk files, it's pretty slow to do that. The UDP procotol is more 
+1.We use flume UDP mode to receive logs via network. This way we can avoid reading disk files, it's pretty slow to do that. The UDP procotol is more 
 effecient than TCP although it may causes some data loss. We can stand that since we don't need a very exact number. Because of these, this project can process 10000
 logs per second in only one node. It's enough to handle error logs in any case. 
 
-2.We can highlight the main reasons that lead to an alarm. Before we used this strategy, we could just receive the number of errors, nobody knew what happend. So we collect many 
-fields this time, such as ip、port、request path、error log, etc and analyze them. So we can find something very useful from a text message now, which can help us get the root 
-of a problem quickly. For expample, a text massages may says 90% of ip addresses belongs to an mysql instance, and 90% of exceptions are ConnectionTomeoutException, 
-so we are sure there is something wrong with this mysql.
+2.We can highlight the main reasons that lead to an alarm in order to help us solve probelms quickly. Before we used this strategy, we could just receive the number of errors, 
+nobody knew what happend. So we collect many fields this time, such as ip、port、request path、error log, etc and analyze them. So we can find something very useful from a text 
+message now, which can help us get the root of a problem quickly. For expample, a text massages may says 90% of ip addresses belongs to an mysql instance, and 90% of exceptions 
+are ConnectionTomeoutException, so we are sure there is something wrong with this mysql.
 
-3.We store error logs to ElasticSearch. When an error is detected by a schedule task, we can recieve an alarm message and a link. There are some conditions in this link, these conditions are 
+3.We store error logs to ElasticSearch to review. When an error is detected by a schedule task, we can recieve an alarm message and a link. There are some conditions in this link, these conditions are 
 use to make sure we can see what we want in a ton of logs. If we click it, we will jump to a new page where we can get all the logs which are related wwith this alarm. 
 This can help us out when a text message can't show us more details.
 
-4. We can configure multi parallel rules at the same time. A rule is consists of 3 parts, they are level, time span and threshold. For example we can add a configuration,its level is error, 
-its time span is 3 minutes and its thredshold is 10, we can also add another one with fatal level, 1-minute time span and the threshold is just 1. Once It's very flexible, and this can make sure 
-almost every situation can be covered.
+4. We can configure multi parallel rules at the same time to cover a variety of cases. A rule is consists of 3 parts, they are level, time span and threshold. For example we can add a configuration,
+its level is error, its time span is 3 minutes and its thredshold is 10, we can also add another one with fatal level, 1-minute time span and the threshold is just 1. It's very flexible, 
+and this can make sure almost every case can be covered.
 
 5.We provide two different kinds of SDKs for catering to different teams since they use different programming language. And we have taken the simplicity into consideration at the very 
 beginning of the project. We take advantage of auto configuration of springboot. For a team use springboot, the only thing they need to do is to import our package in pom file.
 This feature will never have an impact on the business code.
+
+
 
 
 Geo Service
