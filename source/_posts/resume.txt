@@ -1,31 +1,33 @@
 User Virtual Asset Center
 Introduction:
-This project is used to maintain users' virtual asset, such as VIP, which is one of the most importants project in our department. Its average QPS is more than 10000.
-so, This requires this project has high performance and availabilty. 
+This project is used to maintain users' virtual asset, such as VIP, it is one of the most important project in our department. Its average QPS is more than 10000.
+So, This requires this project has high performance and availability. 
 
 Spotlight:
-1.We use Redis to implement a distributed delay queue in order to retry some callback operations. For example,once a user pays for a VIP product on Wechat or Alipay, we will receive a callback,
-which informs us to add the correponding rights to the user, we must make sure this final step is successful. Before we brought in this queue, we need to handle some failed callback oprations 
-mannually when some errors occured, and retrying immediately in program doesn't work for some problems in terms of network, since it's almost impossible to recover in a few seconds. 
-So we brought in this queue, we stored a data with its expected execute time to zset when an error occurs and start some new Threads to pull and execute again. We do get a great result, The frequency of Manual processing 
+1.We use Redis to make a distributed delay queue in order to retry some callback operations. For example,once a user pays for a VIP product on Wechat or Alipay, we will receive a callback,
+which informs us to add the correponding asset to the user, we must make sure this final step is successful. Before we brought in this queue, we need to handle some failed callback oprations 
+manually when something went wrong. Retrying immediately in program doesn't work for some problems which are related with network, since it's almost impossible to recover from them in a few seconds. 
+So we brought in this queue, we store a data with its expected execute time to zset when an error occurs and start some new Threads to pull and execute again. We do get a great result, The frequency of manual processing 
 has decreased by 80%.
 
-2.We use Redis bitmap to store users' purchase information of a book.  Before we did this, we stored a chapter's id to a set when a user bought it. But it took up too much memeory 
-space, so we changed to this way. We use a bit  to represent a chapter of a book, this saves a lot of memory space, and even gets a better performance.
+2.We use Redis bitmap to store users' purchase information of a book. Before we did this, we stored a chapter's id to a set when a user bought it. But it took up too much memory 
+space, so we changed the storage data structure, we use only a bit to represent a chapter of a book. This way, we can save a lot of memory space, and even get a better performance.
 
-3.We use bucket sort algorithm based in Redis to sort the reading time of ten millions of users. If we use a traditional zset, we need to store all data to only one node of a codis cluster. 
-This must make this node overload, and the key would be pretty big, it must has a poor performance. So, we use a bucket in zset to store just a number of the users who have the same
-reading time. For example, the first bucket stores the number of the users who all have 1-minute reading time. This can spread individual user's reading time to every node in the codis cluster.
-Then we start a schedule task ,it runs every 10 seconds, it's resiponsible for generating the real rank for every bucket by suming up the number of the other buckets in front of it.
-For example, when calculating the rank of the fifth bucket, we need to sum up the numbers from first to fourth bucket. If a user want to get his rank, the only step is to get it by his reading time. 
-It's extremely fast.
+3.We use bucket sort algorithm based on Redis to sort the reading time of ten millions of users. If we use zset in the traditional way, we need to store all of users' reading timne into only one key, 
+which means we store all data into only one node of a codis cluster. This must make this node overload and has a poor performance. So, we use a bucket in zset to store a reading time as score 
+and the number of the all users who have the same time. For example, the first bucket's score is 1, and it is used to store the number of the users whose reading time is 1. 
+This way, we can store user's real reading time in string type, so we are able to spread them to every node in the codis cluster. Then we start a schedule task ,it runs every 10 seconds, 
+it's resiponsible for generating the real rank for every bucket by suming up the number of the other buckets in front of it. For example, when calculating the rank of the fifth bucket, 
+we need to sum up the numbers from first to fourth bucket and plus one finally. If a user want to get his rank, the only step is to get it by his reading time. It's extremely fast.
 
-4.We use snowflake algorithm to generate id, especially for orderid.  Before we did this,  we use Redis to do the same thing.  But if some network error occured, the generator was not
-available. So we choosed the algorithm released by Twitter. It can reduce dependencies on Redis significantly since it works without network. It can enhance performance and availibility.  
+4.We use snowflake algorithm to generate id, especially for the orderids. Before we did this, we use Redis to do the same thing. But if some network error occured, the generator was not
+available as well. So we choosed the algorithm released by Twitter. It can remove dependencies on Redis since it can work without network and generate id just by calculating locally. 
+We use it to enhance performance and availibility.  
 
-5.We use to Spark to analyze data of charging and payment, and give an alarm according to the config. We do this in case an operator make a wrong price for some products by mistake, 
-especially for those sell well. For example, a vip product is worth 50 yuan, but a operator prices it only 5 yuan by mistake, if a lot of users find this bug, we will suffer a huge loss .
-After we added this function, we are able to receive an alarm in a few minutes in the case I just mentioned. This feature is very useful.
+5.We use to Spark to analyze data of charging and payment, and give an alarm according to the config. We are able to discover the abnormal transactions, maybe a user spend a very low price 
+on something which is high-end. We do this in case an operator make a wrong price for some products by mistake, especially for those sell well. For example, a vip product is worth 50 yuan, 
+but a operator prices it only 5 yuan by mistake, if a lot of users find this bug, we will suffer a huge loss. After we added this function, we are able to receive an alarm in a few minutes 
+in that case I just mentioned. This feature is very useful.
 
 
 
