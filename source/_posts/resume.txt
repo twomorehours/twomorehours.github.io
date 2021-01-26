@@ -64,16 +64,16 @@ This feature will never have an impact on the business code.
 
 Geo Service
 Introduction:
-This project is used to access to the external map service providers like Gaode and Baidu, and provide capabilities like location and route planning. As the only map network export,
-We must make sure it' always available.  Its average QPS is about 1000, so we also need to take the performance into consideration.
+This project is used to access to the external map service providers like Gaode and Baidu, and provide capabilities like positioning and route planning. As the only map network export in company,
+We must make sure it's always available. Its average QPS is about 1000, so we also need to take the performance into consideration.
 
 Spotlight:
-1. We use a schedule task to adjust the priorities of these providers according to their success rate for a higher effeciency. Before we did this, the order of a request was fixed.  We tried to get a result from Gaode
-firstly, if failed, we would send a same request to Baidu. But There was something wrong with this. which was that the service of the proviers were not as stable as we imagine. Sometimes  
-they have been unavilable for a long time. in this case, the first request is meaningless, and even it would waste time and connection resources. So we calculate the success rates in individual time windows, 
-and adjuest the request order to providers in order to make sure this first request is successful.
+1. We use a schedule task to adjust the priorities of these providers according to their success rate for a higher effeciency. Before we did this, the execute process of a request was fixed. We tried to get a result from Gaode
+firstly, if failed, we would send a same request to Baidu. But There was something wrong with this, which was that the proviers were not as stable as we imagine. Sometimes they have been unavilable for a long time. 
+In this case, the first request was meaningless and wasted time and connection resources. So we calculate the success rates in individual time windows, 
+and adjust the request execute process in order to make sure this first request is successful.
 
-2.We use http connection pool to improve the http performance. Before we used that, a new connection need to be established for a new reuqest,and we know this kind of operrations is very expensive.
+2.We use http connection pool to improve the http performance. Before we used that, a new connection need to be established for a new reuqest.As we know, this kind of operations is very expensive is relatively complex.
 And someday I found the response headers from the providers show that their http server support the feature keep-alive. So we brought in the connection pool, and it achieved a great effcect. The average resonponse 
 time has decreased by 60%. 
 
