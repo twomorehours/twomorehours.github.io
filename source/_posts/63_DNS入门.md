@@ -2,7 +2,7 @@
 title: DNS入门
 date: 2020-03-25 21:30:39
 categories:
-- 运维知识
+- Linux
 ---
 
 ## 什么是DNS
