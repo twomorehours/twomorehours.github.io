@@ -24,7 +24,7 @@ we need to sum up the members from first to fourth bucket and plus one finally. 
 available as well. So we choosed the algorithm released by Twitter. It can help us remove dependencies on Redis since it can work without network and generate id just by local computing. 
 We use it to enhance performance and availibility.  
 
-5.We use to Spark to analyze data of charging and payment, and give an alarm according to the config. We are able to discover the abnormal transactions, maybe a user spend a very low price 
+5.We use to Spark to analyze data of charging and payment, and give an alarm according to the config. We are able to discover the abnormal transactions, maybe a user spend a little 
 on something which is high-end. We do this in case an operator make a wrong price for some products by mistake, especially for those sell well. For example, a vip product is worth 50 yuan, 
 but a operator prices it only 5 yuan by mistake, if a lot of users find this bug, we will suffer a huge loss. After we added this function, we are able to receive an alarm in a few minutes 
 in that case I just mentioned. This feature is very useful.
@@ -46,12 +46,12 @@ logs per second in only one node. It's enough to handle error logs in any case.
 
 2.We can highlight the main reasons that lead to an alarm in order to help us solve probelms quickly. Before we used this strategy, we could just receive the number of errors, 
 nobody knew what happend. So we collect many fields this time, such as ip、port、request path、error log, etc and analyze them. So we can find something very useful from a text 
-message now, which can help us get the root of a problem quickly. For expample, a text massages may says 90% of ip addresses belongs to an mysql instance, and 90% of exceptions 
+message now, which can help us get the root of a problem quickly. For expample, a text massage may says 90% of ip addresses belongs to an mysql instance, and 90% of exceptions 
 are ConnectionTomeoutException, so we are sure there is something wrong with this mysql.
 
 3.We store error logs to ElasticSearch to review. When an error is detected by a schedule task, we can recieve an alarm message and a link. There are some conditions in this link, these conditions are 
-use to make sure we can see what we want in a ton of logs. If we click it, we will jump to a new page where we can get all the logs which are related wwith this alarm. 
-This can help us out when a text message can't show us more details.
+use to make sure we can see what we would like to see in a ton of logs. If we click it, we will jump to a new page where we can get all of the logs which are related with this alarm. 
+This can help us out when a text message can't show us in more details.
 
 4. We can configure multi parallel rules at the same time to cover a variety of cases. A rule is consists of 3 parts, they are level, time span and threshold. For example we can add a configuration,
 its level is error, its time span is 3 minutes and its thredshold is 10, we can also add another one with fatal level, 1-minute time span and the threshold is just 1. It's very flexible, 
