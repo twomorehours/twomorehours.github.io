@@ -53,11 +53,11 @@ are ConnectionTomeoutException, so we are sure there is something wrong with thi
 use to make sure we can see what we would like to see in a ton of logs. If we click it, we will jump to a new page where we can get all of the logs which are related with this alarm. 
 This can help us out when a text message can't show us in more details.
 
-4. We can configure multi parallel rules at the same time to cover a variety of cases. A rule is consists of 3 parts, they are level, time span and threshold. For example we can add a configuration,
+4. We can configure multi parallel rules at the same time to cover a variety of cases. A rule consists of 3 parts, they are level, time span and threshold. For example we can add a configuration,
 its level is error, its time span is 3 minutes and its thredshold is 10, we can also add another one with fatal level, 1-minute time span and the threshold is just 1. It's very flexible, 
 and this can make sure almost every case can be covered.
 
-5.We provide two different kinds of SDKs for catering to different teams since they use different programming language. And we have taken the simplicity into consideration at the very 
+5.We provide two different types of SDKs for catering to different teams since they use different programming language. And we have taken the simplicity into consideration at the very 
 beginning of the project. We take advantage of auto configuration of springboot. For a team use springboot, the only thing they need to do is to import our package in pom file.
 This feature will never have an impact on the business code.
 
@@ -71,11 +71,11 @@ We must make sure it's always available. Its average QPS is about 1000, so we al
 
 Spotlight:
 1. We use a schedule task to adjust the priorities of these providers according to their success rate for a higher effeciency. Before we did this, the execute process of a request was fixed. We tried to get a result from Gaode
-firstly, if failed, we would send a same request to Baidu. But There was something wrong with this, which was that the proviers were not as stable as we imagine. Sometimes they have been unavilable for a long time. 
+firstly, if failed, we would send a same request to Baidu. But There was something wrong with this, which was that the providers were not as stable as we imagine. Sometimes they have been unavilable for a long time. 
 In this case, the first request was meaningless and wasted time and connection resources. So we calculate the success rates in individual time windows, 
 and adjust the request execute process in order to make sure this first request is successful.
 
-2.We use http connection pool to improve the http performance. Before we used that, a new connection need to be established for a new reuqest.As we know, this kind of operations is very expensive is relatively complex.
+2.We use http connection pool to improve the http performance. Before we used that, a new connection needs to be established for a new reuqest. As we know, this kind of operations is relatively complex for OS.
 And someday I found the response headers from the providers show that their http server support the feature keep-alive. So we brought in the connection pool, and it achieved a great effcect. The average resonponse 
 time has decreased by 60%. 
 
