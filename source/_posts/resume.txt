@@ -1,6 +1,6 @@
 User Virtual Asset Center
 Introduction:
-This project is used to maintain users' virtual asset, such as VIP, it is one of the most important project in our department. Its average QPS is more than 10000.
+This project is used to maintain users' virtual asset, such as VIP, it is one of the most important projects in our department. Its average QPS is more than 10000.
 So, This requires this project has high performance and availability. 
 
 Spotlight:
@@ -13,18 +13,18 @@ has decreased by 80%.
 2.We use Redis bitmap to store users' purchase information of a book. Before we did this, we stored a chapter's id to a set when a user bought it. But it took up too much memory 
 space, so we changed the storage data structure, we use only a bit to represent a chapter of a book. This way, we can save a lot of memory space, and even get a better performance.
 
-3.We use bucket sort algorithm based on Redis to sort the reading time of ten millions of users. If we use zset in the traditional way, we need to store all of users' reading timne into only one key, 
+3.We use bucket sort algorithm based on Redis to sort the reading time of ten millions of users. If we use zset in the traditional way, we need to store all of users' reading time into only one key, 
 which means we store all data into only one node of a codis cluster. This must make this node overload and has a poor performance. So, we use a bucket in zset to store a reading time as score 
-and the number of the all users who have the same time. For example, the first bucket's score is 1, and it is used to store the number of the users whose reading time is 1. 
-This way, we can store user's real reading time in string type, so we are able to spread them to every node in the codis cluster. Then we start a schedule task ,it runs every 10 seconds, 
-it's resiponsible for generating the real rank for every bucket by suming up the number of the other buckets in front of it. For example, when calculating the rank of the fifth bucket, 
-we need to sum up the numbers from first to fourth bucket and plus one finally. If a user want to get his rank, the only step is to get it by his reading time. It's extremely fast.
+and the number of the all users who have the same time as member. For example, the first bucket's score is 1, and its member is the number of the users whose reading time is 1. 
+This way, we can store user's real reading time in string type, so we are able to spread them to every node in a codis cluster. Then we start a schedule task ,it runs every 10 seconds, 
+it's resiponsible for generating the real rank for every bucket by suming up the members of the other buckets in front of them. For example, when calculating the rank of the fifth bucket, 
+we need to sum up the members from first to fourth bucket and plus one finally. If a user want to get his rank, the only step is to get it by his reading time. It's extremely fast.
 
-4.We use snowflake algorithm to generate id, especially for the orderids. Before we did this, we use Redis to do the same thing. But if some network error occured, the generator was not
-available as well. So we choosed the algorithm released by Twitter. It can remove dependencies on Redis since it can work without network and generate id just by calculating locally. 
+4.We use snowflake algorithm to generate id, especially for the orderids. Before we used this algorithm, we use Redis to do the same thing. But if some network error occured, the generator was not
+available as well. So we choosed the algorithm released by Twitter. It can help us remove dependencies on Redis since it can work without network and generate id just by local computing. 
 We use it to enhance performance and availibility.  
 
-5.We use to Spark to analyze data of charging and payment, and give an alarm according to the config. We are able to discover the abnormal transactions, maybe a user spend a very low price 
+5.We use to Spark to analyze data of charging and payment, and give an alarm according to the config. We are able to discover the abnormal transactions, maybe a user spend a little 
 on something which is high-end. We do this in case an operator make a wrong price for some products by mistake, especially for those sell well. For example, a vip product is worth 50 yuan, 
 but a operator prices it only 5 yuan by mistake, if a lot of users find this bug, we will suffer a huge loss. After we added this function, we are able to receive an alarm in a few minutes 
 in that case I just mentioned. This feature is very useful.
@@ -46,18 +46,18 @@ logs per second in only one node. It's enough to handle error logs in any case.
 
 2.We can highlight the main reasons that lead to an alarm in order to help us solve probelms quickly. Before we used this strategy, we could just receive the number of errors, 
 nobody knew what happend. So we collect many fields this time, such as ip、port、request path、error log, etc and analyze them. So we can find something very useful from a text 
-message now, which can help us get the root of a problem quickly. For expample, a text massages may says 90% of ip addresses belongs to an mysql instance, and 90% of exceptions 
+message now, which can help us get the root of a problem quickly. For expample, a text massage may says 90% of ip addresses belongs to an mysql instance, and 90% of exceptions 
 are ConnectionTomeoutException, so we are sure there is something wrong with this mysql.
 
 3.We store error logs to ElasticSearch to review. When an error is detected by a schedule task, we can recieve an alarm message and a link. There are some conditions in this link, these conditions are 
-use to make sure we can see what we want in a ton of logs. If we click it, we will jump to a new page where we can get all the logs which are related wwith this alarm. 
-This can help us out when a text message can't show us more details.
+use to make sure we can see what we would like to see in a ton of logs. If we click it, we will jump to a new page where we can get all of the logs which are related with this alarm. 
+This can help us out when a text message can't show us in more details.
 
-4. We can configure multi parallel rules at the same time to cover a variety of cases. A rule is consists of 3 parts, they are level, time span and threshold. For example we can add a configuration,
+4. We can configure multi parallel rules at the same time to cover a variety of cases. A rule consists of 3 parts, they are level, time span and threshold. For example we can add a configuration,
 its level is error, its time span is 3 minutes and its thredshold is 10, we can also add another one with fatal level, 1-minute time span and the threshold is just 1. It's very flexible, 
 and this can make sure almost every case can be covered.
 
-5.We provide two different kinds of SDKs for catering to different teams since they use different programming language. And we have taken the simplicity into consideration at the very 
+5.We provide two different types of SDKs for catering to different teams since they use different programming language. And we have taken the simplicity into consideration at the very 
 beginning of the project. We take advantage of auto configuration of springboot. For a team use springboot, the only thing they need to do is to import our package in pom file.
 This feature will never have an impact on the business code.
 
@@ -71,11 +71,11 @@ We must make sure it's always available. Its average QPS is about 1000, so we al
 
 Spotlight:
 1. We use a schedule task to adjust the priorities of these providers according to their success rate for a higher effeciency. Before we did this, the execute process of a request was fixed. We tried to get a result from Gaode
-firstly, if failed, we would send a same request to Baidu. But There was something wrong with this, which was that the proviers were not as stable as we imagine. Sometimes they have been unavilable for a long time. 
+firstly, if failed, we would send a same request to Baidu. But There was something wrong with this, which was that the providers were not as stable as we imagine. Sometimes they have been unavilable for a long time. 
 In this case, the first request was meaningless and wasted time and connection resources. So we calculate the success rates in individual time windows, 
 and adjust the request execute process in order to make sure this first request is successful.
 
-2.We use http connection pool to improve the http performance. Before we used that, a new connection need to be established for a new reuqest.As we know, this kind of operations is very expensive is relatively complex.
+2.We use http connection pool to improve the http performance. Before we used that, a new connection needs to be established for a new reuqest. As we know, this kind of operations is relatively complex for OS.
 And someday I found the response headers from the providers show that their http server support the feature keep-alive. So we brought in the connection pool, and it achieved a great effcect. The average resonponse 
 time has decreased by 60%. 
 
