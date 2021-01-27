@@ -75,7 +75,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> Word count:</span>
-            <span class="post-count">773</span>
+            <span class="post-count">928</span>
         </span>
     </span>
 
@@ -84,7 +84,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> Reading time≈</span>
-            <span class="post-count">3 min</span>
+            <span class="post-count">4 min</span>
         </span>
     </span>
 </div>
@@ -180,9 +180,22 @@
 <h2 id="小练习三"><a href="#小练习三" class="headerlink" title="小练习三"></a>小练习三</h2><p>输出某slow log中redis的平均响应时间,如下</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">平均响应时间: 21 ms</span><br></pre></td></tr></table></figure>
 
-<h2 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h2><h2 id="小练习四"><a href="#小练习四" class="headerlink" title="小练习四"></a>小练习四</h2><p>统计access log中 请求ip top5</p>
-<h2 id="小练习五"><a href="#小练习五" class="headerlink" title="小练习五"></a>小练习五</h2><p>统计QPS top5</p>
-<h2 id="substr"><a href="#substr" class="headerlink" title="substr"></a>substr</h2><h2 id="小练习六"><a href="#小练习六" class="headerlink" title="小练习六"></a>小练习六</h2><p>统计redis key超时平均时长top5</p>
+<h2 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; echo &quot;&quot; | awk &#39;BEGIN &#123;m[&quot;a&quot;]+&#x3D;1;m[&quot;b&quot;]++;&#125; END &#123;for(k in m)&#123;print k,m[k]&#125;&#125;&#39;</span><br><span class="line">a 1</span><br><span class="line">b 1</span><br></pre></td></tr></table></figure>
+<ul>
+<li>awk数组是实际上就是map</li>
+<li>awk数组(任何变量)都我无需声明，直接使用</li>
+<li>当map的value是数字时，可以直接用++ += – -=</li>
+<li>使用<code>for in</code>遍历</li>
+</ul>
+<h2 id="小练习四"><a href="#小练习四" class="headerlink" title="小练习四"></a>小练习四</h2><p>输出8080端口的tcp连接状态，如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">LISTEN 1</span><br><span class="line">CLOSE_WAIT 53</span><br><span class="line">ESTABLISHED 36</span><br><span class="line">TIME_WAIT 5</span><br></pre></td></tr></table></figure>
+<h2 id="小练习四-1"><a href="#小练习四-1" class="headerlink" title="小练习四"></a>小练习四</h2><p>统计nginx.log中请求uri top5,如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;vp&#x2F;order&#x2F;giftOrdinaryVip 5</span><br><span class="line">&#x2F;vp&#x2F;order&#x2F;giftUnionVip 1</span><br></pre></td></tr></table></figure>
+<h2 id="substr"><a href="#substr" class="headerlink" title="substr"></a>substr</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; echo &quot;断章取义&quot; | awk &#39;&#123;print substr($0,2,2)&#125;&#39;</span><br><span class="line">章取</span><br></pre></td></tr></table></figure>
+<ul>
+<li>substr(str,index,length) index从1开始<h2 id="小练习六"><a href="#小练习六" class="headerlink" title="小练习六"></a>小练习六</h2>输出某slow log中redis的平均响应时长的key top5,如下<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">vp_renew_job_lock_20 208.667</span><br><span class="line">VIP_RENEW_LOCK_IOS_TEST 204.5</span><br><span class="line">UVPE_G_i1076020015_3 88</span><br><span class="line">USR_GRANT_COUPON_G 69.9565</span><br><span class="line">GRANT_WELFARE_CARD_G 66.8182</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
 
       
       <!-- reward -->
@@ -214,19 +227,19 @@
   
   <nav class="article-nav">
     
-      <a href="/2020/09/20/116_Spring%E7%9A%84Listener/" class="article-nav-link">
+      <a href="/2020/10/05/90_JUC%E7%9A%84Lock/" class="article-nav-link">
         <strong class="article-nav-caption">上一篇</strong>
         <div class="article-nav-title">
           
-            Spring的Listener实现原理
+            JUC的Lock
           
         </div>
       </a>
     
     
-      <a href="/2020/09/15/74_Mybatis%E4%B8%AD%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F1/" class="article-nav-link">
+      <a href="/2020/09/20/116_Spring%E7%9A%84Listener/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">Mybatis中使用的设计模式</div>
+        <div class="article-nav-title">Spring的Listener实现原理</div>
       </a>
     
   </nav>
