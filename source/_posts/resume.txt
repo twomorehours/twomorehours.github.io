@@ -14,11 +14,11 @@ has decreased by 80%.
 space, so we changed the storage data structure, we use only a bit to represent a chapter of a book. This way, we can save a lot of memory space, and even get a better performance.
 
 3.We use bucket sort algorithm based on Redis to sort the reading time of ten millions of users. If we use zset in the traditional way, we need to store all of users' reading time into only one key, 
-which means we store all data into only one node of a codis cluster. This must make this node overload and has a poor performance. So, we use a bucket in zset to store a reading time
-and the number of the all users who have the same time. For example, the first bucket's score is 1, and its member is the number of the users whose reading time is 1. 
-This way, we can store user's real reading time in string type, so we are able to spread them to every node in a codis cluster. Then we start a schedule task ,it runs every 10 seconds, 
-it's resiponsible for generating the real rank for every bucket by suming up the numbers in the other buckets in front of it. For example, when calculating the rank of the fifth bucket, 
-we need to sum up the numebers from first to fourth bucket and plus one finally. If a user want to get his rank, the only step is to get it by his reading time. It's extremely fast.
+which means we store all data into only one node of a codis cluster. This must make this node overload and has a poor performance. So, we store evey reading time 
+and the number of users who have the same reading time with zset. We call a element in zset a bucket. For example, the first bucket's score is 1, and its member is the number of the users whose reading time is 1. 
+This way, we can store user's individual reading time in string type, so they can be spread to every node in a codis cluster. Then we start a schedule task ,it runs every 10 seconds, 
+it's resiponsible for computing the ranking for every bucket by suming up the numbers in the other buckets in front of it. For example, when computing the ranking of the fifth bucket, 
+we need to sum up the numebers from first to fourth bucket and plus one finally. If a user want to get his ranking, the only step is to get it by his reading time. It's extremely fast.
 
 4.We use snowflake algorithm to generate id. Before we used this algorithm, we use Redis to do the same thing. But if some network error occured, the generator was not
 available as well. So we choosed the algorithm released by Twitter. It can help us remove dependencies on Redis since it can work without network and generate id just by local computing. 
@@ -83,4 +83,4 @@ time has decreased by 60%.
 
 
 
-
+ 
