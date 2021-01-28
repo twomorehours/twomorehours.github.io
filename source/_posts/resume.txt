@@ -69,14 +69,14 @@ This project is used to access to the external map service providers like Gaode 
 We must make sure it's always available. Its average QPS is about 1000, so we also need to take the performance into consideration.
 
 Spotlight:
-1. We use a schedule task to adjust the priorities of these providers according to their success rate for a higher effeciency. Before we did this, the execute process of a request was fixed. We tried to get a result from Gaode
+1. We use a schedule task to adjust the priorities of these providers according to their success rate. Before we did this, the execute process of a request was fixed. We tried to get a result from Gaode
 firstly, if that failed, we would send a same request to Baidu. But There was something wrong with this, which was that the providers were not as stable as we imagine. Sometimes they have been unavilable for a long time. 
 In this case, the first request was meaningless and wasted time and connection resources. So we calculate the success rates in individual time windows, 
-and adjust the request execute process in order to make sure this first request is successful.
+and adjust the request execute process in order to make sure this first request is successful. This can make the project more effecient.
 
 2.We use http connection pool to improve the http performance. Before we used that, a new connection needs to be established for a new reuqest. As we know, this kind of operations is relatively complex for OS.
-And someday I found the response headers from the providers showing that their http servers support the feature keep-alived. So we brought in the connection pool, and it achieved a great effcect. The average resonponse 
-time has decreased by 60%. 
+And someday I found something useful from the providers' response headers, that is they support the feature keep-alived. So we brought in the connection pool to resue tcp conditions, and it achieved a great effcect. 
+The average resonponse time has decreased by 60%. 
 
 
 
