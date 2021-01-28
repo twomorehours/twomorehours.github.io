@@ -24,8 +24,7 @@ we need to sum up the numebers from first to fourth bucket and plus one finally.
 available as well. So we choosed the algorithm released by Twitter. It can help us remove dependencies on Redis since it can work without network and generate id just by local computing. 
 We use it to enhance performance and availibility.  
 
-5.We use Spark to analyze data of charging and payment, and give an alarm according to the config. We are able to discover the abnormal transactions, maybe a user spend a little 
-on something which is high-end. We do this in case an operator make a wrong price for some products by mistake, especially for those sell well. For example, a vip product is worth 50 yuan, 
+5.We use Spark to analyze data of charging and payment, and give an alarm according to the config. We do this in case an operator make a wrong price for some products by mistake, especially for those sell well. For example, a vip product is worth 50 yuan, 
 but a operator prices it only 5 yuan by mistake, if a lot of users find this bug, we will suffer a huge loss. After we added this function, we are able to receive an alarm in a few minutes 
 in that case I just mentioned. This feature is very useful.
 
