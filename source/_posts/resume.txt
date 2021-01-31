@@ -7,8 +7,8 @@ Spotlight:
 1.We use Redis to make a distributed delay queue in order to retry some callback operations. For example,once a user pays for a VIP product on Wechat or Alipay, we will receive a callback,
 which informs us to increase user's assets, we must make sure this final step is successful. Before we brought in this queue, we need to handle some failed callback oprations 
 manually when something went wrong. Retrying immediately in program doesn't work for some problems which are related with network, since it's almost impossible to recover from them in a few seconds. 
-So we brought in this queue, we store a data with its expected execute time to zset when an error occurs and start some new Threads to pull and execute again. We do get a great result, The frequency of manual processing 
-has decreased by 80%.
+So we brought in this queue, we store a data with its expected execute time to zset when an error occurs ,and start some Threads to pull the data its time is before current time and execute again continuously. 
+We do get a great result, The frequency of manual processing has decreased by 80%.
 
 2.We use Redis bitmap to store users' purchase information of a book. Before we did this, we stored a chapter's id to a set when a user bought it. But it took up too much memory 
 space, so we changed the storage data structure, we use only a bit to represent a chapter of a book. This way, we can save a lot of memory space, and even get a better performance.
@@ -71,7 +71,7 @@ We must make sure it's always available. Its average QPS is about 1000, so we al
 
 Spotlight:
 1. We use a schedule task to adjust the priorities of these providers according to their success rate. Before we did this, We sent a request to providers in a fixed order. We tried to get a result from Gaode
-firstly, if that failed, we would send a same request to Baidu. But There was something wrong with this, which was that the providers were not as stable as we imagine. Sometimes they have been unavilable for a long time. 
+firstly, if that failed, we would send a same request to Baidu. But There was something wrong with this, which was that the providers were that stable. Sometimes they have been unavilable for a long time. 
 If the Gaode is not available, the first request was meaningless and wasted time and connection resources. So we calculate the success rates in individual time windows, 
 and adjust the request execute process in order to make sure this first request is successful. This can make the project more effecient.
 
