@@ -5,7 +5,7 @@ So, This requires this project has high performance and availability.
 
 Spotlight:
 1.We use Redis to make a distributed delay queue in order to retry some callback operations. For example,once a user pays for a VIP product on Wechat or Alipay, we will receive a callback,
-which informs us to add the correponding asset to the user, we must make sure this final step is successful. Before we brought in this queue, we need to handle some failed callback oprations 
+which informs us to increase user's assets, we must make sure this final step is successful. Before we brought in this queue, we need to handle some failed callback oprations 
 manually when something went wrong. Retrying immediately in program doesn't work for some problems which are related with network, since it's almost impossible to recover from them in a few seconds. 
 So we brought in this queue, we store a data with its expected execute time to zset when an error occurs and start some new Threads to pull and execute again. We do get a great result, The frequency of manual processing 
 has decreased by 80%.
@@ -14,11 +14,12 @@ has decreased by 80%.
 space, so we changed the storage data structure, we use only a bit to represent a chapter of a book. This way, we can save a lot of memory space, and even get a better performance.
 
 3.We use bucket sort algorithm based on Redis to sort the reading time of ten millions of users. If we use zset in the traditional way, we need to store all of users' reading time into only one key, 
-which means we store all data into only one node of a codis cluster. This must make this node overload and has a poor performance. So, we store evey reading time 
-and the number of users who have the same reading time with zset. We call a element in zset a bucket. For example, the socre of the first bucket is 1, and its member is the number of the users whose reading time is 1. 
-This way, we can store user's individual reading time in string type, so they can be spread to every node in a codis cluster. Then we start a schedule task ,it runs every 10 seconds, 
-it's resiponsible for computing the ranking for every bucket by suming up the numbers in the other buckets in front of it. For example, when computing the ranking of the fifth bucket, 
-we need to sum up the numebers from first to fourth bucket and plus one finally. If a user want to get his ranking, the only step is to get it by his reading time. It's extremely fast.
+which means we store all data into only one node of a codis cluster. This must make this node overload and has a poor performance. So, we store evey unique reading time 
+and the number of users who have the same reading time with zset.  For example, the socre of the first element is 1, and its member is the number of the users whose reading time is 1. 
+We call a element in zset a bucket. Because we only need to store data in one week, the number of elements is supposed to be less than 10,080.  This way, we can store user's individual 
+reading time in string type, so they can be spread to every node in a codis cluster. Then we start a schedule task ,it runs every 10 seconds, it's resiponsible for computing the ranking for 
+every bucket by suming up the numbers in the other buckets in front of it. For example, when computing the ranking of the fifth bucket, we need to sum up the numebers 
+from first to fourth bucket and plus one finally. If a user want to get his ranking, the only step is to get it by his reading time. It's extremely fast.
 
 4.We use snowflake algorithm to generate id. Before we used this algorithm, we use Redis to do the same thing. But if some network error occured, the generator was not
 available as well. So we choosed the algorithm released by Twitter. It can help us remove dependencies on Redis since it can work without network and generate id just by local computing. 

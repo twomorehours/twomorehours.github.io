@@ -1,14 +1,14 @@
 My name is Yuhao, I live in shenyang, you can find the other base information about me from the resume, 
 so I won't give you the unnecessary details about that. Let's start with my work experience directly. 
-I have worked for two companies in three and a half years. They are both in the Internet industry.
-The first one's name is 58 Daojia, it's one of subcompanies of 58 Group. you may have heard of it. 
+I have worked for two companies in three and a half years. The first one's name is 58 Daojia, it's one of subcompanies of 58 Group. you may have heard of it. 
 They had a well-known app called 58 Sunyun. Now, they have changed the name to KuaiGouDache.
 It's an app which is familiar with DiDi. You can find a vehicle that meet you requirements on the platform. 
 The biggest differece between them is that they have the totally different purposes. The DiDi is designed for travel,
 but this one is for transportation,I had been working there as a Java developer for two years.
 The second company is Zhangyue, I'm still woking here now. which is the biggest reading servie provider in China. 
 They also have a recognized app called iReader. The builtin ebook apps in most of mobile phones released by
-domestic manufactures are supported by Zhangyue, such as huawei, oppo and vivo. These two companies both have huge number of users, 
+domestic manufactures are supported by Zhangyue, such as huawei, oppo and vivo.  These two companies are both in the Internet industry. 
+So I'm on top of the agile development, and they also have huge number of users, 
 especially for Zhangyue. It has more than 100 million users at least and most of them are active.
 So I have accumulated a lot of experience on high avaiable and high concurrency.
 I specialize in Java and Golang. I have wealth experience in using Spring Stack and Some middlewares.
