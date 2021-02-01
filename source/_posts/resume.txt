@@ -50,7 +50,7 @@ error log, etc, and we  analyze them. So we can find something very useful from 
 may says 90% of ip addresses belongs to an mysql instance, and 90% of exceptions are ConnectionTimeoutException, so we are sure there is something wrong with this mysql.
 
 3.We store error logs to ElasticSearch to review. When a bunch of errors are detected by a schedule task, we can recieve a link in a text message. There are some conditions in this link, these conditions are 
-used to make sure we can see what we would like to see in a ton of logs. If we click it, we will jump to a new page where we can get all of the logs which are related with this alarm. 
+used to make sure we can pick up what we want in a ton of logs. If we click it, we will jump to a new page where we can get all of the logs which are related with this alarm. 
 This can help us out when a text message can't show us in more details.
 
 4. We can configure multi parallel rules at the same time to cover a variety of cases. A rule consists of 3 parts, they are level, time span and threshold. For example we can add a configuration,
@@ -73,7 +73,7 @@ Spotlight:
 1. We use a schedule task to adjust the priorities of these providers according to their success rate. Before we did this, We sent a request to providers in a fixed order. We tried to get a result from Gaode
 firstly, if that failed, we would send a same request to Baidu. But There was something wrong with this, which was that the providers were that stable. Sometimes they have been unavilable for a long time. 
 If the Gaode is not available, the first request was meaningless and wasted time and connection resources. So we calculate the success rates in individual time windows, 
-and adjust the request execute process in order to make sure this first request is successful. This can make the project more effecient.
+and adjust the request execute process in order to make sure we can get a result in the first request.
 
 2.We use http connection pool to improve the http performance. Before we used that, a new connection needs to be established for a new reuqest. As we know, this kind of operations is relatively complex for OS.
 And someday I found something useful from the providers' response headers, that is they support the feature keep-alived. So we brought in the connection pool to resue tcp conditions, and it achieved a great effcect. 
