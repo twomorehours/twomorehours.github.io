@@ -10,7 +10,7 @@ manually when something went wrong. Retrying immediately in program doesn't work
 So we brought in this queue, we store a data with its expected execute time to zset when an error occurs ,and start some Threads to pull the data its time is before current time and execute again continuously. 
 We do get a great result, The frequency of manual processing has decreased by 80%.
 
-2.We use Redis bitmap to store users' purchase information of a book. Before we did this, we stored a chapter's id to a set when a user bought it. But it took up too much memory 
+2.We use Redis bitmap to store users' purchase information about a book. Before we did this, we stored a chapter's id to a set when a user bought it. But it took up too much memory 
 space, so we changed the storage data structure, we use only a bit to represent a chapter of a book. This way, we can save a lot of memory space, and even get a better performance.
 
 3.We use bucket sort algorithm based on Redis to sort the reading time of ten millions of users. If we use zset in the traditional way, we need to store all of users' reading time into only one key, 
@@ -19,7 +19,7 @@ and the number of users who have the same reading time with zset.  For example, 
 We call a element in zset a bucket. Because we only need to store data in one week, the number of elements is supposed to be less than 10,080.  This way, we can store user's individual 
 reading time in string type, so they can be spread to every node in a codis cluster. Then we start a schedule task ,it runs every 10 seconds, it's resiponsible for computing the ranking for 
 every bucket by suming up the numbers in the other buckets in front of it. For example, when computing the ranking of the fifth bucket, we need to sum up the numebers 
-from first to fourth bucket and plus one finally. If a user want to get his ranking, the only step is to get it by his reading time. It's extremely fast.
+from first to fourth bucket and plus one finally. If a user want to get his ranking, the only thing we need to do is to get the ranking of the bucket where the user stays by his reading time. It's extremely fast.
 
 4.We use snowflake algorithm to generate id. Before we used this algorithm, we use Redis to do the same thing. But if some network error occured, the generator was not
 available as well. So we choosed the algorithm released by Twitter. It can help us remove dependencies on Redis since it can work without network and generate id just by local computing. 
@@ -50,7 +50,7 @@ error log, etc, and we  analyze them. So we can find something very useful from 
 may says 90% of ip addresses belongs to an mysql instance, and 90% of exceptions are ConnectionTimeoutException, so we are sure there is something wrong with this mysql.
 
 3.We store error logs to ElasticSearch to review. When a bunch of errors are detected by a schedule task, we can recieve a link in a text message. There are some conditions in this link, these conditions are 
-used to make sure we can pick up what we want in a ton of logs. If we click it, we will jump to a new page where we can get all of the logs which are related with this alarm. 
+used to make sure we can see what we would like to see in a ton of logs. If we click it, we will jump to a new page where we can get all of the logs which are related with this alarm. 
 This can help us out when a text message can't show us in more details.
 
 4. We can configure multi parallel rules at the same time to cover a variety of cases. A rule consists of 3 parts, they are level, time span and threshold. For example we can add a configuration,
@@ -73,7 +73,7 @@ Spotlight:
 1. We use a schedule task to adjust the priorities of these providers according to their success rate. Before we did this, We sent a request to providers in a fixed order. We tried to get a result from Gaode
 firstly, if that failed, we would send a same request to Baidu. But There was something wrong with this, which was that the providers were that stable. Sometimes they have been unavilable for a long time. 
 If the Gaode is not available, the first request was meaningless and wasted time and connection resources. So we calculate the success rates in individual time windows, 
-and adjust the request execute process in order to make sure we can get a result in the first request.
+and adjust the request execute process in order to make sure this first request is successful. This can make the project more effecient.
 
 2.We use http connection pool to improve the http performance. Before we used that, a new connection needs to be established for a new reuqest. As we know, this kind of operations is relatively complex for OS.
 And someday I found something useful from the providers' response headers, that is they support the feature keep-alived. So we brought in the connection pool to resue tcp conditions, and it achieved a great effcect. 
