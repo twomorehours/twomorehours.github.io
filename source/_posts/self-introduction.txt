@@ -1,9 +1,8 @@
 My name is Yuhao, you can find the other base information about me from the resume, 
 Let's start with my work experience directly. 
-I have worked for two companies in three and a half years. The first one's name is 58 Daojia, it's one of subcompanies of 58 Group. you may have heard of it. 
-They had a well-known app called KuaiGoudache. I had been working there as a Java developer for two years.
-The second company is Zhangyue, which is the biggest reading servie provider in China. The builtin ebook apps in most of mobile phones released by
-domestic manufactures are supported by Zhangyue, such as huawei, oppo and vivo.  These two companies are both in the Internet industry. 
+I have worked in two companies in the past four and a half years. The first one is 58 Group.
+I participated in the development of KGDC there. The second company is Zhangyue, which is the second biggest reading servie provider in China. Most of the ebook apps released by
+domestic mobile phone manufactures are supported by this company, such as huawei, oppo and vivo.  These two companies are both in the Internet industry. 
 So I'm on top of the agile development, and they also have huge number of users, 
 especially for Zhangyue. It has more than 100 million users at least and most of them are active.
 So I have accumulated a lot of experience on high avaiable and high concurrency.
