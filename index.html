@@ -833,6 +833,7 @@
         let timerInterval = null;
         let results = [];
         let gameStartTime = null;
+        let currentQuestionStartTime = null;
         let currentMode = 'medium';
         let totalQuestions = 10;
 
@@ -983,6 +984,7 @@
             timer = 0;
             results = [];
             gameStartTime = Date.now();
+            currentQuestionStartTime = Date.now();
 
             document.getElementById('currentQuestion').textContent = `1/${totalQuestions}`;
             document.getElementById('timer').textContent = '00:00';
@@ -1088,22 +1090,26 @@
 
             const isCorrect = userAnswer === question.correctAnswer;
 
+            // 计算本题耗时
+            const timeSpent = Math.round((Date.now() - currentQuestionStartTime) / 1000);
+
             // 记录结果
             results.push({
                 question: `${question.total} = ${question.num1} + ?`,
                 displayQuestion: `${question.total} 分解为 ${question.num1} 和 ?`,
                 userAnswer: userAnswer,
                 correctAnswer: question.correctAnswer,
-                isCorrect: isCorrect
+                isCorrect: isCorrect,
+                timeSpent: timeSpent
             });
 
             // 显示反馈
             if (isCorrect) {
                 card.classList.add('correct');
-                feedback.textContent = '✓ 正确！';
+                feedback.textContent = `✓ 正确！用时 ${formatTime(timeSpent)}`;
             } else {
                 card.classList.add('wrong');
-                feedback.textContent = `✗ 正确答案是 ${question.correctAnswer}`;
+                feedback.textContent = `✗ 正确答案是 ${question.correctAnswer}，用时 ${formatTime(timeSpent)}`;
             }
 
             // 禁用输入框
@@ -1127,6 +1133,9 @@
                 // 游戏结束
                 endGame();
             } else {
+                // 记录下一题的开始时间
+                currentQuestionStartTime = Date.now();
+
                 // 激活下一张卡片
                 const nextCard = document.querySelectorAll('.card')[currentQuestionIndex];
                 if (nextCard) {
@@ -1174,6 +1183,7 @@
                         <span>
                             答案: ${result.userAnswer}
                             ${!result.isCorrect ? `<span class="correct-answer">(正确: ${result.correctAnswer})</span>` : ' ✓'}
+                            <span style="margin-left: 10px; color: #666;">⏱️ ${formatTime(result.timeSpent)}</span>
                         </span>
                     `;
                     detailsContainer.appendChild(item);
