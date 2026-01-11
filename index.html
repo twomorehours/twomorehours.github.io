@@ -22,14 +22,17 @@
         }
 
         .game-container {
-            width: 800px;
-            height: 700px;
+            width: 90%;
+            max-width: 800px;
+            min-height: 600px;
+            max-height: 95vh;
             background: rgba(255, 255, 255, 0.95);
             border-radius: 30px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             padding: 40px;
             position: relative;
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .start-screen, .result-screen {
@@ -458,6 +461,262 @@
             font-size: 16px;
             color: #999;
             margin-top: 10px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .game-container {
+                width: 95%;
+                padding: 20px;
+                border-radius: 20px;
+            }
+
+            .start-screen h1, .result-screen h1 {
+                font-size: 32px;
+            }
+
+            .start-screen p, .result-screen p {
+                font-size: 16px;
+            }
+
+            .btn {
+                padding: 12px 40px;
+                font-size: 18px;
+            }
+
+            .mode-btn {
+                padding: 15px 40px;
+                font-size: 18px;
+                min-width: 250px;
+            }
+
+            .mode-description {
+                font-size: 12px;
+            }
+
+            .number-input-screen h2,
+            .difficulty-screen h2 {
+                font-size: 28px;
+            }
+
+            .number-input-screen input {
+                width: 120px;
+                height: 50px;
+                font-size: 28px;
+            }
+
+            .game-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .timer, .progress {
+                font-size: 18px;
+            }
+
+            .cards-container {
+                height: 350px;
+            }
+
+            .card-question {
+                font-size: 36px;
+            }
+
+            .total-number {
+                font-size: 56px;
+            }
+
+            .number-box {
+                width: 100px;
+                height: 100px;
+                font-size: 48px;
+            }
+
+            .input-box {
+                width: 100px;
+                height: 100px;
+            }
+
+            .card-input {
+                width: 90px;
+                height: 90px;
+                font-size: 48px;
+            }
+
+            .operator {
+                font-size: 36px;
+            }
+
+            .card-feedback {
+                font-size: 20px;
+            }
+
+            .stat-value {
+                font-size: 28px;
+            }
+
+            .stat-label {
+                font-size: 14px;
+            }
+
+            .result-details {
+                max-height: 200px;
+                padding: 15px;
+            }
+
+            .result-item {
+                font-size: 16px;
+                padding: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                width: 98%;
+                padding: 15px;
+                border-radius: 15px;
+            }
+
+            .start-screen h1, .result-screen h1 {
+                font-size: 24px;
+                margin-bottom: 15px;
+            }
+
+            .start-screen p, .result-screen p {
+                font-size: 14px;
+                margin-bottom: 20px;
+            }
+
+            .btn {
+                padding: 10px 30px;
+                font-size: 16px;
+            }
+
+            .mode-btn {
+                padding: 12px 30px;
+                font-size: 16px;
+                min-width: 200px;
+            }
+
+            .mode-description {
+                font-size: 11px;
+            }
+
+            .number-input-screen h2,
+            .difficulty-screen h2 {
+                font-size: 24px;
+            }
+
+            .number-input-screen input {
+                width: 100px;
+                height: 45px;
+                font-size: 24px;
+            }
+
+            .cards-container {
+                height: 300px;
+            }
+
+            .card-number {
+                font-size: 24px;
+                top: 10px;
+                right: 15px;
+            }
+
+            .card-question {
+                font-size: 28px;
+                margin: 15px 0;
+            }
+
+            .total-number {
+                font-size: 42px;
+            }
+
+            .number-box,
+            .input-box {
+                width: 80px;
+                height: 80px;
+                border-width: 3px;
+                border-radius: 15px;
+            }
+
+            .card-input {
+                width: 70px;
+                height: 70px;
+                font-size: 36px;
+            }
+
+            .operator {
+                font-size: 28px;
+            }
+
+            .boxes-container {
+                gap: 15px;
+            }
+
+            .decomposition-container {
+                gap: 15px;
+                margin: 20px 0;
+            }
+
+            .card-feedback {
+                font-size: 16px;
+                margin-top: 10px;
+            }
+
+            .stats {
+                gap: 15px;
+            }
+
+            .stat-value {
+                font-size: 24px;
+            }
+
+            .stat-label {
+                font-size: 12px;
+            }
+
+            .result-details {
+                max-height: 150px;
+                padding: 10px;
+            }
+
+            .result-item {
+                font-size: 14px;
+                padding: 6px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+        }
+
+        @media (max-height: 700px) {
+            .game-container {
+                min-height: auto;
+                max-height: 98vh;
+            }
+
+            .cards-container {
+                height: 300px;
+            }
+
+            .start-screen h1, .result-screen h1 {
+                font-size: 32px;
+                margin-bottom: 10px;
+            }
+
+            .start-screen p, .result-screen p {
+                margin-bottom: 15px;
+            }
+
+            .mode-buttons {
+                gap: 10px;
+                margin-top: 15px;
+            }
+
+            .mode-btn {
+                padding: 15px 50px;
+            }
         }
 
         @keyframes cardEnter {
