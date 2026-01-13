@@ -7,6 +7,12 @@ const GamesCollection = {
             title: '数字分解游戏',
             icon: '🔢',
             description: '学习20以内数字的分解'
+        },
+        {
+            id: 'three-view',
+            title: '三视图游戏',
+            icon: '🧊',
+            description: '根据三视图还原3D立方体，训练空间思维能力'
         }
         // 未来可以在这里添加更多游戏
         // {
@@ -57,6 +63,8 @@ const GamesCollection = {
         // 根据游戏ID显示对应的游戏界面
         if (gameId === 'number-decomposition') {
             NumberDecompositionGame.showStartScreen();
+        } else if (gameId === 'three-view') {
+            ThreeViewGame.showStartScreen();
         }
         // 未来可以在这里添加其他游戏的处理
     },
@@ -66,6 +74,8 @@ const GamesCollection = {
         // 清理当前游戏状态
         if (this.currentGameId === 'number-decomposition') {
             NumberDecompositionGame.cleanup();
+        } else if (this.currentGameId === 'three-view') {
+            ThreeViewGame.cleanup();
         }
 
         this.currentGameId = null;
@@ -76,6 +86,9 @@ const GamesCollection = {
         document.getElementById('difficultyScreen').style.display = 'none';
         document.getElementById('gameScreen').style.display = 'none';
         document.getElementById('resultScreen').style.display = 'none';
+        document.getElementById('threeViewStartScreen').style.display = 'none';
+        document.getElementById('threeViewGameScreen').style.display = 'none';
+        document.getElementById('threeViewResultScreen').style.display = 'none';
 
         // 显示游戏合集页面
         document.getElementById('gamesCollectionScreen').style.display = 'flex';

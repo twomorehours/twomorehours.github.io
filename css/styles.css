@@ -870,3 +870,355 @@ body {
 .game-card:nth-child(4) {
     animation-delay: 0.4s;
 }
+
+/* 三视图游戏样式 */
+.three-view-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    padding: 20px;
+}
+
+.views-display {
+    background: #f5f5f5;
+    padding: 20px;
+    border-radius: 15px;
+}
+
+.views-display h3 {
+    text-align: center;
+    color: #667eea;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.view-section {
+    margin-bottom: 20px;
+}
+
+.view-section h4 {
+    color: #555;
+    margin-bottom: 10px;
+    font-size: 18px;
+    text-align: center;
+}
+
+.view-grid {
+    display: inline-grid;
+    grid-template-columns: repeat(3, 50px);
+    grid-template-rows: repeat(3, 50px);
+    gap: 5px;
+    background: white;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.view-row {
+    display: contents;
+}
+
+.view-cell {
+    width: 50px;
+    height: 50px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.view-cell.filled {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+}
+
+.cube-display {
+    background: #f5f5f5;
+    padding: 20px;
+    border-radius: 15px;
+    flex: 0 0 auto;
+}
+
+.cube-display h3 {
+    text-align: center;
+    color: #667eea;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.cube-container {
+    width: 400px;
+    height: 300px;
+    display: block;
+    margin: 0 auto;
+}
+
+.cube-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* 移除旧的3D立方体样式，因为现在使用Three.js */
+
+/* 答案显示区域 */
+.answers-display {
+    background: #f5f5f5;
+    padding: 20px;
+    border-radius: 15px;
+    flex: 1 1 auto;
+}
+
+.answers-display h3 {
+    text-align: center;
+    color: #667eea;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+/* 三视图网格容器 - 水平排列 */
+.answers-view-grids-container {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 40px;
+    align-items: flex-start;
+}
+
+.answer-view-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.answer-view-section h4 {
+    color: #555;
+    margin-bottom: 5px;
+    font-size: 16px;
+    text-align: center;
+    max-width: 200px;
+}
+
+.answer-view-grid {
+    display: inline-grid;
+    grid-template-columns: repeat(2, 60px);
+    grid-template-rows: repeat(2, 60px);
+    gap: 5px;
+    background: white;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.answer-view-row {
+    display: contents;
+}
+
+.answer-view-cell {
+    width: 60px;
+    height: 60px;
+    border: 3px solid #667eea;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.answer-view-cell:hover {
+    transform: scale(1.05);
+    box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+}
+
+.answer-view-cell.filled {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+}
+
+/* 视图对比样式 */
+.view-comparisons-container {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 20px;
+    justify-content: center;
+    align-items: flex-start;
+    margin-top: 15px;
+}
+
+.view-comparison-section {
+    margin: 0;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 10px;
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.view-comparison-section h4 {
+    color: #667eea;
+    margin-bottom: 10px;
+    font-size: 16px;
+    text-align: center;
+}
+
+.view-comparison {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: nowrap;
+}
+
+.comparison-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.comparison-label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #555;
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 40px);
+    grid-template-rows: repeat(2, 40px);
+    gap: 3px;
+}
+
+.comparison-cell {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.comparison-cell.correct-filled {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    border-color: #11998e;
+}
+
+.comparison-cell.user-correct {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    border-color: #11998e;
+    box-shadow: inset 0 0 0 2px #ffd700;
+}
+
+.comparison-cell.user-wrong {
+    background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+    border-color: #f45c43;
+}
+
+.comparison-cell.user-missed {
+    background: rgba(245, 92, 67, 0.2);
+    border: 2px dashed #f45c43;
+}
+
+/* 响应式设计 - 三视图游戏 */
+@media (max-width: 768px) {
+    .cube-container {
+        height: 300px;
+        width: 100%;
+    }
+
+    .cube-grid {
+        grid-template-columns: repeat(3, 50px);
+        grid-template-rows: repeat(3, 50px);
+    }
+
+    .cube-cell {
+        width: 50px;
+        height: 50px;
+    }
+
+    .answers-view-grids-container {
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .answer-view-section h4 {
+        font-size: 14px;
+    }
+
+    .answer-view-grid {
+        grid-template-columns: repeat(2, 50px);
+        grid-template-rows: repeat(2, 50px);
+    }
+
+    .answer-view-cell {
+        width: 50px;
+        height: 50px;
+    }
+
+    .view-comparisons-container {
+        flex-wrap: wrap;
+    }
+
+    .comparison-grid {
+        grid-template-columns: repeat(2, 35px);
+        grid-template-rows: repeat(2, 35px);
+    }
+
+    .comparison-cell {
+        width: 35px;
+        height: 35px;
+    }
+}
+
+@media (max-width: 480px) {
+    .cube-container {
+        height: 250px;
+        width: 100%;
+    }
+
+    .cube-grid {
+        grid-template-columns: repeat(3, 45px);
+        grid-template-rows: repeat(3, 45px);
+    }
+
+    .cube-cell {
+        width: 45px;
+        height: 45px;
+    }
+
+    .answers-view-grids-container {
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .answer-view-section h4 {
+        font-size: 12px;
+    }
+
+    .answer-view-grid {
+        grid-template-columns: repeat(2, 45px);
+        grid-template-rows: repeat(2, 45px);
+    }
+
+    .answer-view-cell {
+        width: 45px;
+        height: 45px;
+    }
+
+    .view-comparisons-container {
+        flex-wrap: wrap;
+    }
+
+    .comparison-grid {
+        grid-template-columns: repeat(2, 30px);
+        grid-template-rows: repeat(2, 30px);
+    }
+
+    .comparison-cell {
+        width: 30px;
+        height: 30px;
+    }
+}

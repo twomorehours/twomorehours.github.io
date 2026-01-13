@@ -110,11 +110,104 @@
                 <button class="btn" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%);" onclick="backToGamesCollection()">🎮 返回游戏合集</button>
             </div>
         </div>
+
+        <!-- 三视图游戏开始界面 -->
+        <div class="start-screen" id="threeViewStartScreen" style="display: none;">
+            <h1>🧊 三视图游戏</h1>
+            <p>观察立体图形，画出三视图<br>训练空间思维能力！</p>
+            <div class="mode-description" style="max-width: 600px; margin: 20px auto;">
+                <p><strong>游戏规则：</strong></p>
+                <p>1. 系统会显示一个随机生成的2×2×2立体图形（包含3-7个小方块）</p>
+                <p>2. 观察这个立体图形，想象从三个方向看的投影</p>
+                <p>3. 在下方的三个视图网格中画出对应的投影</p>
+                <p>4. 前视图：从前往后看，左视图：从左往右看，俯视图：从上往下看</p>
+                <p>5. 点击网格填充/删除，提交后查看正确答案</p>
+            </div>
+            <button class="btn" onclick="startThreeViewGame()">🎮 开始游戏</button>
+            <button class="btn" style="margin-top: 20px; background: linear-gradient(135deg, #6c757d 0%, #495057 100%);" onclick="backToGamesCollection()">
+                ← 返回游戏合集
+            </button>
+        </div>
+
+        <!-- 三视图游戏界面 -->
+        <div class="game-screen" id="threeViewGameScreen" style="display: none;">
+            <div class="game-header">
+                <div class="timer">⏱️ <span id="threeViewTimer">00:00</span></div>
+                <div class="progress">三视图挑战</div>
+            </div>
+
+            <div class="three-view-container">
+                <!-- 立体图形显示区域 -->
+                <div class="cube-display">
+                    <div id="cubeContainer" class="cube-container"></div>
+                </div>
+
+                <!-- 答案区域 -->
+                <div class="answers-display">
+                    <h3>画出三视图（点击网格填充）</h3>
+                    <div class="answers-view-grids-container">
+                        <div class="answer-view-section">
+                            <h4>正视图 Front View<br><small>（从前往后看，x-z平面）</small></h4>
+                            <div class="answer-view-grid" id="frontAnswerView"></div>
+                        </div>
+
+                        <div class="answer-view-section">
+                            <h4>右视图 Right View<br><small>（从右往左看，y-z平面）</small></h4>
+                            <div class="answer-view-grid" id="rightAnswerView"></div>
+                        </div>
+
+                        <div class="answer-view-section">
+                            <h4>俯视图 Top View<br><small>（从上往下看，x-y平面）</small></h4>
+                            <div class="answer-view-grid" id="topAnswerView"></div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="btn" onclick="submitThreeViewAnswer()">✓ 提交答案</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 三视图游戏结果界面 -->
+        <div class="result-screen" id="threeViewResultScreen" style="display: none;">
+            <h1>🎉 游戏结束！</h1>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="threeViewTime">00:00</div>
+                    <div class="stat-label">用时</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="threeViewScore">0%</div>
+                    <div class="stat-label">正确率</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value"><span id="threeViewCorrect">0</span>/<span id="threeViewTotal">0</span></div>
+                    <div class="stat-label">正确数</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="threeViewWrong">0</div>
+                    <div class="stat-label">错误标记</div>
+                </div>
+            </div>
+            <div class="result-details" id="answerComparison" style="max-height: 500px;">
+                <!-- 答案对比将通过JS动态生成 -->
+            </div>
+            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <button class="btn" onclick="restartThreeViewGame()">🔄 再来一局</button>
+                <button class="btn" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%);" onclick="backToGamesCollection()">🎮 返回游戏合集</button>
+            </div>
+        </div>
     </div>
+
+    <!-- 引入Three.js库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
     <!-- 引入JavaScript模块 -->
     <script src="js/games-collection.js"></script>
     <script src="js/games/number-decomposition.js"></script>
+    <script src="js/games/three-view-game.js"></script>
 
     <!-- 页面加载时初始化游戏合集 -->
     <script>
