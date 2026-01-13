@@ -236,11 +236,11 @@ const ThreeViewGame = {
         this.correctViews.front.reverse();
 
         // 右视图（从右往左看，投影到y-z平面）
-        // 网格行：y轴（从上到下），网格列：z轴（从后到前）
+        // 网格行：y轴（从上到下），网格列：z轴（从前到后）
         this.correctViews.right = [];
         for (let y = 1; y >= 0; y--) {
             this.correctViews.right.push([]);
-            for (let z = 0; z < 2; z++) {
+            for (let z = 1; z >= 0; z--) {
                 let filled = false;
                 // 从右往左看，从x=1向x=0方向查找
                 for (let x = 1; x >= 0; x--) {
@@ -249,7 +249,7 @@ const ThreeViewGame = {
                         break;
                     }
                 }
-                this.correctViews.right[this.correctViews.right.length - 1][z] = filled ? 1 : 0;
+                this.correctViews.right[this.correctViews.right.length - 1].push(filled ? 1 : 0);
             }
         }
 
