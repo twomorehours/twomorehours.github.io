@@ -55,7 +55,7 @@ const ThreeViewGame = {
 
         // 设置相机位置：正对着立方体的正面
         // 立方体范围是 (0,0,0) 到 (1,1,1)，中心在 (0.5,0.5,0.5)
-        this.camera.position.set(0.5, 0.5, 5);
+        this.camera.position.set(0.5, 0.5, 7);
         this.camera.lookAt(0.5, 0.5, 0.5); // 看向立方体中心
 
         // 创建渲染器
