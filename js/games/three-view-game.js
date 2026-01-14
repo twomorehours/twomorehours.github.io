@@ -53,10 +53,36 @@ const ThreeViewGame = {
         const height = container.clientHeight || 400;
         this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
 
-        // 设置相机位置：正对着立方体的正面
-        // 立方体范围是 (0,0,0) 到 (1,1,1)，中心在 (0.5,0.5,0.5)
-        this.camera.position.set(0.5, 0.5, 10);
-        this.camera.lookAt(0.5, 0.5, 0.5); // 看向立方体中心
+        // 设置相机位置：从xy轴角平分线的垂线为轴，向屏幕外旋转30度
+        // 立方体范围是 (0,0,0) 到 (2,2,2)，中心在 (1,1,1)
+        // 旋转轴：(1, 0, -1)，归一化为 (1/√2, 0, -1/√2)
+        const distance = 11; // 距离中心的距离
+        const center = new THREE.Vector3(1, 1, 1);
+
+        // 正视图位置（从z轴正方向看）
+        const frontPos = new THREE.Vector3(1, 1, 12);
+
+        // 从正视图绕y轴向左旋转45度得到的位置
+        const angle45 = Math.PI / 4;
+        const leftRotatedPos = new THREE.Vector3(
+            1 + distance * Math.sin(angle45),
+            1,
+            1 + distance * Math.cos(angle45)
+        );
+
+        // 旋转轴：xy轴角平分线的垂线 (1, 0, -1)，归一化
+        const axis = new THREE.Vector3(1, 0, -1).normalize();
+
+        // 从leftRotatedPos相对于中心的向量
+        const relativePos = leftRotatedPos.clone().sub(center);
+
+        // 绕轴旋转-30度（向屏幕外）
+        const angle30 = -Math.PI / 6; // -30度
+        relativePos.applyAxisAngle(axis, angle30);
+
+        // 最终位置
+        this.camera.position.copy(center.clone().add(relativePos));
+        this.camera.lookAt(center);
 
         // 创建渲染器
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -80,24 +106,24 @@ const ThreeViewGame = {
         this.scene.add(directionalLight);
 
         // 添加底板（表示地面y=0）
-        const floorGeometry = new THREE.PlaneGeometry(3, 3);
+        const floorGeometry = new THREE.PlaneGeometry(4, 4);
         const floorMaterial = new THREE.MeshPhongMaterial({
             color: 0xe0e0e0,
             side: THREE.DoubleSide
         });
         const floor = new THREE.Mesh(floorGeometry, floorMaterial);
         floor.rotation.x = -Math.PI / 2;
-        floor.position.set(0.5, -0.5, 0.5); // 底板在立方体下方
+        floor.position.set(1, -0.5, 1); // 底板在立方体下方
         this.scene.add(floor);
 
         // 添加网格辅助
-        const gridHelper = new THREE.GridHelper(2, 2, 0x999999, 0xcccccc);
-        gridHelper.position.set(0.5, -0.5, 0.5); // 网格也在底板位置
+        const gridHelper = new THREE.GridHelper(3, 3, 0x999999, 0xcccccc);
+        gridHelper.position.set(1, -0.5, 1); // 网格也在底板位置
         this.scene.add(gridHelper);
 
         // 添加坐标轴辅助
-        const axesHelper = new THREE.AxesHelper(1.5);
-        axesHelper.position.set(0.5, -0.5, 0.5); // 坐标轴从底板开始
+        const axesHelper = new THREE.AxesHelper(2);
+        axesHelper.position.set(1, -0.5, 1); // 坐标轴从底板开始
         this.scene.add(axesHelper);
 
         // 渲染循环
@@ -155,14 +181,14 @@ const ThreeViewGame = {
         }
     },
 
-    // 创建空的2x2x2立方体
+    // 创建空的3x3x3立方体
     createEmptyCube() {
         const cube = [];
-        for (let x = 0; x < 2; x++) {
+        for (let x = 0; x < 3; x++) {
             cube[x] = [];
-            for (let y = 0; y < 2; y++) {
+            for (let y = 0; y < 3; y++) {
                 cube[x][y] = [];
-                for (let z = 0; z < 2; z++) {
+                for (let z = 0; z < 3; z++) {
                     cube[x][y][z] = 0; // 0表示空，1表示填充
                 }
             }
@@ -170,25 +196,25 @@ const ThreeViewGame = {
         return cube;
     },
 
-    // 创建空的2x2视图
+    // 创建空的3x3视图
     createEmptyView() {
         const view = [];
-        for (let i = 0; i < 2; i++) {
-            view[i] = [0, 0];
+        for (let i = 0; i < 3; i++) {
+            view[i] = [0, 0, 0];
         }
         return view;
     },
 
     // 随机生成立方体（填充一些格子，确保叠放不悬空）
     generateRandomCube() {
-        // 随机填充3-7个格子（2x2x2总共8个格子）
-        const fillCount = Math.floor(Math.random() * 5) + 3;
+        // 随机填充10-20个格子（3x3x3总共27个格子）
+        const fillCount = Math.floor(Math.random() * 11) + 10;
         let filled = 0;
 
         // 先清空
-        for (let x = 0; x < 2; x++) {
-            for (let y = 0; y < 2; y++) {
-                for (let z = 0; z < 2; z++) {
+        for (let x = 0; x < 3; x++) {
+            for (let y = 0; y < 3; y++) {
+                for (let z = 0; z < 3; z++) {
                     this.cube[x][y][z] = 0;
                 }
             }
@@ -197,9 +223,9 @@ const ThreeViewGame = {
         // 逐层放置，确保每个方块都有支撑
         while (filled < fillCount) {
             // 随机选择位置
-            const x = Math.floor(Math.random() * 2);
-            const y = Math.floor(Math.random() * 2);
-            const z = Math.floor(Math.random() * 2);
+            const x = Math.floor(Math.random() * 3);
+            const y = Math.floor(Math.random() * 3);
+            const z = Math.floor(Math.random() * 3);
 
             // 检查是否可以放置
             // 1. 位置为空
@@ -218,18 +244,18 @@ const ThreeViewGame = {
         // 正视图（从前往后看，投影到x-y平面）
         // 网格行：y轴（从上到下，需要反转），网格列：x轴（从左到右）
         this.correctViews.front = [];
-        for (let y = 0; y < 2; y++) {
+        for (let y = 0; y < 3; y++) {
             this.correctViews.front[y] = [];
-            for (let x = 0; x < 2; x++) {
+            for (let x = 0; x < 3; x++) {
                 let filled = false;
-                // 从前向后看，从z=1向z=0方向查找
-                for (let z = 1; z >= 0; z--) {
+                // 从前向后看，从z=2向z=0方向查找
+                for (let z = 2; z >= 0; z--) {
                     if (this.cube[x][y][z] === 1) {
                         filled = true;
                         break;
                     }
                 }
-                // y=0在下，y=1在上，但网格行0在上，所以需要反转
+                // y=0在下，y=2在上，但网格行0在上，所以需要反转
                 this.correctViews.front[y][x] = filled ? 1 : 0;
             }
         }
@@ -239,12 +265,12 @@ const ThreeViewGame = {
         // 右视图（从右往左看，投影到y-z平面）
         // 网格行：y轴（从上到下），网格列：z轴（从前到后）
         this.correctViews.right = [];
-        for (let y = 1; y >= 0; y--) {
+        for (let y = 2; y >= 0; y--) {
             this.correctViews.right.push([]);
-            for (let z = 1; z >= 0; z--) {
+            for (let z = 2; z >= 0; z--) {
                 let filled = false;
-                // 从右往左看，从x=1向x=0方向查找
-                for (let x = 1; x >= 0; x--) {
+                // 从右往左看，从x=2向x=0方向查找
+                for (let x = 2; x >= 0; x--) {
                     if (this.cube[x][y][z] === 1) {
                         filled = true;
                         break;
@@ -257,12 +283,12 @@ const ThreeViewGame = {
         // 俯视图（从上往下看，投影到x-z平面）
         // 网格行：z轴（从后到前），网格列：x轴（从左到右）
         this.correctViews.top = [];
-        for (let z = 0; z < 2; z++) {
+        for (let z = 0; z < 3; z++) {
             this.correctViews.top[z] = [];
-            for (let x = 0; x < 2; x++) {
+            for (let x = 0; x < 3; x++) {
                 let filled = false;
-                // 从上往下看，从y=1向y=0方向查找
-                for (let y = 1; y >= 0; y--) {
+                // 从上往下看，从y=2向y=0方向查找
+                for (let y = 2; y >= 0; y--) {
                     if (this.cube[x][y][z] === 1) {
                         filled = true;
                         break;
@@ -299,9 +325,9 @@ const ThreeViewGame = {
         });
 
         // 只渲染填充了小方块的位置
-        for (let x = 0; x < 2; x++) {
-            for (let y = 0; y < 2; y++) {
-                for (let z = 0; z < 2; z++) {
+        for (let x = 0; x < 3; x++) {
+            for (let y = 0; y < 3; y++) {
+                for (let z = 0; z < 3; z++) {
                     if (this.cube[x][y][z] === 1) {
                         // 计算位置
                         const posX = x;
@@ -341,11 +367,11 @@ const ThreeViewGame = {
         container.innerHTML = '';
         const userView = this.userAnswers[viewType];
 
-        for (let row = 0; row < 2; row++) {
+        for (let row = 0; row < 3; row++) {
             const gridRow = document.createElement('div');
             gridRow.className = 'answer-view-row';
 
-            for (let col = 0; col < 2; col++) {
+            for (let col = 0; col < 3; col++) {
                 const cell = document.createElement('div');
                 cell.className = 'answer-view-cell';
                 cell.dataset.row = row;
@@ -391,6 +417,11 @@ const ThreeViewGame = {
 
         this.init();
 
+        // 初始视角不激活任何按钮
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
         // 启动计时器
         this.timer = 0;
         this.timerInterval = setInterval(() => {
@@ -411,12 +442,12 @@ const ThreeViewGame = {
         clearInterval(this.timerInterval);
 
         // 计算每个视图的得分
-        let totalCells = 12; // 3个视图 × 4个格子
+        let totalCells = 27; // 3个视图 × 9个格子
         let correct = 0;
 
         // 检查正视图
-        for (let row = 0; row < 2; row++) {
-            for (let col = 0; col < 2; col++) {
+        for (let row = 0; row < 3; row++) {
+            for (let col = 0; col < 3; col++) {
                 if (this.userAnswers.front[row][col] === this.correctViews.front[row][col]) {
                     correct++;
                 }
@@ -424,8 +455,8 @@ const ThreeViewGame = {
         }
 
         // 检查右视图
-        for (let row = 0; row < 2; row++) {
-            for (let col = 0; col < 2; col++) {
+        for (let row = 0; row < 3; row++) {
+            for (let col = 0; col < 3; col++) {
                 if (this.userAnswers.right[row][col] === this.correctViews.right[row][col]) {
                     correct++;
                 }
@@ -433,8 +464,8 @@ const ThreeViewGame = {
         }
 
         // 检查俯视图
-        for (let row = 0; row < 2; row++) {
-            for (let col = 0; col < 2; col++) {
+        for (let row = 0; row < 3; row++) {
+            for (let col = 0; col < 3; col++) {
                 if (this.userAnswers.top[row][col] === this.correctViews.top[row][col]) {
                     correct++;
                 }
@@ -516,8 +547,8 @@ const ThreeViewGame = {
         const data = type === 'correct' ? this.correctViews[viewType] : this.userAnswers[viewType];
         const correct = this.correctViews[viewType];
 
-        for (let row = 0; row < 2; row++) {
-            for (let col = 0; col < 2; col++) {
+        for (let row = 0; row < 3; row++) {
+            for (let col = 0; col < 3; col++) {
                 const cell = document.createElement('div');
                 cell.className = 'comparison-cell';
 
@@ -597,10 +628,69 @@ const ThreeViewGame = {
 
         // 重置相机到初始位置
         if (this.camera && this.controls) {
-            this.camera.position.set(0.5, 0.5, 10);
-            this.camera.lookAt(0.5, 0.5, 0.5);
+            const distance = 11;
+            const center = new THREE.Vector3(1, 1, 1);
+
+            // 从正视图绕y轴向左旋转45度
+            const angle45 = Math.PI / 4;
+            const leftRotatedPos = new THREE.Vector3(
+                1 + distance * Math.sin(angle45),
+                1,
+                1 + distance * Math.cos(angle45)
+            );
+
+            // 旋转轴：xy轴角平分线的垂线
+            const axis = new THREE.Vector3(1, 0, -1).normalize();
+            const relativePos = leftRotatedPos.clone().sub(center);
+
+            // 绕轴旋转-30度
+            const angle30 = -Math.PI / 6;
+            relativePos.applyAxisAngle(axis, angle30);
+
+            this.camera.position.copy(center.clone().add(relativePos));
+            this.camera.lookAt(center);
             this.controls.reset();
         }
+    },
+
+    // 切换视角
+    switchView(viewType) {
+        if (!this.camera || !this.controls) return;
+
+        // 移除所有按钮的active类
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // 根据视角类型设置相机位置
+        switch(viewType) {
+            case 'front':
+                // 正视图：从z轴正方向看
+                this.camera.position.set(1, 1, 12);
+                this.camera.up.set(0, 1, 0); // y轴向上
+                this.camera.lookAt(1, 1, 1);
+                break;
+            case 'right':
+                // 右视图：从x轴正方向看
+                this.camera.position.set(12, 1, 1);
+                this.camera.up.set(0, 1, 0); // y轴向上
+                this.camera.lookAt(1, 1, 1);
+                break;
+            case 'top':
+                // 俯视图：从y轴正方向看（保持与正视图相同的左右方向）
+                // 相当于正视图向前倒下，左右方向（x轴）保持不变
+                this.camera.position.set(1, 12, 1);
+                this.camera.up.set(0, 0, -1); // z轴负方向为"上"
+                this.camera.lookAt(1, 1, 1);
+                break;
+        }
+
+        // 更新controls
+        this.controls.update();
+
+        // 给当前按钮添加active类
+        const btnId = viewType + 'ViewBtn';
+        document.getElementById(btnId)?.classList.add('active');
     }
 };
 
@@ -619,4 +709,8 @@ function restartThreeViewGame() {
 
 function refreshThreeViewCube() {
     ThreeViewGame.refreshCube();
+}
+
+function switchToView(viewType) {
+    ThreeViewGame.switchView(viewType);
 }

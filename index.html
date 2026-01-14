@@ -117,7 +117,7 @@
             <p>观察立体图形，画出三视图<br>训练空间思维能力！</p>
             <div class="mode-description" style="max-width: 600px; margin: 20px auto;">
                 <p><strong>游戏规则：</strong></p>
-                <p>1. 系统会显示一个随机生成的2×2×2立体图形（包含3-7个小方块）</p>
+                <p>1. 系统会显示一个随机生成的3×3×3立体图形（包含10-20个小方块）</p>
                 <p>2. 观察这个立体图形，想象从三个方向看的投影</p>
                 <p>3. 在下方的三个视图网格中画出对应的投影</p>
                 <p>4. 前视图：从前往后看，左视图：从左往右看，俯视图：从上往下看</p>
@@ -134,6 +134,11 @@
             <div class="game-header">
                 <div class="timer">⏱️ <span id="threeViewTimer">00:00</span></div>
                 <div class="progress">三视图挑战</div>
+                <div class="view-buttons">
+                    <button class="view-btn" id="frontViewBtn" onclick="switchToView('front')">正视图</button>
+                    <button class="view-btn" id="rightViewBtn" onclick="switchToView('right')">右视图</button>
+                    <button class="view-btn" id="topViewBtn" onclick="switchToView('top')">俯视图</button>
+                </div>
                 <button class="refresh-btn" onclick="refreshThreeViewCube()" title="换一个新的立方体">🔄 刷新</button>
             </div>
 
