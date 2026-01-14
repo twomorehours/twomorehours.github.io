@@ -55,7 +55,7 @@ const ThreeViewGame = {
 
         // 设置相机位置：正对着立方体的正面
         // 立方体范围是 (0,0,0) 到 (1,1,1)，中心在 (0.5,0.5,0.5)
-        this.camera.position.set(0.5, 0.5, 7);
+        this.camera.position.set(0.5, 0.5, 10);
         this.camera.lookAt(0.5, 0.5, 0.5); // 看向立方体中心
 
         // 创建渲染器
@@ -68,6 +68,7 @@ const ThreeViewGame = {
         this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
         this.controls.dampingFactor = 0.05;
+        this.controls.enableZoom = false; // 禁用缩放
 
         // 添加环境光
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
@@ -596,7 +597,7 @@ const ThreeViewGame = {
 
         // 重置相机到初始位置
         if (this.camera && this.controls) {
-            this.camera.position.set(0.5, 0.5, 7);
+            this.camera.position.set(0.5, 0.5, 10);
             this.camera.lookAt(0.5, 0.5, 0.5);
             this.controls.reset();
         }
