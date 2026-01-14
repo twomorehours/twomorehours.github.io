@@ -56,7 +56,7 @@ const ThreeViewGame = {
         // 设置相机位置：从xy轴角平分线的垂线为轴，向屏幕外旋转30度
         // 立方体范围是 (0,0,0) 到 (2,2,2)，中心在 (1,1,1)
         // 旋转轴：(1, 0, -1)，归一化为 (1/√2, 0, -1/√2)
-        const distance = 11; // 距离中心的距离
+        const distance = 8.8; // 距离中心的距离（11 * 0.8 = 8.8，放大20%）
         const center = new THREE.Vector3(1, 1, 1);
 
         // 正视图位置（从z轴正方向看）
@@ -669,7 +669,7 @@ const ThreeViewGame = {
 
         // 重置相机到初始位置
         if (this.camera && this.controls) {
-            const distance = 11;
+            const distance = 8.8;
             const center = new THREE.Vector3(1, 1, 1);
 
             // 从正视图绕y轴向左旋转45度
@@ -707,7 +707,7 @@ const ThreeViewGame = {
         switch(viewType) {
             case 'initial':
                 // 初始视角：从xy轴角平分线的垂线为轴，向屏幕外旋转30度
-                const distance = 11;
+                const distance = 8.8;
                 const center = new THREE.Vector3(1, 1, 1);
                 const angle45 = Math.PI / 4;
                 const leftRotatedPos = new THREE.Vector3(
