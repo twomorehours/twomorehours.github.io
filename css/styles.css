@@ -1110,7 +1110,7 @@ body {
 .view-comparison-section h4 {
     color: #667eea;
     margin-bottom: 10px;
-    font-size: 16px;
+    font-size: 14px;
     text-align: center;
 }
 
@@ -1136,14 +1136,14 @@ body {
 
 .comparison-grid {
     display: grid;
-    grid-template-columns: repeat(3, 40px);
-    grid-template-rows: repeat(3, 40px);
+    grid-template-columns: repeat(3, 30px);
+    grid-template-rows: repeat(3, 30px);
     gap: 3px;
 }
 
 .comparison-cell {
-    width: 40px;
-    height: 40px;
+    width: 30px;
+    height: 30px;
     border: 2px solid #ddd;
     border-radius: 5px;
     background: white;
@@ -1214,13 +1214,13 @@ body {
     }
 
     .comparison-grid {
-        grid-template-columns: repeat(3, 35px);
-        grid-template-rows: repeat(3, 35px);
+        grid-template-columns: repeat(3, 25px);
+        grid-template-rows: repeat(3, 25px);
     }
 
     .comparison-cell {
-        width: 35px;
-        height: 35px;
+        width: 25px;
+        height: 25px;
     }
 }
 
@@ -1264,12 +1264,12 @@ body {
     }
 
     .comparison-grid {
-        grid-template-columns: repeat(3, 30px);
-        grid-template-rows: repeat(3, 30px);
+        grid-template-columns: repeat(3, 20px);
+        grid-template-rows: repeat(3, 20px);
     }
 
     .comparison-cell {
-        width: 30px;
-        height: 30px;
+        width: 20px;
+        height: 20px;
     }
 }

@@ -130,34 +130,35 @@ const ThreeViewGame = {
 
     // 创建加粗的坐标轴
     createThickAxes() {
-        const axisLength = 4;
-        const thickness = 0.15;
+        const axisLength = 2.5;
+        const thickness = 0.08; // 减小粗细
+        const center = new THREE.Vector3(1, 1, 1); // 3×3×3中心
 
         // 创建坐标轴材质 - 使用高亮颜色
         const redMaterial = new THREE.MeshBasicMaterial({ color: 0xff3333 });
         const greenMaterial = new THREE.MeshBasicMaterial({ color: 0x33ff33 });
         const blueMaterial = new THREE.MeshBasicMaterial({ color: 0x3333ff });
 
-        // X轴 (红色) - 沿x轴
+        // X轴 (红色) - 从中心向+x方向延伸（正视图方向）
         const xAxisGeom = new THREE.CylinderGeometry(thickness, thickness, axisLength, 16);
         const xAxis = new THREE.Mesh(xAxisGeom, redMaterial);
         xAxis.rotation.z = -Math.PI / 2;
-        xAxis.position.set(axisLength / 2, 0, 0);
+        xAxis.position.set(center.x + axisLength / 2, center.y, center.z);
         this.scene.add(xAxis);
         this.cubes.push(xAxis);
 
-        // Y轴 (绿色) - 沿y轴（默认垂直）
+        // Y轴 (绿色) - 从中心向+y方向延伸（上方）
         const yAxisGeom = new THREE.CylinderGeometry(thickness, thickness, axisLength, 16);
         const yAxis = new THREE.Mesh(yAxisGeom, greenMaterial);
-        yAxis.position.set(0, axisLength / 2, 0);
+        yAxis.position.set(center.x, center.y + axisLength / 2, center.z);
         this.scene.add(yAxis);
         this.cubes.push(yAxis);
 
-        // Z轴 (蓝色) - 沿z轴
+        // Z轴 (蓝色) - 从中心向+z方向延伸（深度方向）
         const zAxisGeom = new THREE.CylinderGeometry(thickness, thickness, axisLength, 16);
         const zAxis = new THREE.Mesh(zAxisGeom, blueMaterial);
         zAxis.rotation.x = Math.PI / 2;
-        zAxis.position.set(0, 0, axisLength / 2);
+        zAxis.position.set(center.x, center.y, center.z + axisLength / 2);
         this.scene.add(zAxis);
         this.cubes.push(zAxis);
     },
@@ -646,6 +647,10 @@ const ThreeViewGame = {
 
     // 刷新立方体（重新生成随机立方体）
     refreshCube() {
+        // 重置计时器
+        this.timer = 0;
+        document.getElementById('threeViewTimer').textContent = '00:00';
+
         // 重新生成立方体
         this.cube = this.createEmptyCube();
         this.generateRandomCube();

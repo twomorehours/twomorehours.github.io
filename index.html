@@ -140,12 +140,15 @@
                     <button class="view-btn" id="rightViewBtn" onclick="switchToView('right')">右视图</button>
                     <button class="view-btn" id="topViewBtn" onclick="switchToView('top')">俯视图</button>
                 </div>
-                <button class="refresh-btn" onclick="refreshThreeViewCube()" title="换一个新的立方体">🔄 刷新</button>
+                <button class="refresh-btn" onclick="refreshThreeViewCube()" title="换一个新的立方体">换一个</button>
             </div>
 
             <div class="three-view-container">
                 <!-- 立体图形显示区域 -->
                 <div class="cube-display">
+                    <div style="text-align: center; margin-bottom: 10px; color: #3333ff; font-size: 14px;">
+                        💡 蓝色线为正视图方向
+                    </div>
                     <div id="cubeContainer" class="cube-container"></div>
                 </div>
 
