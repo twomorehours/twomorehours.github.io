@@ -121,13 +121,45 @@ const ThreeViewGame = {
         gridHelper.position.set(1, -0.5, 1); // 网格也在底板位置
         this.scene.add(gridHelper);
 
-        // 添加坐标轴辅助
-        const axesHelper = new THREE.AxesHelper(2);
-        axesHelper.position.set(1, -0.5, 1); // 坐标轴从底板开始
-        this.scene.add(axesHelper);
+        // 添加加粗的坐标轴
+        this.createThickAxes();
 
         // 渲染循环
         this.animate();
+    },
+
+    // 创建加粗的坐标轴
+    createThickAxes() {
+        const axisLength = 4;
+        const thickness = 0.15;
+
+        // 创建坐标轴材质 - 使用高亮颜色
+        const redMaterial = new THREE.MeshBasicMaterial({ color: 0xff3333 });
+        const greenMaterial = new THREE.MeshBasicMaterial({ color: 0x33ff33 });
+        const blueMaterial = new THREE.MeshBasicMaterial({ color: 0x3333ff });
+
+        // X轴 (红色) - 沿x轴
+        const xAxisGeom = new THREE.CylinderGeometry(thickness, thickness, axisLength, 16);
+        const xAxis = new THREE.Mesh(xAxisGeom, redMaterial);
+        xAxis.rotation.z = -Math.PI / 2;
+        xAxis.position.set(axisLength / 2, 0, 0);
+        this.scene.add(xAxis);
+        this.cubes.push(xAxis);
+
+        // Y轴 (绿色) - 沿y轴（默认垂直）
+        const yAxisGeom = new THREE.CylinderGeometry(thickness, thickness, axisLength, 16);
+        const yAxis = new THREE.Mesh(yAxisGeom, greenMaterial);
+        yAxis.position.set(0, axisLength / 2, 0);
+        this.scene.add(yAxis);
+        this.cubes.push(yAxis);
+
+        // Z轴 (蓝色) - 沿z轴
+        const zAxisGeom = new THREE.CylinderGeometry(thickness, thickness, axisLength, 16);
+        const zAxis = new THREE.Mesh(zAxisGeom, blueMaterial);
+        zAxis.rotation.x = Math.PI / 2;
+        zAxis.position.set(0, 0, axisLength / 2);
+        this.scene.add(zAxis);
+        this.cubes.push(zAxis);
     },
 
     // 添加视角标注
@@ -350,6 +382,9 @@ const ThreeViewGame = {
                 }
             }
         }
+
+        // 重新添加坐标轴
+        this.createThickAxes();
     },
 
     // 渲染用户作答的三视图网格
@@ -417,10 +452,11 @@ const ThreeViewGame = {
 
         this.init();
 
-        // 初始视角不激活任何按钮
+        // 激活初始视角按钮
         document.querySelectorAll('.view-btn').forEach(btn => {
             btn.classList.remove('active');
         });
+        document.getElementById('initialViewBtn')?.classList.add('active');
 
         // 启动计时器
         this.timer = 0;
@@ -664,6 +700,24 @@ const ThreeViewGame = {
 
         // 根据视角类型设置相机位置
         switch(viewType) {
+            case 'initial':
+                // 初始视角：从xy轴角平分线的垂线为轴，向屏幕外旋转30度
+                const distance = 11;
+                const center = new THREE.Vector3(1, 1, 1);
+                const angle45 = Math.PI / 4;
+                const leftRotatedPos = new THREE.Vector3(
+                    1 + distance * Math.sin(angle45),
+                    1,
+                    1 + distance * Math.cos(angle45)
+                );
+                const axis = new THREE.Vector3(1, 0, -1).normalize();
+                const relativePos = leftRotatedPos.clone().sub(center);
+                const angle30 = -Math.PI / 6;
+                relativePos.applyAxisAngle(axis, angle30);
+                this.camera.position.copy(center.clone().add(relativePos));
+                this.camera.up.set(0, 1, 0); // y轴向上
+                this.camera.lookAt(center);
+                break;
             case 'front':
                 // 正视图：从z轴正方向看
                 this.camera.position.set(1, 1, 12);
