@@ -574,6 +574,32 @@ const ThreeViewGame = {
         this.scene = null;
         this.camera = null;
         this.cubes = [];
+    },
+
+    // 刷新立方体（重新生成随机立方体）
+    refreshCube() {
+        // 重新生成立方体
+        this.cube = this.createEmptyCube();
+        this.generateRandomCube();
+        this.calculateCorrectViews();
+
+        // 重置用户答案
+        this.userAnswers = {
+            front: this.createEmptyView(),
+            right: this.createEmptyView(),
+            top: this.createEmptyView()
+        };
+
+        // 重新渲染
+        this.render3DCube();
+        this.renderAnswerViews();
+
+        // 重置相机到初始位置
+        if (this.camera && this.controls) {
+            this.camera.position.set(0.5, 0.5, 7);
+            this.camera.lookAt(0.5, 0.5, 0.5);
+            this.controls.reset();
+        }
     }
 };
 
@@ -588,4 +614,8 @@ function submitThreeViewAnswer() {
 
 function restartThreeViewGame() {
     ThreeViewGame.restartGame();
+}
+
+function refreshThreeViewCube() {
+    ThreeViewGame.refreshCube();
 }
