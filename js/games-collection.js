@@ -12,7 +12,7 @@ const GamesCollection = {
             id: 'three-view',
             title: '三视图游戏',
             icon: '🧊',
-            description: '根据三视图还原3D立方体，训练空间思维能力'
+            description: '根据3D立方体画出三视图，训练空间思维能力'
         }
         // 未来可以在这里添加更多游戏
         // {
