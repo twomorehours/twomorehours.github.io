@@ -62,12 +62,12 @@ const ThreeViewGame = {
         // 正视图位置（从z轴正方向看）
         const frontPos = new THREE.Vector3(1, 1, 12);
 
-        // 从正视图绕y轴向左旋转45度得到的位置
-        const angle45 = Math.PI / 4;
+        // 从正视图绕y轴（绿色线）顺时针旋转25度（45-20）得到的位置
+        const angleY = 25 * Math.PI / 180; // 25度
         const leftRotatedPos = new THREE.Vector3(
-            1 + distance * Math.sin(angle45),
+            1 + distance * Math.sin(angleY),
             1,
-            1 + distance * Math.cos(angle45)
+            1 + distance * Math.cos(angleY)
         );
 
         // 旋转轴：xy轴角平分线的垂线 (1, 0, -1)，归一化
@@ -240,36 +240,221 @@ const ThreeViewGame = {
 
     // 随机生成立方体（填充一些格子，确保叠放不悬空）
     generateRandomCube() {
-        // 随机填充10-20个格子（3x3x3总共27个格子）
-        const fillCount = Math.floor(Math.random() * 11) + 10;
-        let filled = 0;
+        let validCube = false;
 
-        // 先清空
+        // 不断尝试直到满足所有条件
+        while (!validCube) {
+            // 随机填充10-20个格子（3x3x3总共27个格子）
+            const fillCount = Math.floor(Math.random() * 11) + 10;
+            let filled = 0;
+
+            // 先清空
+            for (let x = 0; x < 3; x++) {
+                for (let y = 0; y < 3; y++) {
+                    for (let z = 0; z < 3; z++) {
+                        this.cube[x][y][z] = 0;
+                    }
+                }
+            }
+
+            // 逐层放置，确保每个方块都有支撑
+            while (filled < fillCount) {
+                // 随机选择位置
+                const x = Math.floor(Math.random() * 3);
+                const y = Math.floor(Math.random() * 3);
+                const z = Math.floor(Math.random() * 3);
+
+                // 检查是否可以放置
+                // 1. 位置为空
+                // 2. 如果不是底层(y=0)，下方必须有方块支撑
+                if (this.cube[x][y][z] === 0) {
+                    if (y === 0 || this.cube[x][y-1][z] === 1) {
+                        this.cube[x][y][z] = 1;
+                        filled++;
+                    }
+                }
+            }
+
+            // 检查最高处和最低处的差值是否 <= 2
+            const heightDiff = this.calculateHeightDifference();
+            // 检查从初始视角是否所有方块都至少部分可见
+            const allVisible = this.checkAllCubesVisibleFromInitialView();
+            // 检查相邻柱之间高度差是否 <= 1
+            const adjacentHeightDiffOk = this.checkAdjacentColumnHeightDiff();
+            // 检查从前到后、从右到左柱的高度是非递减的
+            const heightMonotonicityOk = this.checkColumnHeightMonotonicity();
+
+            if (heightDiff <= 2 && allVisible && adjacentHeightDiffOk && heightMonotonicityOk) {
+                validCube = true;
+            }
+        }
+    },
+
+    // 检查相邻柱之间高度差是否 <= 1
+    checkAdjacentColumnHeightDiff() {
+        // 计算每个柱的高度（每个x,z位置的最高y坐标）
+        const columnHeights = [];
+        for (let x = 0; x < 3; x++) {
+            columnHeights[x] = [];
+            for (let z = 0; z < 3; z++) {
+                columnHeights[x][z] = this.getColumnHeight(x, z);
+            }
+        }
+
+        // 检查所有相邻的柱（包括水平、垂直和对角相邻）
+        for (let x = 0; x < 3; x++) {
+            for (let z = 0; z < 3; z++) {
+                // 检查右边的柱
+                if (x < 2) {
+                    const diff = Math.abs(columnHeights[x][z] - columnHeights[x + 1][z]);
+                    if (diff > 1) return false;
+                }
+                // 检查下边的柱
+                if (z < 2) {
+                    const diff = Math.abs(columnHeights[x][z] - columnHeights[x][z + 1]);
+                    if (diff > 1) return false;
+                }
+                // 检查右下对角的柱
+                if (x < 2 && z < 2) {
+                    const diff = Math.abs(columnHeights[x][z] - columnHeights[x + 1][z + 1]);
+                    if (diff > 1) return false;
+                }
+                // 检查左下对角的柱
+                if (x > 0 && z < 2) {
+                    const diff = Math.abs(columnHeights[x][z] - columnHeights[x - 1][z + 1]);
+                    if (diff > 1) return false;
+                }
+            }
+        }
+
+        return true;
+    },
+
+    // 获取指定位置(x,z)的柱高度（最高y坐标）
+    getColumnHeight(x, z) {
+        // 从上往下找第一个填充的方块
+        for (let y = 2; y >= 0; y--) {
+            if (this.cube[x][y][z] === 1) {
+                return y + 1; // 返回高度（y=0时高度为1，y=2时高度为3）
+            }
+        }
+        return 0; // 该柱没有方块
+    },
+
+    // 检查柱高度的单调性
+    checkColumnHeightMonotonicity() {
+        // 计算每个柱的高度
+        const columnHeights = [];
+        for (let x = 0; x < 3; x++) {
+            columnHeights[x] = [];
+            for (let z = 0; z < 3; z++) {
+                columnHeights[x][z] = this.getColumnHeight(x, z);
+            }
+        }
+
+        // 检查正视图方向：从前到后（z轴方向）
+        // 要求：前面的柱高度必须 >= 后面的柱高度（前面高后面低）
+        for (let x = 0; x < 3; x++) {
+            for (let z = 0; z < 2; z++) {
+                // 如果前面的柱高度 < 后面的柱高度，违反条件
+                if (columnHeights[x][z] < columnHeights[x][z + 1]) {
+                    return false;
+                }
+            }
+        }
+
+        // 检查右视图方向：从右到左（x轴方向）
+        // 要求：右边的柱高度必须 >= 左边的柱高度（右边高左边低）
+        for (let z = 0; z < 3; z++) {
+            for (let x = 0; x < 2; x++) {
+                // 如果右边的柱高度 < 左边的柱高度，违反条件
+                if (columnHeights[x][z] < columnHeights[x + 1][z]) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    },
+
+    // 检查从初始视角看是否所有方块都至少部分可见
+    checkAllCubesVisibleFromInitialView() {
+        // 初始视角方向向量：从相机位置看向中心(1,1,1)
+        // 相机位置大约是 (1+distance*sin(45°), 1, 1+distance*cos(45°)) 再绕轴旋转-30度
+        // 简化计算：使用从立方体右前上方往左后下方看的视角
+
         for (let x = 0; x < 3; x++) {
             for (let y = 0; y < 3; y++) {
                 for (let z = 0; z < 3; z++) {
-                    this.cube[x][y][z] = 0;
+                    if (this.cube[x][y][z] === 1) {
+                        // 检查这个方块是否被其他方块完全遮挡
+                        if (this.isCubeCompletelyHidden(x, y, z)) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    },
+
+    // 检查指定位置的方块是否被完全遮挡
+    isCubeCompletelyHidden(x, y, z) {
+        // 从初始视角（右前上方往左后下方看）检查遮挡
+        // 视角方向大致是：x增加，z增加，y增加的方向更容易看到
+
+        // 检查是否有"外露面"
+        // 初始视角从右前上方看，所以检查6个面是否有暴露
+        const directions = [
+            { dx: 1, dy: 0, dz: 0 },  // +x方向（右）
+            { dx: -1, dy: 0, dz: 0 }, // -x方向（左）
+            { dx: 0, dy: 1, dz: 0 },  // +y方向（上）
+            { dx: 0, dy: -1, dz: 0 }, // -y方向（下）
+            { dx: 0, dy: 0, dz: 1 },  // +z方向（后）
+            { dx: 0, dy: 0, dz: -1 }  // -z方向（前）
+        ];
+
+        let hasExposedFace = false;
+
+        for (const dir of directions) {
+            const nx = x + dir.dx;
+            const ny = y + dir.dy;
+            const nz = z + dir.dz;
+
+            // 如果这个方向的相邻位置为空或超出边界，说明这个面是暴露的
+            if (nx < 0 || nx >= 3 || ny < 0 || ny >= 3 || nz < 0 || nz >= 3) {
+                hasExposedFace = true;
+                break;
+            }
+
+            if (this.cube[nx][ny][nz] === 0) {
+                hasExposedFace = true;
+                break;
+            }
+        }
+
+        return !hasExposedFace; // 如果没有任何暴露的面，则被完全遮挡
+    },
+
+    // 计算立方体最高处和最低处的差值
+    calculateHeightDifference() {
+        let minY = 2; // 初始化为最高可能的y坐标
+        let maxY = 0; // 初始化为最低可能的y坐标
+
+        // 遍历所有位置，找到有方块的最低和最高y坐标
+        for (let x = 0; x < 3; x++) {
+            for (let y = 0; y < 3; y++) {
+                for (let z = 0; z < 3; z++) {
+                    if (this.cube[x][y][z] === 1) {
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                    }
                 }
             }
         }
 
-        // 逐层放置，确保每个方块都有支撑
-        while (filled < fillCount) {
-            // 随机选择位置
-            const x = Math.floor(Math.random() * 3);
-            const y = Math.floor(Math.random() * 3);
-            const z = Math.floor(Math.random() * 3);
-
-            // 检查是否可以放置
-            // 1. 位置为空
-            // 2. 如果不是底层(y=0)，下方必须有方块支撑
-            if (this.cube[x][y][z] === 0) {
-                if (y === 0 || this.cube[x][y-1][z] === 1) {
-                    this.cube[x][y][z] = 1;
-                    filled++;
-                }
-            }
-        }
+        // 返回高度差
+        return maxY - minY;
     },
 
     // 计算正确的三视图
@@ -672,12 +857,12 @@ const ThreeViewGame = {
             const distance = 8.8;
             const center = new THREE.Vector3(1, 1, 1);
 
-            // 从正视图绕y轴向左旋转45度
-            const angle45 = Math.PI / 4;
+            // 从正视图绕y轴（绿色线）顺时针旋转25度（45-20）
+            const angleY = 25 * Math.PI / 180;
             const leftRotatedPos = new THREE.Vector3(
-                1 + distance * Math.sin(angle45),
+                1 + distance * Math.sin(angleY),
                 1,
-                1 + distance * Math.cos(angle45)
+                1 + distance * Math.cos(angleY)
             );
 
             // 旋转轴：xy轴角平分线的垂线
@@ -709,11 +894,12 @@ const ThreeViewGame = {
                 // 初始视角：从xy轴角平分线的垂线为轴，向屏幕外旋转30度
                 const distance = 8.8;
                 const center = new THREE.Vector3(1, 1, 1);
-                const angle45 = Math.PI / 4;
+                // 从正视图绕y轴（绿色线）顺时针旋转25度（45-20）
+                const angleY = 25 * Math.PI / 180;
                 const leftRotatedPos = new THREE.Vector3(
-                    1 + distance * Math.sin(angle45),
+                    1 + distance * Math.sin(angleY),
                     1,
-                    1 + distance * Math.cos(angle45)
+                    1 + distance * Math.cos(angleY)
                 );
                 const axis = new THREE.Vector3(1, 0, -1).normalize();
                 const relativePos = leftRotatedPos.clone().sub(center);
