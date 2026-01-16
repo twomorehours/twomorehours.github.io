@@ -179,13 +179,24 @@ const NumberDecompositionGame = {
     showNumberInput() {
         document.getElementById('startScreen').style.display = 'none';
         document.getElementById('numberInputScreen').style.display = 'flex';
-        document.getElementById('practiceNumber').focus();
+
+        // 每次随机生成一个2-20的数字作为默认值和placeholder
+        const randomNum = Math.floor(Math.random() * 19) + 2;
+        const input = document.getElementById('practiceNumber');
+        input.placeholder = randomNum;
+        input.value = ''; // 清空之前的输入
+        input.focus();
     },
 
     // 开始练习模式
     startPracticeMode() {
         const input = document.getElementById('practiceNumber');
         let num = parseInt(input.value);
+
+        // 如果用户没有输入数字，使用placeholder的值作为默认值
+        if (isNaN(num)) {
+            num = parseInt(input.placeholder);
+        }
 
         if (isNaN(num) || num < 2 || num > 20) {
             alert('请输入2到20之间的数字');
